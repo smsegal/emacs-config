@@ -14,6 +14,15 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
+;; Custom File
+(setq custom-file (concat user-emacs-directory "custom.el"))
+(load custom-file)
+
+;; set font
+(set-face-attribute 'default nil
+		    :family "Jetbrains Mono"
+		    :height 140)
+				 
 ;; incremental narrowing a la ivy
 (use-package selectrum
   :init (selectrum-mode +1))
@@ -53,6 +62,11 @@
 
 (winner-mode +1)
 
+;; smart modeline
+(use-package smart-mode-line
+  :custom (sml/theme 'respectful)
+  :init (sml/setup))
+
 ;; (show-paren-mode 1)
 (use-package highlight-parentheses
   :demand t
@@ -67,10 +81,21 @@
   (setq hl-line-sticky-flag nil
         global-hl-line-sticky-flag nil))
 
-(use-package highlight-numbers
-  :hook ((prog-mode conf-mode) . highlight-numbers-mode)
-  :config (setq highlight-numbers-generic-regexp "\\_<[[:digit:]]+\\(?:\\.[0-9]*\\)?\\_>"))
+;; themes
+(use-package doom-themes
+  :custom
+  (doom-themes-enable-bold t)
+  (doom-themes-enable-italic t)
+  :config
+  (load-theme 'doom-zenburn)
+  (doom-themes-visual-bell-config)
+  (doom-themes-org-config))
 
+;; line numbers?
+(use-package display-line-numbers
+  :straight nil
+  :init (setq display-line-numbers-type 'relative)
+  :hook (prog-mode . display-line-numbers-mode))
 
 ;; scrolling
 (setq hscroll-margin 2
@@ -196,3 +221,11 @@
 
 ;; vc-mode tweaks
 (setq vc-follow-symlinks t)
+
+(use-package magit
+  :bind ("C-c C-g" . magit-status))
+
+
+;; project.el
+(use-package projectile 
+  :bind-keymap ("C-x p" . projectile-command-map))
