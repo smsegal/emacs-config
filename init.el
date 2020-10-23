@@ -1,3 +1,5 @@
+;;; init.el -*- lexical-binding: t; -*-
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -38,6 +40,8 @@
 				140
 			      120))
 
+(setq enable-recursive-minibuffers t)
+
 (when IS-MAC
   (mac-auto-operator-composition-mode))
 
@@ -49,6 +53,13 @@
   (evil-respect-visual-line-mode t)
   :config
   (evil-mode 1))
+
+(when (fboundp 'undo-redo)
+  (setq evil-undo-system 'undo-redo))
+
+(use-package undo-fu
+  :unless (fboundp 'undo-redo)
+  :custom (evil-undo-system 'undo-fu))
 
 (use-package evil-collection
   :after evil
@@ -72,6 +83,7 @@
 ;; leader key setup
 (general-create-definer +leader-def
   :prefix "SPC"
+  :keymaps 'override
   :states '(normal visual))
 
 (general-def :prefix-map '+file-map
@@ -105,20 +117,18 @@
 (use-package evil-nerd-commenter
   :commands evilnc-comment-operator
   :general
-  (:states '(normal visual)
-	   "gc" 'evilnc-comment-operator))
+  (general-nvmap "gc" 'evilnc-comment-operator))
 
 ;; incremental narrowing a la ivy
 (use-package selectrum
   :commands selectrum-next-candidate selectrum-previous-candidate
   :init
-  (general-def :states 'insert
-    "C-k" nil)
   (selectrum-mode +1)
   :general
+  (general-imap :keymaps 'selectrum-minibuffer-map "C-k" nil)
   (:keymaps 'selectrum-minibuffer-map
 	    "C-j" 'selectrum-next-candidate
-	    "C-k" 'selectrum-previous-canidate))
+	    "C-k" 'selectrum-previous-candidate))
 
 (use-package prescient)
 (use-package selectrum-prescient
@@ -126,11 +136,37 @@
   :init
   (selectrum-prescient-mode +1)
   (prescient-persist-mode +1))
- 
+
+;; code formatting
+;; (use-package apheleia
+;;   :straight (:host github :repo "raxod502/apheleia")
+;;   :general
+;;   (:prefix-map '+code-map
+;; 	       "f" (+format-dwim-def #'apheleia-format-buffer)))
+
+(use-package format-all
+  :config
+  (defun +format-dwim (start end)
+    (interactive "r")
+    (if (use-region-p)
+	(save-excursion
+	  (save-restriction
+	    (narrow-to-region start end)
+	    (message "formatting region from %s\nto %s" start end)
+	    (format-all-buffer)))
+      ;; (apheleia-format-buffer))
+      (message "formatting whole buffer")
+      (format-all-buffer)))
+  :general
+  (:prefix-map '+code-map
+	       "f" '+format-dwim))
+
 ;; buffers
 (defalias 'list-buffers 'ibuffer-other-window)
 
 ;; what the hell do i press next?
+(put 'narrow-to-region 'disabled nil)
+
 (use-package which-key
   :diminish which-key-mode
   :init (which-key-mode +1))
@@ -255,10 +291,10 @@
   :bind ("C-x R" . restart-emacs))
 
 (defun recentf-open-files+ ()
-    "Use `completing-read' to open a recent file."
-    (interactive)
-    (let ((files (mapcar 'abbreviate-file-name recentf-list)))
-      (find-file (completing-read "Find recent file: " files nil t))))
+  "Use `completing-read' to open a recent file."
+  (interactive)
+  (let ((files (mapcar 'abbreviate-file-name recentf-list)))
+    (find-file (completing-read "Find recent file: " files nil t))))
 
 (use-package recentf-mode
   :straight nil
@@ -319,7 +355,7 @@
 			company-math-symbols-latex
 			company-math-symbols-unicode
 			company-latex-commands)
-	      company-backends)))
+		      company-backends)))
 
 (add-hook 'LaTeX-mode-hook 'my-latex-mode-setup)
 
@@ -332,7 +368,7 @@
 (use-package evil-magit
   :after magit)
 
-;; projectile 
+;; projectile
 (use-package projectile
   :general
   (+leader-def
