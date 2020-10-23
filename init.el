@@ -14,30 +14,113 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
-;; Custom File
-(setq custom-file (concat user-emacs-directory "custom.el"))
-(load custom-file)
+;; macos needs a few different tweaks
+(defvar IS-MAC (eq system-type 'darwin))
+
+;; garbage collection hacks
+(use-package gcmh
+  :diminish gcmh-mode
+  :init (gcmh-mode 1))
+
+;; Personal Information
+(setq user-full-name "Shane Segal"
+      user-mail-address "shane@smsegal.ca")
+
+;; load custom settings from a seperate file instead of polluting this file
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(if (file-exists-p custom-file)
+    (load custom-file))
 
 ;; set font
+;; macos needs a larger font due to hidpi
 (set-face-attribute 'default nil
-		    :family "Jetbrains Mono"
-		    :height 140)
-				 
+		    :family "Cascadia Code"
+		    :height (if IS-MAC
+				140
+			      120))
+ 
+;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies
+(use-package evil
+  :custom
+  (evil-want-integration t)
+  (evil-want-keybinding nil)
+  (evil-respect-visual-line-mode t)
+  :config
+  (evil-mode 1))
+
+(use-package evil-collection
+  :after evil
+  :custom
+  (evil-collection-setup-minibuffer t)
+  :config
+  (evil-collection-init))
+
+(use-package evil-escape
+  :custom
+  (evil-escape-delay 0.1)
+  (evil-escape-key-sequence "fd")
+  :hook (after-init . evil-escape-mode))
+
+;; general keybindings
+(use-package general
+  :commands general-define-key general-def general-swap-key general-create-definer
+  :init (general-evil-setup)
+  )
+
+;; leader key setup
+(general-create-definer +leader-def
+  :prefix "SPC"
+  :states '(normal visual))
+
+(general-def :prefix-map '+file-map
+  "f" 'find-file
+  "s" 'save-buffer
+  "r" 'recentf-open-files+)
+
+(general-def :prefix-map '+code-map
+  "e" 'eval-buffer)
+
+(general-def :prefix-map '+quit-restart-map
+  "q" 'kill-emacs
+  "r" 'restart-emacs)
+
+(general-def :prefix-map '+buffer-map
+  "b" 'switch-to-buffer)
+
+(+leader-def
+  "SPC" '(execute-extended-command :which-key "M-x")
+  "w" '(:keymap evil-window-map :which-key "windows")
+  "b" '(:keymap +buffer-map :which-key "buffers")
+  "q" '(:keymap +quit-restart-map :which-key "quit/restart")
+  "c" '(:keymap +code-map :which-key "code")
+  "f" '(:keymap +file-map :which-key "files")
+  "h" '(:keymap help-map :which-key "help"))
+
 ;; incremental narrowing a la ivy
 (use-package selectrum
-  :init (selectrum-mode +1))
+  :commands selectrum-next-candidate selectrum-previous-candidate
+  :init
+  (general-def :states 'insert
+    "C-k" nil)
+  (selectrum-mode +1)
+  :general
+  (:keymaps 'selectrum-minibuffer-map
+	    "C-j" 'selectrum-next-candidate
+	    "C-k" 'selectrum-previous-canidate))
+
 (use-package prescient)
 (use-package selectrum-prescient
   :after prescient
   :init
   (selectrum-prescient-mode +1)
   (prescient-persist-mode +1))
-
-(use-package ctrlf
-  :init (ctrlf-mode +1))
+ 
+;; buffers
+(defalias 'list-buffers 'ibuffer-other-window)
 
 ;; what the hell do i press next?
 (use-package which-key
+  :diminish which-key-mode
   :init (which-key-mode +1))
 
 ;; UI Tweaks
@@ -54,13 +137,17 @@
 
 (unless (assq 'menu-bar-lines default-frame-alist)
   (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
-  (add-to-list 'default-frame-alist '(tool-bar-lines . 0)))
+  (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
+  (add-to-list 'default-frame-alist '(vertical-scroll-bars)))
 
 ;; ui cruft
-(setq menu-bar-mode nil
-      tool-bar-mode nil)
+(setq menu-bar-mode   nil
+      tool-bar-mode   nil
+      scroll-bar-mode nil)
 
 (winner-mode +1)
+
+(use-package diminish)
 
 ;; smart modeline
 (use-package smart-mode-line
@@ -69,10 +156,7 @@
 
 ;; (show-paren-mode 1)
 (use-package highlight-parentheses
-  :demand t
-  :init
-  (require 'highlight-parentheses)
-  (highlight-parentheses-mode))
+  :hook ((prog-mode LaTex-mode) . highlight-parentheses-mode))
 
 (use-package hl-line
   :straight nil
@@ -90,6 +174,12 @@
   (load-theme 'doom-zenburn)
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
+
+(use-package fira-code-mode
+  :custom
+  (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":", "x"))
+  (fira-code-mode-enable-hex-literal nil)
+  :hook prog-mode)
 
 ;; line numbers?
 (use-package display-line-numbers
@@ -118,12 +208,12 @@
 ;; visual fill column
 (use-package visual-fill-column
   :hook (visual-line-mode . visual-fill-column-mode)
-  :init
-  (setq visual-fill-column-width 110
-	visual-fill-column-center-text t)
+  :custom
+  (visual-fill-column-width 100)
+  (visual-fill-column-center-text t)
   :commands visual-fill-column-mode)
 
-;; autocomplete
+;;autocomplete
 (use-package company
   :commands company-complete-common company-manual-begin company-grab-line
   :custom
@@ -133,6 +223,7 @@
 
 ;; syntax highlighting
 (use-package flycheck
+  :diminish flycheck-mode
   :init
   (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
   :hook (after-init . global-flycheck-mode))
@@ -210,12 +301,12 @@
 
 (defun my-latex-mode-setup ()
   (setq-local company-backends
-	      (append '(company-math-symbols-latex
-			company-math-symbols-unicode
-			company-latex-commands
+	      (append '(company-reftex-citations
 			company-reftex-labels
-			company-reftex-citations))
-	      company-backends))
+			company-math-symbols-latex
+			company-math-symbols-unicode
+			company-latex-commands)
+	      company-backends)))
 
 (add-hook 'LaTeX-mode-hook 'my-latex-mode-setup)
 
@@ -225,7 +316,11 @@
 (use-package magit
   :bind ("C-c C-g" . magit-status))
 
+(use-package evil-magit
+  :after magit)
 
-;; project.el
-(use-package projectile 
-  :bind-keymap ("C-x p" . projectile-command-map))
+;; projectile 
+(use-package projectile
+  :general
+  (+leader-def
+    "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
