@@ -19,8 +19,7 @@
 
 ;; garbage collection hacks
 (use-package gcmh
-  :diminish gcmh-mode
-  :init (gcmh-mode 1))
+  :diminish gcmh-mode :init (gcmh-mode 1))
 
 ;; Personal Information
 (setq user-full-name "Shane Segal"
@@ -38,7 +37,10 @@
 		    :height (if IS-MAC
 				140
 			      120))
- 
+
+(when IS-MAC
+  (mac-auto-operator-composition-mode))
+
 ;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies
 (use-package evil
   :custom
@@ -56,6 +58,7 @@
   (evil-collection-init))
 
 (use-package evil-escape
+  :diminish evil-escape-mode
   :custom
   (evil-escape-delay 0.1)
   (evil-escape-key-sequence "fd")
@@ -64,8 +67,7 @@
 ;; general keybindings
 (use-package general
   :commands general-define-key general-def general-swap-key general-create-definer
-  :init (general-evil-setup)
-  )
+  :init (general-evil-setup))
 
 ;; leader key setup
 (general-create-definer +leader-def
@@ -87,14 +89,24 @@
 (general-def :prefix-map '+buffer-map
   "b" 'switch-to-buffer)
 
+(general-def :prefix-map '+vc-map
+  "g" 'magit-status)
+
 (+leader-def
   "SPC" '(execute-extended-command :which-key "M-x")
   "w" '(:keymap evil-window-map :which-key "windows")
   "b" '(:keymap +buffer-map :which-key "buffers")
   "q" '(:keymap +quit-restart-map :which-key "quit/restart")
   "c" '(:keymap +code-map :which-key "code")
+  "g" '(:keymap +vc-map :which-key "vc/git")
   "f" '(:keymap +file-map :which-key "files")
   "h" '(:keymap help-map :which-key "help"))
+
+(use-package evil-nerd-commenter
+  :commands evilnc-comment-operator
+  :general
+  (:states '(normal visual)
+	   "gc" 'evilnc-comment-operator))
 
 ;; incremental narrowing a la ivy
 (use-package selectrum
@@ -176,16 +188,17 @@
   (doom-themes-org-config))
 
 (use-package fira-code-mode
+  :unless IS-MAC
   :custom
   (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":", "x"))
   (fira-code-mode-enable-hex-literal nil)
   :hook prog-mode)
 
 ;; line numbers?
-(use-package display-line-numbers
-  :straight nil
-  :init (setq display-line-numbers-type 'relative)
-  :hook (prog-mode . display-line-numbers-mode))
+;; (use-package display-line-numbers
+;;   :straight nil
+;;   :init (setq display-line-numbers-type 'relative)
+;;   :hook (prog-mode . display-line-numbers-mode))
 
 ;; scrolling
 (setq hscroll-margin 2
