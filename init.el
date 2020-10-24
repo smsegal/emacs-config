@@ -26,7 +26,6 @@
 ;; Personal Information
 (setq user-full-name "Shane Segal"
       user-mail-address "shane@smsegal.ca")
-
 ;; load custom settings from a seperate file instead of polluting this file
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (if (file-exists-p custom-file)
@@ -35,10 +34,8 @@
 ;; set font
 ;; macos needs a larger font due to hidpi
 (set-face-attribute 'default nil
-		    :family "Cascadia Code"
-		    :height (if IS-MAC
-				140
-			      120))
+                    :family "Cascadia Code"
+                    :height (if IS-MAC 140 120))
 
 (setq enable-recursive-minibuffers t)
 
@@ -99,20 +96,32 @@
   "r" 'restart-emacs)
 
 (general-def :prefix-map '+buffer-map
-  "b" 'switch-to-buffer)
+  "b" 'switch-to-buffer
+  "p" 'previous-buffer
+  "n" 'next-buffer
+  "r" 'revert-buffer)
 
-(general-def :prefix-map '+vc-map
-  "g" 'magit-status)
+(general-def :prefix-map '+vc-map)
+
+(general-def :prefix-map '+insert-map)
+
+(general-def :prefix-map '+open-map
+  "-" 'dired-jump)
+
+(general-def :prefix-map '+search-map)
 
 (+leader-def
-  "SPC" '(execute-extended-command :which-key "M-x")
-  "w" '(:keymap evil-window-map :which-key "windows")
-  "b" '(:keymap +buffer-map :which-key "buffers")
-  "q" '(:keymap +quit-restart-map :which-key "quit/restart")
-  "c" '(:keymap +code-map :which-key "code")
-  "g" '(:keymap +vc-map :which-key "vc/git")
-  "f" '(:keymap +file-map :which-key "files")
-  "h" '(:keymap help-map :which-key "help"))
+ "SPC" '(execute-extended-command :which-key "M-x")
+ "w" '(:keymap evil-window-map :which-key "windows")
+ "b" '(:keymap +buffer-map :which-key "buffers")
+ "q" '(:keymap +quit-restart-map :which-key "quit/restart")
+ "c" '(:keymap +code-map :which-key "code")
+ "g" '(:keymap +vc-map :which-key "vc/git")
+ "f" '(:keymap +file-map :which-key "files")
+ "i" '(:keymap +insert-map :which-key "insert")
+ "o" '(:keymap +open-map :which-key "open")
+ "s" '(:keymap +search-map :which-key "search")
+ "h" '(:keymap help-map :which-key "help"))
 
 (use-package evil-nerd-commenter
   :commands evilnc-comment-operator
@@ -125,10 +134,10 @@
   :init
   (selectrum-mode +1)
   :general
-  (general-imap :keymaps 'selectrum-minibuffer-map "C-k" nil)
+  (general-imap "C-k" nil)
   (:keymaps 'selectrum-minibuffer-map
-	    "C-j" 'selectrum-next-candidate
-	    "C-k" 'selectrum-previous-candidate))
+   "C-j" 'selectrum-next-candidate
+   "C-k" 'selectrum-previous-candidate))
 
 (use-package prescient)
 (use-package selectrum-prescient
@@ -137,29 +146,39 @@
   (selectrum-prescient-mode +1)
   (prescient-persist-mode +1))
 
-;; code formatting
-;; (use-package apheleia
-;;   :straight (:host github :repo "raxod502/apheleia")
-;;   :general
-;;   (:prefix-map '+code-map
-;; 	       "f" (+format-dwim-def #'apheleia-format-buffer)))
+(use-package selectrum-contrib
+  :straight nil
+  :load-path "modules/"
+  :general
+  (:prefix-map '+search-map
+	       "s" 'selectrum-swiper)
+  (:prefix-map '+insert-map
+	       "y" '(+yank-pop :which-key "insert from kill ring")))
 
-(use-package format-all
-  :config
-  (defun +format-dwim (start end)
-    (interactive "r")
-    (if (use-region-p)
-	(save-excursion
-	  (save-restriction
-	    (narrow-to-region start end)
-	    (message "formatting region from %s\nto %s" start end)
-	    (format-all-buffer)))
-      ;; (apheleia-format-buffer))
-      (message "formatting whole buffer")
-      (format-all-buffer)))
+       
+;; code formatting
+(use-package apheleia
+  :straight (:host github :repo "raxod502/apheleia")
   :general
   (:prefix-map '+code-map
-	       "f" '+format-dwim))
+	       "f" 'apheleia-format-buffer))
+
+;; (use-package format-all
+;;   :config
+;;   (defun +format-dwim (start end)
+;;     (interactive "r")
+;;     (if (use-region-p)
+;; 	(save-excursion
+;; 	  (save-restriction
+;; 	    (narrow-to-region start end)
+;; 	    (message "formatting region from %s\nto %s" start end)
+;; 	    (format-all-buffer)))
+;;       ;; (apheleia-format-buffer))
+;;       (message "formatting whole buffer")
+;;       (format-all-buffer)))
+;;   :general
+;;   (:prefix-map '+code-map
+;;    "f" '+format-dwim))
 
 ;; buffers
 (defalias 'list-buffers 'ibuffer-other-window)
@@ -207,11 +226,18 @@
   :hook ((prog-mode LaTex-mode) . highlight-parentheses-mode))
 
 (use-package hl-line
+  :disabled
   :straight nil
   :hook ((prog-mode text-mode conf-mode special-mode) . hl-line-mode)
   :config
   (setq hl-line-sticky-flag nil
         global-hl-line-sticky-flag nil))
+
+(use-package ace-window
+  ;; :custom
+  ;; (aw-leading-char-face '(:foreground "red" :height 4.0))
+  :general (:prefix-map 'evil-window-map
+			"w" 'ace-window))
 
 ;; themes
 (use-package doom-themes
@@ -226,7 +252,7 @@
 (use-package fira-code-mode
   :unless IS-MAC
   :custom
-  (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":", "x"))
+  (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+"))
   (fira-code-mode-enable-hex-literal nil)
   :hook prog-mode)
 
@@ -268,7 +294,10 @@
   :custom
   (company-idle-delay 0.0)
   :hook (after-init . global-company-mode)
-  :config (company-tng-mode +1))
+  :general (general-imap "C-SPC" 'company-complete))
+
+(use-package company-quickhelp
+  :init (company-quickhelp-mode))
 
 ;; syntax highlighting
 (use-package flycheck
@@ -363,13 +392,40 @@
 (setq vc-follow-symlinks t)
 
 (use-package magit
-  :bind ("C-c C-g" . magit-status))
+  :general
+  (:prefix-map '+vc-map
+	       "g" 'magit-status))
 
 (use-package evil-magit
   :after magit)
 
 ;; projectile
 (use-package projectile
+  :custom
+  (projectile-completion-system 'default)
   :general
   (+leader-def
-    "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
+   "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
+
+;; direnv support
+(use-package envrc
+  :diminish envrc-mode
+  :init (envrc-global-mode +1))
+
+;; languages + highlighting
+(straight-register-package
+ '(tsc :host github
+       :repo "ubolonton/emacs-tree-sitter"
+       :files ("core/*.el")))
+(use-package tree-sitter
+  :diminish tree-sitter-mode
+  :straight (:host github :repo "ubolonton/emacs-tree-sitter"
+		   :files ("lisp/*.el"))
+  :init (global-tree-sitter-mode))
+(use-package tree-sitter-langs
+  :straight (:host github :repo "ubolonton/emacs-tree-sitter"
+		   :files ("langs/*.el" "langs/queries")))
+(use-package tree-sitter-hl
+  :straight nil
+  :after tree-sitter tree-sitter-langs
+  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
