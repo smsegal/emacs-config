@@ -27,7 +27,7 @@
 (use-package no-littering
   :config
   (setq auto-save-file-name-transforms
-   `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
 (use-package recentf-mode
   :straight nil
@@ -73,6 +73,8 @@
   :config
   (global-evil-surround-mode 1))
 
+
+
 (use-package undo-tree
   :custom (evil-undo-system 'undo-tree)
   :config (global-undo-tree-mode))
@@ -91,6 +93,11 @@
   (evil-escape-key-sequence "fd")
   :hook (after-init . evil-escape-mode))
 
+(use-package smartparens
+  :hook (after-init . smartparens-global-mode))
+(use-package smartparens-config
+  :straight nil)
+
 ;; general keybindings
 (use-package general
   :commands general-define-key general-def general-swap-key general-create-definer
@@ -99,6 +106,12 @@
 ;; leader key setup
 (general-create-definer +leader-def
   :prefix "SPC"
+  :keymaps 'override
+  :states '(normal visual))
+
+;; local leader
+(general-create-definer +local-leader-def
+  :prefix ","
   :keymaps 'override
   :states '(normal visual))
 
@@ -146,6 +159,11 @@
   :commands evilnc-comment-operator
   :general
   (general-nvmap "gc" 'evilnc-comment-operator))
+
+(use-package evil-easymotion
+  :general
+  (general-nmap
+    "gs" '(:keymap evilem-map :which-key "easymotion")))
 
 ;; incremental narrowing a la ivy
 (use-package selectrum
@@ -220,6 +238,13 @@
   (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
   (add-to-list 'default-frame-alist '(vertical-scroll-bars)))
 
+;;window dividers
+(setq window-divider-default-places 'bottom-only
+      window-divider-default-bottom-width 1)
+(window-divider-mode +1)
+
+(set-fringe-style 1)
+
 (setq menu-bar-mode   nil
       tool-bar-mode   nil
       scroll-bar-mode nil)
@@ -231,7 +256,6 @@
   (:prefix-map 'evil-window-map
 	       "u" 'winner-undo
 	       "r" 'winner-redo))
-
 
 (use-package dumb-jump
   :hook (xref-backend-functions . dumb-jump-xreg-activate))
@@ -354,7 +378,7 @@
   (setq lsp-keymap-prefix "C-l")
   :hook (((python-mode TeX-mode LaTeX-mode) . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp-deferred)
+  :commands (lsp lsp-deferred))
 (use-package lsp-ui :commands lsp-ui-mode)
 
 ;; utilities
@@ -380,6 +404,12 @@
   :after yasnippet)
 
 ;; better help buffers
+(use-package helpful
+  :general
+  (:prefix-map 'help-map
+	       "f" #'helpful-callable
+	       "v" #'helpful-variable
+	       "k" #'helpful-key))
 
 ;; latex
 
@@ -443,7 +473,10 @@
 (use-package magit
   :general
   (:prefix-map '+vc-map
-	       "g" 'magit-status))
+	       "g" 'magit-status)
+  (+local-leader-def :keymaps 'with-editor-mode-map
+		"," 'with-editor-finish
+		"k" 'with-editor-cancel))
 
 (use-package evil-magit
   :after magit)
@@ -452,7 +485,7 @@
 (use-package projectile
   :custom
   (projectile-completion-system 'default)
-  (projectile-project-search-path '("~/src" "~/writing"))
+  ;; (projectile-project-search-path '("~/src" "~/writing"))
   (projectile-auto-discovery t)
   :hook (after-init . projectile-mode)
   :general
