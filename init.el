@@ -21,7 +21,22 @@
 
 ;; garbage collection hacks
 (use-package gcmh
-  :diminish gcmh-mode :init (gcmh-mode 1))
+  :diminish gcmh-mode
+  :init (gcmh-mode 1))
+
+(use-package no-littering
+  :config
+  (setq auto-save-file-name-transforms
+   `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+
+(use-package recentf-mode
+  :straight nil
+  :after no-littering
+  :hook (after-init . recentf-mode)
+  :config
+  (add-to-list 'recentf-exclude no-littering-var-directory)
+  (add-to-list 'recentf-exclude no-littering-etc-directory)
+  (run-at-time nil (* 5 60) 'recentf-save-list))
 
 ;; Personal Information
 (setq user-full-name "Shane Segal"
@@ -41,6 +56,8 @@
 
 (when IS-MAC
   (mac-auto-operator-composition-mode))
+
+(use-package diminish)
 
 ;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies
 (use-package evil
@@ -157,6 +174,10 @@
   (:prefix-map '+insert-map
 	       "y" '(+yank-pop :which-key "insert from kill ring")))
 
+(use-package deadgrep
+  :general
+  (:prefix-map '+search-map
+	       "d" #'deadgrep))
 
 ;; code formatting
 (use-package apheleia
@@ -170,20 +191,6 @@
   :general
   (:prefix-map '+code-map
 	       "f" 'format-all-buffer))
-;;   (defun +format-dwim (start end)
-;;     (interactive "r")
-;;     (if (use-region-p)
-;; 	(save-excursion
-;; 	  (save-restriction
-;; 	    (narrow-to-region start end)
-;; 	    (message "formatting region from %s\nto %s" start end)
-;; 	    (format-all-buffer)))
-;;       ;; (apheleia-format-buffer))
-;;       (message "formatting whole buffer")
-;;       (format-all-buffer)))
-;;   :general
-;;   (:prefix-map '+code-map
-;;    "f" '+format-dwim))
 
 ;; buffers
 (defalias 'list-buffers 'ibuffer-other-window)
@@ -217,9 +224,14 @@
       tool-bar-mode   nil
       scroll-bar-mode nil)
 
-(winner-mode +1)
+(use-package winner
+  :straight nil
+  :hook (after-init . winner-mode)
+  :general
+  (:prefix-map 'evil-window-map
+	       "u" 'winner-undo
+	       "r" 'winner-redo))
 
-(use-package diminish)
 
 (use-package dumb-jump
   :hook (xref-backend-functions . dumb-jump-xreg-activate))
@@ -244,7 +256,6 @@
   :config
   (setq hl-line-sticky-flag nil
         global-hl-line-sticky-flag nil))
-
 
 (use-package all-the-icons)
 (use-package all-the-icons-dired
@@ -282,10 +293,11 @@
   :hook (after-init . evil-goggles-mode)
   :config (evil-goggles-use-diff-faces))
 
-;; (use-package display-line-numbers
-;;   :straight nil
-;;   :init (setq display-line-numbers-type 'relative)
-;;   :hook (prog-mode . display-line-numbers-mode))
+(use-package display-line-numbers
+  :disabled
+  :straight nil
+  :init (setq display-line-numbers-type 'relative)
+  :hook (prog-mode . display-line-numbers-mode))
 
 ;; scrolling
 (setq hscroll-margin 2
@@ -315,17 +327,16 @@
 
 ;;autocomplete
 (use-package company
-  :commands company-complete-common company-manual-begin company-grab-line
   :custom
   (company-idle-delay 0.0)
   :hook (after-init . global-company-mode)
   :general (general-imap "C-SPC" 'company-complete))
-
-(use-package company-quickhelp
-  :hook (company-mode . company-quickhelp-mode))
-
 (use-package company-box
   :hook (company-mode . company-box-mode))
+(use-package company-quickhelp
+  :after company-box
+  :hook (company-mode . company-quickhelp-mode))
+
 
 ;; syntax highlighting
 (use-package flycheck
@@ -357,18 +368,18 @@
   (let ((files (mapcar 'abbreviate-file-name recentf-list)))
     (find-file (completing-read "Find recent file: " files nil t))))
 
-(use-package recentf-mode
-  :straight nil
-  :hook (after-init . recentf-mode)
-  :config
-  (run-at-time nil (* 5 60) 'recentf-save-list))
 
 (use-package yasnippet
-  :hook ((prog-mode text-mode) . yas-global-mode))
-(use-package yasnippet-snippets)
+  :hook ((prog-mode text-mode) . yas-global-mode)
+  :general (:prefix-map '+insert-map
+			"s" 'yas-insert-snippet))
+(use-package yasnippet-snippets
+  :after yasnippet)
 (use-package doom-snippets
   :straight (:host github :repo "hlissner/doom-snippets")
-  :after yasnippets)
+  :after yasnippet)
+
+;; better help buffers
 
 ;; latex
 
@@ -441,6 +452,9 @@
 (use-package projectile
   :custom
   (projectile-completion-system 'default)
+  (projectile-project-search-path '("~/src" "~/writing"))
+  (projectile-auto-discovery t)
+  :hook (after-init . projectile-mode)
   :general
   (+leader-def
     "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))

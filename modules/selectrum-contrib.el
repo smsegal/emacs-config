@@ -63,7 +63,7 @@
     (push-mark (point) t)
     (forward-line (- chosen-line-number current-line-number))
     (beginning-of-line-text 1)
-    (view-recenter)))
+    (recenter)))
 
 (defun org:show-subtree-headlines ()
   "Show headlines surrounding point."
