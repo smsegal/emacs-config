@@ -51,12 +51,14 @@
   :config
   (evil-mode 1))
 
-(when (fboundp 'undo-redo)
-  (setq evil-undo-system 'undo-redo))
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
 
-(use-package undo-fu
-  :unless (fboundp 'undo-redo)
-  :custom (evil-undo-system 'undo-fu))
+(use-package undo-tree
+  :custom (evil-undo-system 'undo-tree)
+  :config (global-undo-tree-mode))
 
 (use-package evil-collection
   :after evil
@@ -92,7 +94,7 @@
   "e" 'eval-buffer)
 
 (general-def :prefix-map '+quit-restart-map
-  "q" 'kill-emacs
+  "q" 'confirm-kill-emacs
   "r" 'restart-emacs)
 
 (general-def :prefix-map '+buffer-map
@@ -111,17 +113,17 @@
 (general-def :prefix-map '+search-map)
 
 (+leader-def
- "SPC" '(execute-extended-command :which-key "M-x")
- "w" '(:keymap evil-window-map :which-key "windows")
- "b" '(:keymap +buffer-map :which-key "buffers")
- "q" '(:keymap +quit-restart-map :which-key "quit/restart")
- "c" '(:keymap +code-map :which-key "code")
- "g" '(:keymap +vc-map :which-key "vc/git")
- "f" '(:keymap +file-map :which-key "files")
- "i" '(:keymap +insert-map :which-key "insert")
- "o" '(:keymap +open-map :which-key "open")
- "s" '(:keymap +search-map :which-key "search")
- "h" '(:keymap help-map :which-key "help"))
+  "SPC" '(execute-extended-command :which-key "M-x")
+  "w" '(:keymap evil-window-map :which-key "windows")
+  "b" '(:keymap +buffer-map :which-key "buffers")
+  "q" '(:keymap +quit-restart-map :which-key "quit/restart")
+  "c" '(:keymap +code-map :which-key "code")
+  "g" '(:keymap +vc-map :which-key "vc/git")
+  "f" '(:keymap +file-map :which-key "files")
+  "i" '(:keymap +insert-map :which-key "insert")
+  "o" '(:keymap +open-map :which-key "open")
+  "s" '(:keymap +search-map :which-key "search")
+  "h" '(:keymap help-map :which-key "help"))
 
 (use-package evil-nerd-commenter
   :commands evilnc-comment-operator
@@ -136,8 +138,8 @@
   :general
   (general-imap "C-k" nil)
   (:keymaps 'selectrum-minibuffer-map
-   "C-j" 'selectrum-next-candidate
-   "C-k" 'selectrum-previous-candidate))
+	    "C-j" 'selectrum-next-candidate
+	    "C-k" 'selectrum-previous-candidate))
 
 (use-package prescient)
 (use-package selectrum-prescient
@@ -155,16 +157,19 @@
   (:prefix-map '+insert-map
 	       "y" '(+yank-pop :which-key "insert from kill ring")))
 
-       
+
 ;; code formatting
 (use-package apheleia
+  :disabled
   :straight (:host github :repo "raxod502/apheleia")
   :general
   (:prefix-map '+code-map
 	       "f" 'apheleia-format-buffer))
 
-;; (use-package format-all
-;;   :config
+(use-package format-all
+  :general
+  (:prefix-map '+code-map
+	       "f" 'format-all-buffer))
 ;;   (defun +format-dwim (start end)
 ;;     (interactive "r")
 ;;     (if (use-region-p)
@@ -202,12 +207,12 @@
       window-resize-pixelwise t
       frame-resize-pixelwise t)
 
+;; ui cruft
 (unless (assq 'menu-bar-lines default-frame-alist)
   (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
   (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
   (add-to-list 'default-frame-alist '(vertical-scroll-bars)))
 
-;; ui cruft
 (setq menu-bar-mode   nil
       tool-bar-mode   nil
       scroll-bar-mode nil)
@@ -216,10 +221,17 @@
 
 (use-package diminish)
 
+(use-package dumb-jump
+  :hook (xref-backend-functions . dumb-jump-xreg-activate))
+
 ;; smart modeline
 (use-package smart-mode-line
+  :disabled
   :custom (sml/theme 'respectful)
   :init (sml/setup))
+
+(use-package telephone-line
+  :config (telephone-line-mode +1))
 
 ;; (show-paren-mode 1)
 (use-package highlight-parentheses
@@ -232,6 +244,15 @@
   :config
   (setq hl-line-sticky-flag nil
         global-hl-line-sticky-flag nil))
+
+
+(use-package all-the-icons)
+(use-package all-the-icons-dired
+  :hook (dired-mode . all-the-icons-dired-mode))
+
+(use-package anzu
+  :hook (after-init . global-anzu-mode))
+(use-package evil-anzu)
 
 (use-package ace-window
   ;; :custom
@@ -250,13 +271,17 @@
   (doom-themes-org-config))
 
 (use-package fira-code-mode
+  :diminish fira-code-mode
   :unless IS-MAC
   :custom
   (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+"))
   (fira-code-mode-enable-hex-literal nil)
   :hook prog-mode)
 
-;; line numbers?
+(use-package evil-goggles
+  :hook (after-init . evil-goggles-mode)
+  :config (evil-goggles-use-diff-faces))
+
 ;; (use-package display-line-numbers
 ;;   :straight nil
 ;;   :init (setq display-line-numbers-type 'relative)
@@ -297,14 +322,20 @@
   :general (general-imap "C-SPC" 'company-complete))
 
 (use-package company-quickhelp
-  :init (company-quickhelp-mode))
+  :hook (company-mode . company-quickhelp-mode))
+
+(use-package company-box
+  :hook (company-mode . company-box-mode))
 
 ;; syntax highlighting
 (use-package flycheck
   :diminish flycheck-mode
   :init
   (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
-  :hook (after-init . global-flycheck-mode))
+  :hook (after-init . global-flycheck-mode)
+  :general
+  (:prefix-map '+code-map
+	       "x" 'flycheck-list-errors))
 
 ;; lsp-mode
 (use-package lsp-mode
@@ -317,7 +348,8 @@
 
 ;; utilities
 (use-package restart-emacs
-  :bind ("C-x R" . restart-emacs))
+  :general
+  (:prefix-map '+quit-map "r" 'restart-emacs))
 
 (defun recentf-open-files+ ()
   "Use `completing-read' to open a recent file."
@@ -329,8 +361,14 @@
   :straight nil
   :hook (after-init . recentf-mode)
   :config
-  (run-at-time nil (* 5 60) 'recentf-save-list)
-  :bind ("C-x C-r" . 'recentf-open-files+))
+  (run-at-time nil (* 5 60) 'recentf-save-list))
+
+(use-package yasnippet
+  :hook ((prog-mode text-mode) . yas-global-mode))
+(use-package yasnippet-snippets)
+(use-package doom-snippets
+  :straight (:host github :repo "hlissner/doom-snippets")
+  :after yasnippets)
 
 ;; latex
 
@@ -340,8 +378,8 @@
   :mode ("\\.tex\\'" . LaTeX-mode)
   :init
   (setq-default TeX-master t)
-  (setq TeX-parse-self t ; parse on load
-	TeX-auto-save t  ; parse on save
+  (setq TeX-parse-self t ;; parse on load
+	TeX-auto-save t  ;; parse on save
 	;; automatically insert braces after sub/superscript in math mode
 	TeX-electric-sub-and-superscript t
 	bibtex-dialect 'biblatex
@@ -405,7 +443,7 @@
   (projectile-completion-system 'default)
   :general
   (+leader-def
-   "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
+    "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
 
 ;; direnv support
 (use-package envrc
