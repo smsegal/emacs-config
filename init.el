@@ -68,12 +68,6 @@
   :config
   (evil-mode 1))
 
-(use-package evil-surround
-  :ensure t
-  :config
-  (global-evil-surround-mode 1))
-
-
 
 (use-package undo-tree
   :custom (evil-undo-system 'undo-tree)
@@ -155,6 +149,13 @@
   "s" '(:keymap +search-map :which-key "search")
   "h" '(:keymap help-map :which-key "help"))
 
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode +1))
+(use-package evil-embrace
+  :after evil-surround
+  :init (evil-embrace-enable-evil-surround-integration))
+
 (use-package evil-nerd-commenter
   :commands evilnc-comment-operator
   :general
@@ -164,6 +165,12 @@
   :general
   (general-nmap
     "gs" '(:keymap evilem-map :which-key "easymotion")))
+
+(use-package evil-lion
+  :general
+  (general-nvmap
+    "gl" 'evil-lion-left
+    "gL" 'evil-lion-right))
 
 ;; incremental narrowing a la ivy
 (use-package selectrum
@@ -301,7 +308,7 @@
   (doom-themes-enable-bold t)
   (doom-themes-enable-italic t)
   :config
-  (load-theme 'doom-zenburn)
+  (load-theme 'doom-old-hope)
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
@@ -358,9 +365,7 @@
 (use-package company-box
   :hook (company-mode . company-box-mode))
 (use-package company-quickhelp
-  :after company-box
   :hook (company-mode . company-quickhelp-mode))
-
 
 ;; syntax highlighting
 (use-package flycheck
