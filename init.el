@@ -528,18 +528,10 @@
   :init (envrc-global-mode +1))
 
 ;; languages + highlighting
-(straight-register-package
- '(tsc :host github
-       :repo "ubolonton/emacs-tree-sitter"
-       :files ("core/*.el")))
 (use-package tree-sitter
   :diminish tree-sitter-mode
-  :straight (:host github :repo "ubolonton/emacs-tree-sitter"
-		   :files ("lisp/*.el"))
   :init (global-tree-sitter-mode))
-(use-package tree-sitter-langs
-  :straight (:host github :repo "ubolonton/emacs-tree-sitter"
-		   :files ("langs/*.el" "langs/queries")))
+(use-package tree-sitter-langs)
 (use-package tree-sitter-hl
   :straight nil
   :after tree-sitter tree-sitter-langs
