@@ -59,6 +59,12 @@
 
 (use-package diminish)
 
+(use-package exec-path-from-shell
+  :when (memq window-system '(mac ns x))
+  :custom (exec-path-from-shell-arguments '("-l"))
+  :config
+  (exec-path-from-shell-initialize))
+
 ;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies
 (use-package evil
   :custom
@@ -297,10 +303,21 @@
 (use-package evil-anzu)
 
 (use-package ace-window
-  ;; :custom
-  ;; (aw-leading-char-face '(:foreground "red" :height 4.0))
+  :custom
+  (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  :config
+  (set-face-attribute 'aw-leading-char-face nil :height 3.0)
   :general (:prefix-map 'evil-window-map
 			"w" 'ace-window))
+
+;; dashboard
+(use-package dashboard
+  :custom
+  (dashboard-set-footer nil)
+  (initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+  (dashboard-center-content t)
+  :config
+  (dashboard-setup-startup-hook))
 
 ;; themes
 (use-package doom-themes
@@ -316,7 +333,7 @@
   :diminish fira-code-mode
   :unless IS-MAC
   :custom
-  (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+"))
+  (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+" ">="))
   (fira-code-mode-enable-hex-literal nil)
   :hook prog-mode)
 
@@ -472,6 +489,15 @@
 
 (add-hook 'LaTeX-mode-hook 'my-latex-mode-setup)
 
+(use-package pdf-tools
+  :magic ("%PDF" . pdf-view-mode)
+  :config
+  (pdf-tools-install :no-query)
+  :general
+  (+local-leader-def :keymaps 'pdf-view-mode-map
+    "s" 'pdf-view-auto-slice-minor-mode))
+
+
 ;; vc-mode tweaks
 (setq vc-follow-symlinks t)
 
@@ -480,8 +506,8 @@
   (:prefix-map '+vc-map
 	       "g" 'magit-status)
   (+local-leader-def :keymaps 'with-editor-mode-map
-		"," 'with-editor-finish
-		"k" 'with-editor-cancel))
+    "," 'with-editor-finish
+    "k" 'with-editor-cancel))
 
 (use-package evil-magit
   :after magit)
@@ -490,7 +516,6 @@
 (use-package projectile
   :custom
   (projectile-completion-system 'default)
-  ;; (projectile-project-search-path '("~/src" "~/writing"))
   (projectile-auto-discovery t)
   :hook (after-init . projectile-mode)
   :general
