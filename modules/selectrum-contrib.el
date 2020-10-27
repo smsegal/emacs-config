@@ -1,8 +1,11 @@
+;;; selectrum-contrib.el -*- lexical-binding: t; -*-
+
 (require 'selectrum)
 (require 'cl-lib)
 
 (defvar selectrum-swiper-history nil "Submission history for `selectrum-swiper'.")
 (autoload 'selectrum-read "selectrum")
+
 (defun selectrum-swiper ()
   "Search for a matching line and jump to the beginning of its text.  Obeys narrowing."
   (interactive)
@@ -59,7 +62,7 @@
                                       :no-move-default-candidate t))
 
          (chosen-line-number (get-text-property 0 'line-num chosen-line)))
-    
+
     (push-mark (point) t)
     (forward-line (- chosen-line-number current-line-number))
     (beginning-of-line-text 1)
@@ -88,28 +91,47 @@
 (defun +yank-pop (&optional arg)
   "Call `yank-pop' with ARG when appropriate, or offer completion."
   (interactive "*P")
- (if arg (yank-pop arg)
-   (let* ((old-last-command last-command)
-          (selectrum-should-sort-p nil)
-          (enable-recursive-minibuffers t)
-          (text (completing-read
-                 "Yank: "
-                 (cl-remove-duplicates
-                  kill-ring :test #'string= :from-end t)
-                 nil t nil nil))
-          ;; Find `text' in `kill-ring'.
-          (pos (cl-position text kill-ring :test #'string=))
-          ;; Translate relative to `kill-ring-yank-pointer'.
-          (n (+ pos (length kill-ring-yank-pointer))))
-     (unless (string= text (current-kill n t))
-       (error "Could not setup for `current-kill'"))
-     ;; Restore `last-command' over Selectrum commands.
-     (setq last-command old-last-command)
-     ;; Delegate to `yank-pop' if appropriate or just insert.
-     (if (eq last-command 'yank)
-         (yank-pop n) (insert-for-yank text)))))
+  (if arg (yank-pop arg)
+    (let* ((old-last-command last-command)
+           (selectrum-should-sort-p nil)
+           (enable-recursive-minibuffers t)
+           (text (completing-read
+                  "Yank: "
+                  (cl-remove-duplicates
+                   kill-ring :test #'string= :from-end t)
+                  nil t nil nil))
+           ;; Find `text' in `kill-ring'.
+           (pos (cl-position text kill-ring :test #'string=))
+           ;; Translate relative to `kill-ring-yank-pointer'.
+           (n (+ pos (length kill-ring-yank-pointer))))
+      (unless (string= text (current-kill n t))
+	(error "Could not setup for `current-kill'"))
+      ;; Restore `last-command' over Selectrum commands.
+      (setq last-command old-last-command)
+      ;; Delegate to `yank-pop' if appropriate or just insert.
+      (if (eq last-command 'yank)
+          (yank-pop n) (insert-for-yank text)))))
 
+(require 'all-the-icons)
+
+;;;###autoload
+(defun +selectrum-candidate-highlight-with-icons-function (input candidates)
+  "Default value of `selectrum-highlight-candidates-function'.
+Highlight the substring match with
+`selectrum-primary-highlight'. INPUT is a string, CANDIDATES is a
+list of strings."
+  (let ((regexp (regexp-quote input)))
+    (save-match-data
+      (mapcar
+       (lambda (candidate)
+         (when (string-match regexp candidate)
+           (setq candidate (copy-sequence candidate))
+           (put-text-property
+            (match-beginning 0) (match-end 0)
+            'face 'selectrum-primary-highlight
+            candidate))
+         (concat (all-the-icons-icon-for-file candidate) candidate))
+       candidates))))
 
 
 (provide 'selectrum-contrib)
-

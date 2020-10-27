@@ -199,6 +199,9 @@
 (use-package selectrum-contrib
   :straight nil
   :load-path "modules/"
+  ;; :config
+  ;; (setq selectrum-highlight-candidates-function
+  ;; 	#'+selectrum-candidate-highlight-with-icons-function)
   :general
   (:prefix-map '+search-map
 	       "s" 'selectrum-swiper)
@@ -536,3 +539,7 @@
   :straight nil
   :after tree-sitter tree-sitter-langs
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+
+(use-package ssh-config-mode
+  :config
+  (add-to-list 'auto-mode-alist '("~/.ssh/config\\'" . ssh-config-mode)))
