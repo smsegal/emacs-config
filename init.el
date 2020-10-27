@@ -336,7 +336,7 @@
   :diminish fira-code-mode
   :unless IS-MAC
   :custom
-  (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+" ">="))
+  (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+" ">=" "*"))
   (fira-code-mode-enable-hex-literal nil)
   :hook prog-mode)
 
