@@ -134,4 +134,76 @@ list of strings."
        candidates))))
 
 
+(eval-and-compile
+  (require 'dom)
+  (require 'xdg))
+
+(declare-function dom-attr "dom")
+(declare-function dom-by-tag "dom")
+(defvar recentf-list)
+
+(defun selectrum--recentf-get-xdg ()
+  (let ((file-of-recent-files
+         (expand-file-name "recently-used.xbel" (xdg-data-home))))
+    (if (not (file-readable-p file-of-recent-files))
+        (user-error "List of XDG recent files not found.")
+      (delq
+       nil
+       (mapcar
+        (lambda (bookmark-node)
+          (let ((local-path
+                 (string-remove-prefix "file://"
+                                       (dom-attr bookmark-node
+                                                 'href))))
+            (when local-path
+              (let ((full-file-name
+                     (decode-coding-string
+                      (url-unhex-string local-path)
+                      'utf-8)))
+                (when (file-exists-p full-file-name)
+                  full-file-name)))))
+        (nreverse (dom-by-tag (with-temp-buffer
+                                (insert-file-contents file-of-recent-files)
+                                (libxml-parse-xml-region (point-min)
+                                                         (point-max)))
+                              'bookmark)))))))
+
+(defun selectrum-recentf ()
+  "Open a recently used file (including XDG)."
+  (interactive)
+  (let* ((selectrum-should-sort-p nil)
+         (all-recent-files
+          (append (mapcar #'substring-no-properties
+                          recentf-list)
+                  (seq-filter #'recentf-include-p
+                              (selectrum--recentf-get-xdg))))
+         (files-with-times
+          (mapcar (lambda (file)
+                    (cons file
+                          ;; Use modification time, since getting file access time
+                          ;; seems to count as accessing the file, ruining future uses.
+                          (file-attribute-modification-time (file-attributes file))))
+                  all-recent-files))
+         (sorted-files
+          (delete-dups (sort files-with-times
+                             (lambda (file1 file2)
+                               ;; Want existing most recent local files first.
+                               (cond ((or (not (file-exists-p (car file1)))
+                                          (file-remote-p (car file1)))
+                                      nil)
+                                     ((or (not (file-exists-p (car file2)))
+                                          (file-remote-p (car file2)))
+                                      t)
+                                     (t (time-less-p (cdr file2)
+                                                     (cdr file1))))))))
+         (propertized-files (mapcar (lambda (f)
+                                      (propertize (abbreviate-file-name (car f))
+                                                  'selectrum-candidate-display-right-margin
+                                                  (propertize (current-time-string (cdr f))
+                                                              'face 'completions-annotations)))
+                                    sorted-files)))
+    (find-file (completing-read "Select recent file: " propertized-files
+                                nil t nil 'file-name-history
+                                (car propertized-files)))))
+
 (provide 'selectrum-contrib)

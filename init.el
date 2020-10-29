@@ -59,11 +59,12 @@
 
 (use-package diminish)
 
-(use-package exec-path-from-shell
-  :when (memq window-system '(mac ns x))
-  :custom (exec-path-from-shell-arguments '("-l"))
-  :config
-  (exec-path-from-shell-initialize))
+;; (use-package exec-path-from-shell
+;;   :when (memq window-system '(mac ns x))
+;;   ;; :custom (exec-path-from-shell-arguments '("-l"))
+;;   :config
+;;   (setq exec-path-from-shell-variables '("PATH"))
+;;   (exec-path-from-shell-initialize))
 
 ;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies
 (use-package evil
@@ -73,7 +74,6 @@
   (evil-respect-visual-line-mode t)
   :config
   (evil-mode 1))
-
 
 (use-package undo-tree
   :custom (evil-undo-system 'undo-tree)
@@ -115,20 +115,25 @@
   :keymaps 'override
   :states '(normal visual))
 
+
+(defun +find-user-init ()
+  (interactive)
+  (find-file user-emacs-directory))
+
 (general-def :prefix-map '+file-map
-  "f" 'find-file
-  "s" 'save-buffer
-  "r" 'recentf-open-files+)
+  "f" #'find-file
+  "s" #'save-buffer
+  "p" #'+find-user-init)
 
 (general-def :prefix-map '+code-map
   "e" 'eval-buffer)
 
 (general-def :prefix-map '+quit-restart-map
-  "q" 'confirm-kill-emacs
+  "q" 'save-buffers-kill-emacs
   "r" 'restart-emacs)
 
 (general-def :prefix-map '+buffer-map
-  "b" 'switch-to-buffer
+  ;; "b" 'switch-to-buffer
   "p" 'previous-buffer
   "n" 'next-buffer
   "r" 'revert-buffer)
@@ -191,10 +196,31 @@
 
 (use-package prescient)
 (use-package selectrum-prescient
+  :disabled
   :after prescient
   :init
   (selectrum-prescient-mode +1)
   (prescient-persist-mode +1))
+
+(use-package orderless
+  :after selectrum
+  :custom
+  (completion-styles '(orderless))
+  :config
+  (setq selectrum-refine-candidates-function #'orderless-filter)
+  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
+  ;; If you also configure `completion-styles` for orderless you might want to use the
+  ;; following advice because orderless isn't well suited for initial gathering of
+  ;; candidates by completion in region.
+  (advice-add #'completion--category-override :filter-return
+              (defun completion-in-region-style-setup+ (res)
+		"Fallback to default styles for region completions with orderless."
+		(or res
+                    ;; Don't use orderless for initial candidate gathering.
+                    (and completion-in-region-mode-predicate
+			 (not (minibufferp))
+			 (equal '(orderless) completion-styles)
+			 '(basic partial-completion emacs22))))))
 
 (use-package selectrum-contrib
   :straight nil
@@ -203,6 +229,8 @@
   ;; (setq selectrum-highlight-candidates-function
   ;; 	#'+selectrum-candidate-highlight-with-icons-function)
   :general
+  (:prefix-map '+file-map
+	       "r" 'selectrum-recentf)
   (:prefix-map '+search-map
 	       "s" 'selectrum-swiper)
   (:prefix-map '+insert-map
@@ -212,6 +240,17 @@
   :general
   (:prefix-map '+search-map
 	       "d" #'deadgrep))
+
+(use-package bufler
+  :config (bufler-mode)
+  :general
+  (:keymaps 'bufler-list-mode-map
+	   :states '(normal visual)
+	   "RET" #'bufler-list-buffer-switch
+	   "q" #'quit-window)
+  (:prefix-map '+buffer-map
+	       "b" #'bufler-switch-buffer
+	       "B" #'bufler-list))
 
 ;; code formatting
 (use-package apheleia
@@ -515,6 +554,9 @@
 (use-package evil-magit
   :after magit)
 
+(use-package git-gutter
+  :config (global-git-gutter-mode +1))
+
 ;; projectile
 (use-package projectile
   :custom
@@ -543,3 +585,26 @@
 (use-package ssh-config-mode
   :config
   (add-to-list 'auto-mode-alist '("~/.ssh/config\\'" . ssh-config-mode)))
+
+;; vterm
+(use-package vterm)
+(use-package vterm-toggle
+  :after vterm
+  :general
+  (+leader-def
+    "'" #'vterm-toggle)
+  (:prefix-map '+open-map
+	       "t" #'vterm-toggle
+	       "T" #'vterm-other-window)
+  :config
+  (setq vterm-toggle-fullscreen-p nil)
+  (add-to-list 'display-buffer-alist
+               '((lambda (bufname _)
+		   (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+                 (display-buffer-reuse-window display-buffer-in-direction)
+                 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+                 (direction . bottom)
+                 (dedicated . t) ;dedicated is supported in emacs27
+                 (reusable-frames . visible)
+                 (window-height . 0.3))))
+

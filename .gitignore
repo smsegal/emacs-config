@@ -56,3 +56,4 @@ flycheck_*.el
 
 straight
 custom.el
+eln-cache/
