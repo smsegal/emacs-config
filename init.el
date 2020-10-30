@@ -120,6 +120,13 @@
   (interactive)
   (find-file user-emacs-directory))
 
+(defadvice find-file (after find-file-sudo activate)
+  "Find file as root if necessary."
+  (unless (and buffer-file-name
+               (file-writable-p buffer-file-name))
+    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+
+
 (general-def :prefix-map '+file-map
   "f" #'find-file
   "s" #'save-buffer
@@ -136,7 +143,8 @@
   ;; "b" 'switch-to-buffer
   "p" 'previous-buffer
   "n" 'next-buffer
-  "r" 'revert-buffer)
+  "r" 'revert-buffer
+  "k" 'kill-this-buffer)
 
 (general-def :prefix-map '+vc-map)
 
@@ -241,13 +249,29 @@
   (:prefix-map '+search-map
 	       "d" #'deadgrep))
 
+(use-package flyspell
+  :straight nil
+  :hook ((org-mode-hook
+          markdown-mode-hook
+          TeX-mode-hook
+          rst-mode-hook
+          mu4e-compose-mode-hook
+          message-mode-hook
+          git-commit-mode-hook) . flyspell-mode))
+(use-package flyspell-correct
+  :custom (flyspell-correct-interface #'flyspell-correct-dummy)
+  :general
+  (general-nvmap
+    "z"))
+
 (use-package bufler
+  :diminish bufler-mode
   :config (bufler-mode)
   :general
   (:keymaps 'bufler-list-mode-map
-	   :states '(normal visual)
-	   "RET" #'bufler-list-buffer-switch
-	   "q" #'quit-window)
+	    :states '(normal visual)
+	    "RET" #'bufler-list-buffer-switch
+	    "q" #'quit-window)
   (:prefix-map '+buffer-map
 	       "b" #'bufler-switch-buffer
 	       "B" #'bufler-list))
@@ -260,10 +284,10 @@
   (:prefix-map '+code-map
 	       "f" 'apheleia-format-buffer))
 
-(use-package format-all
-  :general
-  (:prefix-map '+code-map
-	       "f" 'format-all-buffer))
+(use-package format-all)
+;; :general
+;; (:prefix-map '+code-map
+;; 	       "f" 'format-all-buffer))
 
 ;; buffers
 (defalias 'list-buffers 'ibuffer-other-window)
@@ -367,7 +391,7 @@
   (doom-themes-enable-bold t)
   (doom-themes-enable-italic t)
   :config
-  (load-theme 'doom-old-hope)
+  (load-theme 'doom-wilmersdorf)
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
@@ -410,9 +434,6 @@
 ;; visual fill column
 (use-package visual-fill-column
   :hook (visual-line-mode . visual-fill-column-mode)
-  :custom
-  (visual-fill-column-width 100)
-  (visual-fill-column-center-text t)
   :commands visual-fill-column-mode)
 
 ;;autocomplete
@@ -434,16 +455,35 @@
   :hook (after-init . global-flycheck-mode)
   :general
   (:prefix-map '+code-map
-	       "x" 'flycheck-list-errors))
+	       "x" '(flycheck-list-errors :which-key "show errors")))
 
 ;; lsp-mode
 (use-package lsp-mode
-  :init
-  (setq lsp-keymap-prefix "C-l")
+  :commands (lsp lsp-deferred)
+  :custom
+  (lsp-keymap-prefix "C-l")
   :hook (((python-mode TeX-mode LaTeX-mode) . lsp-deferred)
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands (lsp lsp-deferred))
+         (lsp-mode . lsp-enable-which-key-integration)))
 (use-package lsp-ui :commands lsp-ui-mode)
+
+(defun +format-dwim ()
+  (interactive)
+  (if lsp-mode
+      (if (eq evil-state "visual")
+	  (lsp-format-region)
+	(lsp-format-buffer))
+    (format-all-buffer)))
+
+(general-def :prefix-map '+code-map
+  "f" #'+format-dwim)
+
+
+;; python tweaks
+(use-package python
+  :straight nil
+  :custom
+  (python-shell-interpreter "ipython")
+  (python-shell-interpreter-args "--simple-prompt -i"))
 
 ;; utilities
 (use-package restart-emacs
@@ -503,16 +543,16 @@
 	 (LaTeX-mode . reftex-mode))
   :init
   (setq reftex-cite-format
-        '((?a . "\\autocite[]{%l}")
-          (?b . "\\blockcquote[]{%l}{}")
-          (?c . "\\cite[]{%l}")
-          (?f . "\\footcite[]{%l}")
-          (?n . "\\nocite{%l}")
-          (?p . "\\parencite[]{%l}")
-          (?s . "\\smartcite[]{%l}")
-          (?t . "\\textcite[]{%l}"))
-        reftex-plug-into-AUCTeX t
-        reftex-toc-split-windows-fraction 0.3))
+	'((?a . "\\autocite[]{%l}")
+	  (?b . "\\blockcquote[]{%l}{}")
+	  (?c . "\\cite[]{%l}")
+	  (?f . "\\footcite[]{%l}")
+	  (?n . "\\nocite{%l}")
+	  (?p . "\\parencite[]{%l}")
+	  (?s . "\\smartcite[]{%l}")
+	  (?t . "\\textcite[]{%l}"))
+	reftex-plug-into-AUCTeX t
+	reftex-toc-split-windows-fraction 0.3))
 
 (use-package company-auctex
   :init (company-auctex-init))
@@ -530,6 +570,22 @@
 		      company-backends)))
 
 (add-hook 'LaTeX-mode-hook 'my-latex-mode-setup)
+
+(defun +latex-smartparens ()
+  (require 'smartparens)
+  (set (make-variable-buffer-local 'TeX-electric-math) (cons "\\(" "\\)"))
+
+  ;; smaller version of writeroom mode without text expansion and buffer stuff
+  (set (make-variable-buffer-local 'visual-fill-column-center-text) t)
+  (set (make-variable-buffer-local 'visual-fill-column-width) 100)
+
+  ;; Smartparens for whatever reason treats the insertion of dollar signs and quotes as single characters.
+  (setq sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands))
+  (setq sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands))
+  ;; After selecting a region, we can wrap it in parenthesis or quotes.
+  (setq sp-autowrap-region t))
+
+(add-hook 'LaTeX-mode-hook '+latex-smartparens)
 
 (use-package pdf-tools
   :magic ("%PDF" . pdf-view-mode)
@@ -599,12 +655,11 @@
   :config
   (setq vterm-toggle-fullscreen-p nil)
   (add-to-list 'display-buffer-alist
-               '((lambda (bufname _)
+	       '((lambda (bufname _)
 		   (with-current-buffer bufname (equal major-mode 'vterm-mode)))
-                 (display-buffer-reuse-window display-buffer-in-direction)
-                 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-                 (direction . bottom)
-                 (dedicated . t) ;dedicated is supported in emacs27
-                 (reusable-frames . visible)
-                 (window-height . 0.3))))
-
+		 (display-buffer-reuse-window display-buffer-in-direction)
+		 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+		 (direction . bottom)
+		 (dedicated . t) ;dedicated is supported in emacs27
+		 (reusable-frames . visible)
+		 (window-height . 0.3))))
