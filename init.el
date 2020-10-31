@@ -259,10 +259,10 @@
           message-mode-hook
           git-commit-mode-hook) . flyspell-mode))
 (use-package flyspell-correct
-  :custom (flyspell-correct-interface #'flyspell-correct-dummy)
-  :general
-  (general-nvmap
-    "z"))
+  :custom (flyspell-correct-interface #'flyspell-correct-dummy))
+;; :general
+;; (general-nvmap
+;;   "z"))
 
 (use-package bufler
   :diminish bufler-mode
@@ -275,6 +275,9 @@
   (:prefix-map '+buffer-map
 	       "b" #'bufler-switch-buffer
 	       "B" #'bufler-list))
+
+(use-package burly
+  :straight (:host github :repo "alphapapa/burly.el"))
 
 ;; code formatting
 (use-package apheleia
@@ -468,7 +471,7 @@
 
 (defun +format-dwim ()
   (interactive)
-  (if lsp-mode
+  (if (and (fboundp 'lsp-mode) lsp-mode)
       (if (eq evil-state "visual")
 	  (lsp-format-region)
 	(lsp-format-buffer))
@@ -477,13 +480,16 @@
 (general-def :prefix-map '+code-map
   "f" #'+format-dwim)
 
-
 ;; python tweaks
 (use-package python
   :straight nil
   :custom
-  (python-shell-interpreter "ipython")
+  (python-shell-interpreter "jupyter")
   (python-shell-interpreter-args "--simple-prompt -i"))
+
+(use-package jupyter
+  :straight (:no-native-compile t)
+  :commands jupyter-connect-repl jupyter-run-repl)
 
 ;; utilities
 (use-package restart-emacs
@@ -518,18 +524,56 @@
 ;; latex
 
 (use-package tex-site
+  :after smartparens
   :straight auctex
-  :hook (TeX-mode . visual-line-mode)
+  :hook ((TeX-mode . +latex-setup)
+	 (TeX-mode . +latex-smartparens)
+	 (TeX-mode . TeX-fold-mode))
   :mode ("\\.tex\\'" . LaTeX-mode)
+  :custom
+  (TeX-master t)
+  (TeX-parse-self t) ;; parse on load
+  (TeX-auto-save t)  ;; parse on save
+  ;; automatically insert braces after sub/superscript in math mode
+  (TeX-electric-sub-and-superscript t)
+  (bibtex-dialect 'biblatex)
+  (bibtex-align-at-equal-sign t)
+  (bibtex-text-indentation 20)
+  (TeX-auto-fold t)
   :init
-  (setq-default TeX-master t)
-  (setq TeX-parse-self t ;; parse on load
-	TeX-auto-save t  ;; parse on save
-	;; automatically insert braces after sub/superscript in math mode
-	TeX-electric-sub-and-superscript t
-	bibtex-dialect 'biblatex
-	bibtex-align-at-equal-sign t
-	bibtex-text-indentation 20))
+  (defun +latex-setup ()
+    (turn-on-visual-line-mode)
+
+    (unless word-wrap
+      (toggle-word-wrap))
+
+    (TeX-fold-buffer)
+
+    (setq-local visual-fill-column-center-text t
+		visual-fill-column-width 100
+		company-backends (append '(company-reftex-citations
+					   company-reftex-labels
+					   company-math-symbols-latex
+					   company-math-symbols-unicode
+					   company-latex-commands)
+					 company-backends)))
+  (defun +latex-smartparens ()
+    (setq-local  TeX-electric-math (cons "\\(" "\\)")
+		 ;; Smartparens for whatever reason treats the
+		 ;; insertion of dollar signs and quotes as single characters.
+		 sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands)
+		 sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands)
+		 ;; After selecting a region, we can wrap it in parenthesis or quotes.
+		 sp-autowrap-region t)))
+
+(use-package bibtex
+  :straight nil
+  :hook (bibtex-mode . +bibtex-setup)
+  :init
+  (defun +bibtex-setup ()
+    (turn-on-visual-line-mode)
+    (setq-local visual-fill-column-center-text t
+		visual-fill-column-width 100)))
 
 (use-package auctex-latexmk
   :custom
@@ -560,32 +604,6 @@
 (use-package company-math)
 (use-package company-bibtex)
 
-(defun my-latex-mode-setup ()
-  (setq-local company-backends
-	      (append '(company-reftex-citations
-			company-reftex-labels
-			company-math-symbols-latex
-			company-math-symbols-unicode
-			company-latex-commands)
-		      company-backends)))
-
-(add-hook 'LaTeX-mode-hook 'my-latex-mode-setup)
-
-(defun +latex-smartparens ()
-  (require 'smartparens)
-  (set (make-variable-buffer-local 'TeX-electric-math) (cons "\\(" "\\)"))
-
-  ;; smaller version of writeroom mode without text expansion and buffer stuff
-  (set (make-variable-buffer-local 'visual-fill-column-center-text) t)
-  (set (make-variable-buffer-local 'visual-fill-column-width) 100)
-
-  ;; Smartparens for whatever reason treats the insertion of dollar signs and quotes as single characters.
-  (setq sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands))
-  (setq sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands))
-  ;; After selecting a region, we can wrap it in parenthesis or quotes.
-  (setq sp-autowrap-region t))
-
-(add-hook 'LaTeX-mode-hook '+latex-smartparens)
 
 (use-package pdf-tools
   :magic ("%PDF" . pdf-view-mode)
