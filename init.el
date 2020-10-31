@@ -484,8 +484,16 @@
 (use-package python
   :straight nil
   :custom
-  (python-shell-interpreter "jupyter")
+  (python-shell-interpreter "ipython")
   (python-shell-interpreter-args "--simple-prompt -i"))
+
+(use-package pyimport
+  :general
+  (+local-leader-def
+    :keymaps 'python-mode-map
+    "i" '(nil :which-key "imports")
+    "iu" 'pyimport-remove-unused
+    "ii" 'pyimport-insert-missing))
 
 (use-package jupyter
   :straight (:no-native-compile t)
