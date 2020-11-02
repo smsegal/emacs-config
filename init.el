@@ -14,7 +14,9 @@
   (load bootstrap-file nil 'nomessage))
 
 (straight-use-package 'use-package)
-(setq straight-use-package-by-default t)
+(setq straight-use-package-by-default t
+      straight-fix-flycheck t
+      straight-check-for-modifications '(watch-files find-when-checking))
 
 ;; macos needs a few different tweaks
 (defvar IS-MAC (eq system-type 'darwin))
@@ -77,7 +79,7 @@
 
 (use-package undo-tree
   :custom (evil-undo-system 'undo-tree)
-  :config (global-undo-tree-mode))
+  :config (global-undo-tree-mode +1))
 
 (use-package evil-collection
   :after evil
@@ -101,6 +103,15 @@
 ;; general keybindings
 (use-package general
   :commands general-define-key general-def general-swap-key general-create-definer
+  :custom
+  (general-override-states '(insert
+                             emacs
+                             hybrid
+                             normal
+                             visual
+                             motion
+                             operator
+                             replace))
   :init (general-evil-setup))
 
 ;; leader key setup
@@ -116,21 +127,9 @@
   :states '(normal visual))
 
 
-(defun +find-user-init ()
-  (interactive)
-  (find-file user-emacs-directory))
-
-(defadvice find-file (after find-file-sudo activate)
-  "Find file as root if necessary."
-  (unless (and buffer-file-name
-               (file-writable-p buffer-file-name))
-    (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
-
-
 (general-def :prefix-map '+file-map
   "f" #'find-file
-  "s" #'save-buffer
-  "p" #'+find-user-init)
+  "s" #'save-buffer)
 
 (general-def :prefix-map '+code-map
   "e" 'eval-buffer)
@@ -191,6 +190,25 @@
     "gl" 'evil-lion-left
     "gL" 'evil-lion-right))
 
+(use-package icomplete-vertical
+  :disabled
+  :demand t
+  :custom
+  (completion-styles '(partial-completion substring))
+  (completion-category-overrides '((file (styles basic substring))))
+  (read-file-name-completion-ignore-case t)
+  (read-buffer-completion-ignore-case t)
+  (completion-ignore-case t)
+  :config
+  (icomplete-mode)
+  (icomplete-vertical-mode)
+  :general (:keymaps icomplete-minibuffer-map
+		     "<down>"  #'icomplete-forward-completions
+		     "C-j"     #'icomplete-forward-completions
+		     "<up>"    #'icomplete-backward-completions
+		     "C-k"     #'icomplete-backward-completions
+		     "C-v"     #'icomplete-vertical-toggle))
+
 ;; incremental narrowing a la ivy
 (use-package selectrum
   :commands selectrum-next-candidate selectrum-previous-candidate
@@ -204,13 +222,16 @@
 
 (use-package prescient)
 (use-package selectrum-prescient
-  :disabled
-  :after prescient
+  ;; :disabled
+  :after selectrum prescient
   :init
   (selectrum-prescient-mode +1)
   (prescient-persist-mode +1))
+(use-package company-prescient
+  :hook (company-mode . company-prescient-mode))
 
 (use-package orderless
+  :disabled
   :after selectrum
   :custom
   (completion-styles '(orderless))
@@ -232,6 +253,7 @@
 
 (use-package selectrum-contrib
   :straight nil
+  ;; :after selectrum
   :load-path "modules/"
   ;; :config
   ;; (setq selectrum-highlight-candidates-function
@@ -260,9 +282,19 @@
           git-commit-mode-hook) . flyspell-mode))
 (use-package flyspell-correct
   :custom (flyspell-correct-interface #'flyspell-correct-dummy))
-;; :general
-;; (general-nvmap
-;;   "z"))
+
+;; crux useful commands
+(use-package crux
+  :hook (after-init . crux-reopen-as-root-mode)
+  :general
+  (:prefix-map '+file-map
+	       "p" #'crux-find-user-init-file
+	       "R" #'crux-rename-file-and-buffer))
+
+(use-package super-save
+  :custom (super-save-auto-save-when-idle t)
+  :config
+  (super-save-mode +1))
 
 (use-package bufler
   :diminish bufler-mode
@@ -377,7 +409,8 @@
   :config
   (set-face-attribute 'aw-leading-char-face nil :height 3.0)
   :general (:prefix-map 'evil-window-map
-			"w" 'ace-window))
+			"w" #'ace-window
+			"W" #'ace-swap-window))
 
 ;; dashboard
 (use-package dashboard
@@ -495,9 +528,26 @@
     "iu" 'pyimport-remove-unused
     "ii" 'pyimport-insert-missing))
 
+;; this is great for org etc, but for existing notebooks is lacking
 (use-package jupyter
   :straight (:no-native-compile t)
   :commands jupyter-connect-repl jupyter-run-repl)
+
+(use-package emacs-ipython-notebook
+  :straight ein
+  :hook (ein:notebook-mode . evil-normalize-keymaps)
+  :custom
+  (ein:output-area-inlined-images t)
+  (ein:polymode t)
+  :commands ein:run ein:login
+  :init
+  (evil-define-minor-mode-key mode 'ein:notebook-mode
+    (kbd "<C-return>") 'ein:worksheet-execute-cell-km
+    (kbd "<S-return>") 'ein:worksheet-execute-cell-and-goto-next-km)
+  :general
+  (:keymaps 'ein:notebook-mode-map
+	    "C-j" #'ein:worksheet-goto-next-input-km
+	    "C-k" #'ein:worksheet-goto-prev-input-km))
 
 ;; utilities
 (use-package restart-emacs
@@ -531,6 +581,11 @@
 
 ;; latex
 
+(use-package company-auctex)
+(use-package company-reftex)
+(use-package company-math)
+(use-package company-bibtex)
+
 (use-package tex-site
   :after smartparens
   :straight auctex
@@ -551,15 +606,18 @@
   :init
   (defun +latex-setup ()
     (turn-on-visual-line-mode)
-
     (unless word-wrap
       (toggle-word-wrap))
 
     (TeX-fold-buffer)
-
     (setq-local visual-fill-column-center-text t
 		visual-fill-column-width 100
-		company-backends (append '(company-reftex-citations
+		company-backends (append '(company-auctex-labels
+					   company-auctex-bibs
+					   company-auctex-macros
+					   company-auctex-symbols
+					   company-auctex-environments
+					   company-reftex-citations
 					   company-reftex-labels
 					   company-math-symbols-latex
 					   company-math-symbols-unicode
@@ -606,12 +664,6 @@
 	reftex-plug-into-AUCTeX t
 	reftex-toc-split-windows-fraction 0.3))
 
-(use-package company-auctex
-  :init (company-auctex-init))
-(use-package company-reftex)
-(use-package company-math)
-(use-package company-bibtex)
-
 
 (use-package pdf-tools
   :magic ("%PDF" . pdf-view-mode)
@@ -621,11 +673,12 @@
   (+local-leader-def :keymaps 'pdf-view-mode-map
     "s" 'pdf-view-auto-slice-minor-mode))
 
-
 ;; vc-mode tweaks
 (setq vc-follow-symlinks t)
 
 (use-package magit
+  :custom
+  (magit-diff-refine-hunk 'all)
   :general
   (:prefix-map '+vc-map
 	       "g" 'magit-status)
@@ -649,10 +702,13 @@
   (+leader-def
     "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
 
-;; direnv support
-(use-package envrc
-  :diminish envrc-mode
-  :init (envrc-global-mode +1))
+;; Org Mode
+(use-package org)
+(use-package org-plus-contrib)
+(use-package org-superstar
+  :custom (org-superstar-special-todo-items t)
+  :hook (org-mode . org-superstar-mode))
+
 
 ;; languages + highlighting
 (use-package tree-sitter
@@ -689,3 +745,8 @@
 		 (dedicated . t) ;dedicated is supported in emacs27
 		 (reusable-frames . visible)
 		 (window-height . 0.3))))
+
+;; direnv support
+(use-package envrc
+  :diminish envrc-mode
+  :init (envrc-global-mode +1))
