@@ -289,12 +289,39 @@
   :general
   (:prefix-map '+file-map
 	       "p" #'crux-find-user-init-file
-	       "R" #'crux-rename-file-and-buffer))
+	       "R" #'crux-rename-file-and-buffer
+	       "w" #'crux-open-with))
 
 (use-package super-save
   :custom (super-save-auto-save-when-idle t)
   :config
   (super-save-mode +1))
+
+(use-package +copy-file-name
+  :straight nil
+  :init
+  (defun +copy-file-name-to-clipboard ()
+    "Copy the current buffer file name to the clipboard."
+    (interactive)
+    (let ((filename (if (equal major-mode 'dired-mode)
+			default-directory
+                      (buffer-file-name))))
+      (when filename
+	(kill-new filename)
+	(message "Copied buffer file name '%s' to the clipboard." filename))))
+  :general
+  (:prefix-map '+file-map
+	       "C" '(+copy-file-name-to-clipboard :which-key "copy filename")))
+
+(use-package rotate-text
+  :straight (:host github :repo "debug-ito/rotate-text.el")
+  :config
+  (add-to-list 'rotate-text-words '("true" "false"))
+  (add-to-list 'rotate-text-symbols '("+" "-"))
+  :general
+  (general-nmap
+    "]r" #'rotate-text
+    "[r" #'rotate-text-backward))
 
 (use-package bufler
   :diminish bufler-mode
@@ -442,6 +469,9 @@
 (use-package evil-goggles
   :hook (after-init . evil-goggles-mode)
   :config (evil-goggles-use-diff-faces))
+
+(use-package evil-exchange
+  :config (evil-exchange-install))
 
 (use-package display-line-numbers
   :disabled
@@ -664,14 +694,21 @@
 	reftex-plug-into-AUCTeX t
 	reftex-toc-split-windows-fraction 0.3))
 
-
 (use-package pdf-tools
+  :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
   :magic ("%PDF" . pdf-view-mode)
+  :hook (pdf-view-mode . auto-revert-mode)
   :config
   (pdf-tools-install :no-query)
+  (setq-default pdf-view-display-size 'fit-page)
+  ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
+  (setq pdf-view-use-scaling t
+        pdf-view-use-imagemagick nil)
   :general
   (+local-leader-def :keymaps 'pdf-view-mode-map
-    "s" 'pdf-view-auto-slice-minor-mode))
+    "s" 'pdf-view-auto-slice-minor-mode)
+  (:keymaps 'pdf-view-mode-map
+	    "q" #'kill-current-buffer))
 
 ;; vc-mode tweaks
 (setq vc-follow-symlinks t)
@@ -689,8 +726,16 @@
 (use-package evil-magit
   :after magit)
 
+(use-package magit-todos
+  :after magit
+  :config (magit-todos-mode))
+
 (use-package git-gutter
   :config (global-git-gutter-mode +1))
+
+;; TODO: needs evil keybindings
+(use-package git-timemachine
+  :commands git-timemachine)
 
 ;; projectile
 (use-package projectile
