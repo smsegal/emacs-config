@@ -18,7 +18,7 @@
       straight-fix-flycheck t
       straight-check-for-modifications '(watch-files find-when-checking))
 
-;; macos needs a few different tweaks
+;; macos needs a few different tweaks sjs
 (defvar IS-MAC (eq system-type 'darwin))
 
 ;; garbage collection hacks
@@ -68,7 +68,7 @@
 ;;   (setq exec-path-from-shell-variables '("PATH"))
 ;;   (exec-path-from-shell-initialize))
 
-;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies
+;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies)
 (use-package evil
   :custom
   (evil-want-integration t)
@@ -132,7 +132,9 @@
   "s" #'save-buffer)
 
 (general-def :prefix-map '+code-map
-  "e" 'eval-buffer)
+  "e" #'eval-buffer
+  "c" #'compile
+  "m" #'recompile)
 
 (general-def :prefix-map '+quit-restart-map
   "q" 'save-buffers-kill-emacs
@@ -273,15 +275,77 @@
 
 (use-package flyspell
   :straight nil
-  :hook ((org-mode-hook
-          markdown-mode-hook
-          TeX-mode-hook
-          rst-mode-hook
-          mu4e-compose-mode-hook
-          message-mode-hook
-          git-commit-mode-hook) . flyspell-mode))
+  :custom
+  (flyspell-issue-welcome-flag nil)
+  ;; Significantly speeds up flyspell, which would otherwise print
+  ;; messages for every word when checking the entire buffer
+  (flyspell-issue-message-flag nil)
+  (ispell-program-name "enchant-2") ;; new spellcheck engine
+  (ispell-dictionary "en_CA")
+  :ghook
+  ('(org-mode-hook
+     markdown-mode-hook
+     TeX-mode-hook
+     rst-mode-hook
+     mu4e-compose-mode-hook
+     message-mode-hook
+     git-commit-mode-hook) #'flyspell-mode)
+  ('prog-mode-hook #'flyspell-prog-mode))
+
 (use-package flyspell-correct
-  :custom (flyspell-correct-interface #'flyspell-correct-dummy))
+  :after flyspell
+  :commands flyspell-correct-previous
+  :general
+  ([remap ispell-word] #'flyspell-correct-wrapper)
+  (general-nvmap
+    "zg" #'+spell/add-word)
+  :config
+  (defun +spell/add-word (word &optional scope)
+    "Add WORD to your personal dictionary, within SCOPE.
+SCOPE can be `buffer' or `session' to exclude words only from the current buffer
+or session. Otherwise, the addition is permanent."
+    (interactive
+     (list (progn (require 'flyspell)
+                  (car (flyspell-get-word)))
+           (cond ((equal current-prefix-arg '(16))
+                  'session)
+		 ((equal current-prefix-arg '(4))
+                  'buffer))))
+    (require 'flyspell)
+    (cond
+     ((null scope)
+      (ispell-send-string (concat "*" word "\n"))
+      (ispell-send-string "#\n")
+      (flyspell-unhighlight-at (point))
+      (setq ispell-pdict-modified-p '(t)))
+     ((memq scope '(buffer session))
+      (ispell-send-string (concat "@" word "\n"))
+      (add-to-list 'ispell-buffer-session-localwords word)
+      (or ispell-buffer-local-name ; session localwords might conflict
+          (setq ispell-buffer-local-name (buffer-name)))
+      (flyspell-unhighlight-at (point))
+      (if (null ispell-pdict-modified-p)
+          (setq ispell-pdict-modified-p
+		(list ispell-pdict-modified-p)))
+      (if (eq replace 'buffer)
+          (ispell-add-per-file-word-list word))))
+    (ispell-pdict-save t))
+  (require 'flyspell-correct-popup nil t)
+  (define-key 'popup-menu-keymap [escape] #'keyboard-quit))
+
+(use-package flyspell-correct-popup
+  :after flyspell-correct
+  :custom
+  (flyspell-correct-interface #'flyspell-correct-popup)
+  :general (:keymaps 'popup-menu-keymap [escape] #'keyboard-quit))
+
+(use-package flyspell-lazy
+  :disabled
+  :after flyspell
+  :config
+  (setq flyspell-lazy-idle-seconds 1
+	flyspell-lazy-window-idle-seconds 3)
+  (flyspell-lazy-mode +1))
 
 ;; crux useful commands
 (use-package crux
@@ -289,7 +353,8 @@
   :general
   (:prefix-map '+file-map
 	       "p" #'crux-find-user-init-file
-	       "R" #'crux-rename-file-and-buffer
+	       "R" #'crux-rename-file-and-buffer)
+  (:prefix-map '+open-map
 	       "w" #'crux-open-with))
 
 (use-package super-save
@@ -384,7 +449,8 @@
       window-divider-default-bottom-width 1)
 (window-divider-mode +1)
 
-(set-fringe-style 1)
+(when (fboundp 'set-fringe-style)
+  (set-fringe-style 1))
 
 (setq menu-bar-mode   nil
       tool-bar-mode   nil
@@ -607,7 +673,8 @@
   (:prefix-map 'help-map
 	       "f" #'helpful-callable
 	       "v" #'helpful-variable
-	       "k" #'helpful-key))
+	       "k" #'helpful-key
+	       "h" #'helpful-at-point))
 
 ;; latex
 
@@ -633,165 +700,168 @@
   (bibtex-align-at-equal-sign t)
   (bibtex-text-indentation 20)
   (TeX-auto-fold t)
-  :init
-  (defun +latex-setup ()
-    (turn-on-visual-line-mode)
-    (unless word-wrap
-      (toggle-word-wrap))
+  :general (:keymaps 'TeX-mode-map
+		     [remap compile] #'TeX-command-master
+		     [remap recompile] (lambda () (TeX-command-master +1))
+		     :init
+		     (defun +latex-setup ()
+		       (turn-on-visual-line-mode)
+		       (unless word-wrap
+			 (toggle-word-wrap))
 
-    (TeX-fold-buffer)
-    (setq-local visual-fill-column-center-text t
-		visual-fill-column-width 100
-		company-backends (append '(company-auctex-labels
-					   company-auctex-bibs
-					   company-auctex-macros
-					   company-auctex-symbols
-					   company-auctex-environments
-					   company-reftex-citations
-					   company-reftex-labels
-					   company-math-symbols-latex
-					   company-math-symbols-unicode
-					   company-latex-commands)
-					 company-backends)))
-  (defun +latex-smartparens ()
-    (setq-local  TeX-electric-math (cons "\\(" "\\)")
-		 ;; Smartparens for whatever reason treats the
-		 ;; insertion of dollar signs and quotes as single characters.
-		 sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands)
-		 sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands)
-		 ;; After selecting a region, we can wrap it in parenthesis or quotes.
-		 sp-autowrap-region t)))
+		       (TeX-fold-buffer)
+		       (setq-local visual-fill-column-center-text t
+				   visual-fill-column-width 100
+				   company-backends (append '(company-auctex-labels
+							      company-auctex-bibs
+							      company-auctex-macros
+							      company-auctex-symbols
+							      company-auctex-environments
+							      company-reftex-citations
+							      company-reftex-labels
+							      company-math-symbols-latex
+							      company-math-symbols-unicode
+							      company-latex-commands)
+							    company-backends)))
+		     (defun +latex-smartparens ()
+		       (setq-local  TeX-electric-math (cons "\\(" "\\)")
+				    ;; Smartparens for whatever reason treats the
+				    ;; insertion of dollar signs and quotes as single characters.
+				    sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands)
+				    sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands)
+				    ;; After selecting a region, we can wrap it in parenthesis or quotes.
+				    sp-autowrap-region t)))
 
-(use-package bibtex
-  :straight nil
-  :hook (bibtex-mode . +bibtex-setup)
-  :init
-  (defun +bibtex-setup ()
-    (turn-on-visual-line-mode)
-    (setq-local visual-fill-column-center-text t
-		visual-fill-column-width 100)))
+  (use-package bibtex
+    :straight nil
+    :hook (bibtex-mode . +bibtex-setup)
+    :init
+    (defun +bibtex-setup ()
+      (turn-on-visual-line-mode)
+      (setq-local visual-fill-column-center-text t
+		  visual-fill-column-width 100)))
 
-(use-package auctex-latexmk
-  :custom
-  (auctex-latexmk-inherit-TeX-PDF-mode t)
-  :init
-  (auctex-latexmk-setup))
+  (use-package auctex-latexmk
+    :custom
+    (auctex-latexmk-inherit-TeX-PDF-mode t)
+    :init
+    (auctex-latexmk-setup))
 
-(use-package reftex
-  :straight nil
-  :hook ((TeX-mode . reftex-mode)
-	 (LaTeX-mode . reftex-mode))
-  :init
-  (setq reftex-cite-format
-	'((?a . "\\autocite[]{%l}")
-	  (?b . "\\blockcquote[]{%l}{}")
-	  (?c . "\\cite[]{%l}")
-	  (?f . "\\footcite[]{%l}")
-	  (?n . "\\nocite{%l}")
-	  (?p . "\\parencite[]{%l}")
-	  (?s . "\\smartcite[]{%l}")
-	  (?t . "\\textcite[]{%l}"))
-	reftex-plug-into-AUCTeX t
-	reftex-toc-split-windows-fraction 0.3))
+  (use-package reftex
+    :straight nil
+    :hook ((TeX-mode . reftex-mode)
+	   (LaTeX-mode . reftex-mode))
+    :init
+    (setq reftex-cite-format
+	  '((?a . "\\autocite[]{%l}")
+	    (?b . "\\blockcquote[]{%l}{}")
+	    (?c . "\\cite[]{%l}")
+	    (?f . "\\footcite[]{%l}")
+	    (?n . "\\nocite{%l}")
+	    (?p . "\\parencite[]{%l}")
+	    (?s . "\\smartcite[]{%l}")
+	    (?t . "\\textcite[]{%l}"))
+	  reftex-plug-into-AUCTeX t
+	  reftex-toc-split-windows-fraction 0.3))
 
-(use-package pdf-tools
-  :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
-  :magic ("%PDF" . pdf-view-mode)
-  :hook (pdf-view-mode . auto-revert-mode)
-  :config
-  (pdf-tools-install :no-query)
-  (setq-default pdf-view-display-size 'fit-page)
-  ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
-  (setq pdf-view-use-scaling t
-        pdf-view-use-imagemagick nil)
-  :general
-  (+local-leader-def :keymaps 'pdf-view-mode-map
-    "s" 'pdf-view-auto-slice-minor-mode)
-  (:keymaps 'pdf-view-mode-map
-	    "q" #'kill-current-buffer))
+  (use-package pdf-tools
+    :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
+    :magic ("%PDF" . pdf-view-mode)
+    :hook (pdf-view-mode . auto-revert-mode)
+    :config
+    (pdf-tools-install :no-query)
+    (setq-default pdf-view-display-size 'fit-page)
+    ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
+    (setq pdf-view-use-scaling t
+          pdf-view-use-imagemagick nil)
+    :general
+    (+local-leader-def :keymaps 'pdf-view-mode-map
+      "s" 'pdf-view-auto-slice-minor-mode)
+    (:keymaps 'pdf-view-mode-map
+	      "q" #'kill-current-buffer))
 
-;; vc-mode tweaks
-(setq vc-follow-symlinks t)
+  ;; vc-mode tweaks
+  (setq vc-follow-symlinks t)
 
-(use-package magit
-  :custom
-  (magit-diff-refine-hunk 'all)
-  :general
-  (:prefix-map '+vc-map
-	       "g" 'magit-status)
-  (+local-leader-def :keymaps 'with-editor-mode-map
-    "," 'with-editor-finish
-    "k" 'with-editor-cancel))
+  (use-package magit
+    :custom
+    (magit-diff-refine-hunk 'all)
+    :general
+    (:prefix-map '+vc-map
+		 "g" 'magit-status)
+    (+local-leader-def :keymaps 'with-editor-mode-map
+      "," 'with-editor-finish
+      "k" 'with-editor-cancel))
 
-(use-package evil-magit
-  :after magit)
+  (use-package evil-magit
+    :after magit)
 
-(use-package magit-todos
-  :after magit
-  :config (magit-todos-mode))
+  (use-package magit-todos
+    :after magit
+    :config (magit-todos-mode))
 
-(use-package git-gutter
-  :config (global-git-gutter-mode +1))
+  (use-package git-gutter
+    :config (global-git-gutter-mode +1))
 
-;; TODO: needs evil keybindings
-(use-package git-timemachine
-  :commands git-timemachine)
+  ;; TODO: needs evil keybindings
+  (use-package git-timemachine
+    :commands git-timemachine)
 
-;; projectile
-(use-package projectile
-  :custom
-  (projectile-completion-system 'default)
-  (projectile-auto-discovery t)
-  :hook (after-init . projectile-mode)
-  :general
-  (+leader-def
-    "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
+  ;; projectile
+  (use-package projectile
+    :custom
+    (projectile-completion-system 'default)
+    (projectile-auto-discovery t)
+    :hook (after-init . projectile-mode)
+    :general
+    (+leader-def
+      "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
 
-;; Org Mode
-(use-package org)
-(use-package org-plus-contrib)
-(use-package org-superstar
-  :custom (org-superstar-special-todo-items t)
-  :hook (org-mode . org-superstar-mode))
+  ;; Org Mode
+  (use-package org)
+  (use-package org-plus-contrib)
+  (use-package org-superstar
+    :custom (org-superstar-special-todo-items t)
+    :hook (org-mode . org-superstar-mode))
 
 
-;; languages + highlighting
-(use-package tree-sitter
-  :diminish tree-sitter-mode
-  :init (global-tree-sitter-mode))
-(use-package tree-sitter-langs)
-(use-package tree-sitter-hl
-  :straight nil
-  :after tree-sitter tree-sitter-langs
-  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+  ;; languages + highlighting
+  (use-package tree-sitter
+    :diminish tree-sitter-mode
+    :init (global-tree-sitter-mode))
+  (use-package tree-sitter-langs)
+  (use-package tree-sitter-hl
+    :straight nil
+    :after tree-sitter tree-sitter-langs
+    :hook (tree-sitter-after-on . tree-sitter-hl-mode))
 
-(use-package ssh-config-mode
-  :config
-  (add-to-list 'auto-mode-alist '("~/.ssh/config\\'" . ssh-config-mode)))
+  (use-package ssh-config-mode
+    :config
+    (add-to-list 'auto-mode-alist '("~/.ssh/config\\'" . ssh-config-mode)))
 
-;; vterm
-(use-package vterm)
-(use-package vterm-toggle
-  :after vterm
-  :general
-  (+leader-def
-    "'" #'vterm-toggle)
-  (:prefix-map '+open-map
-	       "t" #'vterm-toggle
-	       "T" #'vterm-other-window)
-  :config
-  (setq vterm-toggle-fullscreen-p nil)
-  (add-to-list 'display-buffer-alist
-	       '((lambda (bufname _)
-		   (with-current-buffer bufname (equal major-mode 'vterm-mode)))
-		 (display-buffer-reuse-window display-buffer-in-direction)
-		 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-		 (direction . bottom)
-		 (dedicated . t) ;dedicated is supported in emacs27
-		 (reusable-frames . visible)
-		 (window-height . 0.3))))
+  ;; vterm
+  (use-package vterm)
+  (use-package vterm-toggle
+    :after vterm
+    :general
+    (+leader-def
+      "'" #'vterm-toggle)
+    (:prefix-map '+open-map
+		 "t" #'vterm-toggle
+		 "T" #'vterm-other-window)
+    :config
+    (setq vterm-toggle-fullscreen-p nil)
+    (add-to-list 'display-buffer-alist
+		 '((lambda (bufname _)
+		     (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+		   (display-buffer-reuse-window display-buffer-in-direction)
+		   ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+		   (direction . bottom)
+		   (dedicated . t) ;dedicated is supported in emacs27
+		   (reusable-frames . visible)
+		   (window-height . 0.3))))
 
-;; direnv support
-(use-package envrc
-  :diminish envrc-mode
-  :init (envrc-global-mode +1))
+  ;; direnv support
+  (use-package envrc
+    :diminish envrc-mode
+    :init (envrc-global-mode +1))
