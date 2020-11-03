@@ -730,138 +730,138 @@ or session. Otherwise, the addition is permanent."
 				    sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands)
 				    sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands)
 				    ;; After selecting a region, we can wrap it in parenthesis or quotes.
-				    sp-autowrap-region t)))
+				    sp-autowrap-region t))))
 
-  (use-package bibtex
-    :straight nil
-    :hook (bibtex-mode . +bibtex-setup)
-    :init
-    (defun +bibtex-setup ()
-      (turn-on-visual-line-mode)
-      (setq-local visual-fill-column-center-text t
-		  visual-fill-column-width 100)))
+(use-package bibtex
+  :straight nil
+  :hook (bibtex-mode . +bibtex-setup)
+  :init
+  (defun +bibtex-setup ()
+    (turn-on-visual-line-mode)
+    (setq-local visual-fill-column-center-text t
+		visual-fill-column-width 100)))
 
-  (use-package auctex-latexmk
-    :custom
-    (auctex-latexmk-inherit-TeX-PDF-mode t)
-    :init
-    (auctex-latexmk-setup))
+(use-package auctex-latexmk
+  :custom
+  (auctex-latexmk-inherit-TeX-PDF-mode t)
+  :init
+  (auctex-latexmk-setup))
 
-  (use-package reftex
-    :straight nil
-    :hook ((TeX-mode . reftex-mode)
-	   (LaTeX-mode . reftex-mode))
-    :init
-    (setq reftex-cite-format
-	  '((?a . "\\autocite[]{%l}")
-	    (?b . "\\blockcquote[]{%l}{}")
-	    (?c . "\\cite[]{%l}")
-	    (?f . "\\footcite[]{%l}")
-	    (?n . "\\nocite{%l}")
-	    (?p . "\\parencite[]{%l}")
-	    (?s . "\\smartcite[]{%l}")
-	    (?t . "\\textcite[]{%l}"))
-	  reftex-plug-into-AUCTeX t
-	  reftex-toc-split-windows-fraction 0.3))
+(use-package reftex
+  :straight nil
+  :hook ((TeX-mode . reftex-mode)
+	 (LaTeX-mode . reftex-mode))
+  :init
+  (setq reftex-cite-format
+	'((?a . "\\autocite[]{%l}")
+	  (?b . "\\blockcquote[]{%l}{}")
+	  (?c . "\\cite[]{%l}")
+	  (?f . "\\footcite[]{%l}")
+	  (?n . "\\nocite{%l}")
+	  (?p . "\\parencite[]{%l}")
+	  (?s . "\\smartcite[]{%l}")
+	  (?t . "\\textcite[]{%l}"))
+	reftex-plug-into-AUCTeX t
+	reftex-toc-split-windows-fraction 0.3))
 
-  (use-package pdf-tools
-    :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
-    :magic ("%PDF" . pdf-view-mode)
-    :hook (pdf-view-mode . auto-revert-mode)
-    :config
-    (pdf-tools-install :no-query)
-    (setq-default pdf-view-display-size 'fit-page)
-    ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
-    (setq pdf-view-use-scaling t
-          pdf-view-use-imagemagick nil)
-    :general
-    (+local-leader-def :keymaps 'pdf-view-mode-map
-      "s" 'pdf-view-auto-slice-minor-mode)
-    (:keymaps 'pdf-view-mode-map
-	      "q" #'kill-current-buffer))
+(use-package pdf-tools
+  :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
+  :magic ("%PDF" . pdf-view-mode)
+  :hook (pdf-view-mode . auto-revert-mode)
+  :config
+  (pdf-tools-install :no-query)
+  (setq-default pdf-view-display-size 'fit-page)
+  ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
+  (setq pdf-view-use-scaling t
+        pdf-view-use-imagemagick nil)
+  :general
+  (+local-leader-def :keymaps 'pdf-view-mode-map
+    "s" 'pdf-view-auto-slice-minor-mode)
+  (:keymaps 'pdf-view-mode-map
+	    "q" #'kill-current-buffer))
 
-  ;; vc-mode tweaks
-  (setq vc-follow-symlinks t)
+;; vc-mode tweaks
+(setq vc-follow-symlinks t)
 
-  (use-package magit
-    :custom
-    (magit-diff-refine-hunk 'all)
-    :general
-    (:prefix-map '+vc-map
-		 "g" 'magit-status)
-    (+local-leader-def :keymaps 'with-editor-mode-map
-      "," 'with-editor-finish
-      "k" 'with-editor-cancel))
+(use-package magit
+  :custom
+  (magit-diff-refine-hunk 'all)
+  :general
+  (:prefix-map '+vc-map
+	       "g" 'magit-status)
+  (+local-leader-def :keymaps 'with-editor-mode-map
+    "," 'with-editor-finish
+    "k" 'with-editor-cancel))
 
-  (use-package evil-magit
-    :after magit)
+(use-package evil-magit
+  :after magit)
 
-  (use-package magit-todos
-    :after magit
-    :config (magit-todos-mode))
+(use-package magit-todos
+  :after magit
+  :config (magit-todos-mode))
 
-  (use-package git-gutter
-    :config (global-git-gutter-mode +1))
+(use-package git-gutter
+  :config (global-git-gutter-mode +1))
 
-  ;; TODO: needs evil keybindings
-  (use-package git-timemachine
-    :commands git-timemachine)
+;; TODO: needs evil keybindings
+(use-package git-timemachine
+  :commands git-timemachine)
 
-  ;; projectile
-  (use-package projectile
-    :custom
-    (projectile-completion-system 'default)
-    (projectile-auto-discovery t)
-    :hook (after-init . projectile-mode)
-    :general
-    (+leader-def
-      "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
+;; projectile
+(use-package projectile
+  :custom
+  (projectile-completion-system 'default)
+  (projectile-auto-discovery t)
+  :hook (after-init . projectile-mode)
+  :general
+  (+leader-def
+    "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
 
-  ;; Org Mode
-  (use-package org)
-  (use-package org-plus-contrib)
-  (use-package org-superstar
-    :custom (org-superstar-special-todo-items t)
-    :hook (org-mode . org-superstar-mode))
+;; Org Mode
+(use-package org)
+(use-package org-plus-contrib)
+(use-package org-superstar
+  :custom (org-superstar-special-todo-items t)
+  :hook (org-mode . org-superstar-mode))
 
 
-  ;; languages + highlighting
-  (use-package tree-sitter
-    :diminish tree-sitter-mode
-    :init (global-tree-sitter-mode))
-  (use-package tree-sitter-langs)
-  (use-package tree-sitter-hl
-    :straight nil
-    :after tree-sitter tree-sitter-langs
-    :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+;; languages + highlighting
+(use-package tree-sitter
+  :diminish tree-sitter-mode
+  :init (global-tree-sitter-mode))
+(use-package tree-sitter-langs)
+(use-package tree-sitter-hl
+  :straight nil
+  :after tree-sitter tree-sitter-langs
+  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
 
-  (use-package ssh-config-mode
-    :config
-    (add-to-list 'auto-mode-alist '("~/.ssh/config\\'" . ssh-config-mode)))
+(use-package ssh-config-mode
+  :config
+  (add-to-list 'auto-mode-alist '("~/.ssh/config\\'" . ssh-config-mode)))
 
-  ;; vterm
-  (use-package vterm)
-  (use-package vterm-toggle
-    :after vterm
-    :general
-    (+leader-def
-      "'" #'vterm-toggle)
-    (:prefix-map '+open-map
-		 "t" #'vterm-toggle
-		 "T" #'vterm-other-window)
-    :config
-    (setq vterm-toggle-fullscreen-p nil)
-    (add-to-list 'display-buffer-alist
-		 '((lambda (bufname _)
-		     (with-current-buffer bufname (equal major-mode 'vterm-mode)))
-		   (display-buffer-reuse-window display-buffer-in-direction)
-		   ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-		   (direction . bottom)
-		   (dedicated . t) ;dedicated is supported in emacs27
-		   (reusable-frames . visible)
-		   (window-height . 0.3))))
+;; vterm
+(use-package vterm)
+(use-package vterm-toggle
+  :after vterm
+  :general
+  (+leader-def
+    "'" #'vterm-toggle)
+  (:prefix-map '+open-map
+	       "t" #'vterm-toggle
+	       "T" #'vterm-other-window)
+  :config
+  (setq vterm-toggle-fullscreen-p nil)
+  (add-to-list 'display-buffer-alist
+	       '((lambda (bufname _)
+		   (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+		 (display-buffer-reuse-window display-buffer-in-direction)
+		 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+		 (direction . bottom)
+		 (dedicated . t) ;dedicated is supported in emacs27
+		 (reusable-frames . visible)
+		 (window-height . 0.3))))
 
-  ;; direnv support
-  (use-package envrc
-    :diminish envrc-mode
-    :init (envrc-global-mode +1))
+;; direnv support
+(use-package envrc
+  :diminish envrc-mode
+  :init (envrc-global-mode +1))
