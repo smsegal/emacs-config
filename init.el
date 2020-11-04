@@ -70,16 +70,25 @@
 
 ;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies)
 (use-package evil
+  :after undo-fu
   :custom
   (evil-want-integration t)
   (evil-want-keybinding nil)
   (evil-respect-visual-line-mode t)
+  (evil-want-Y-yank-to-eol t)
+  (evil-cross-lines t)
+  (evil-split-window-below t)
+  (evil-vsplit-window-right t)
+  (evil-undo-system 'undo-fu)
   :config
   (evil-mode 1))
 
 (use-package undo-tree
+  :disabled
   :custom (evil-undo-system 'undo-tree)
   :config (global-undo-tree-mode +1))
+
+(use-package undo-fu)
 
 (use-package evil-collection
   :after evil
@@ -191,6 +200,31 @@
   (general-nvmap
     "gl" 'evil-lion-left
     "gL" 'evil-lion-right))
+
+(use-package evil-goggles
+  :config
+  (evil-goggles-mode)
+  (evil-goggles-use-diff-faces))
+
+(use-package evil-exchange
+  :config (evil-exchange-install))
+
+;; code folding
+(use-package origami
+  :disabled
+  :straight (:host github :repo "jcs-elpa/origami.el")
+  :hook (after-init . global-origami-mode))
+
+(use-package vimish-fold
+  :after evil)
+
+(use-package evil-vimish-fold
+  :after vimish-fold
+  :init
+  (setq evil-vimish-fold-mode-lighter " ⮒")
+  (setq evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
+  :config
+  (global-evil-vimish-fold-mode))
 
 (use-package icomplete-vertical
   :disabled
@@ -419,9 +453,9 @@ or session. Otherwise, the addition is permanent."
 ;; buffers
 (defalias 'list-buffers 'ibuffer-other-window)
 
-;; what the hell do i press next?
 (put 'narrow-to-region 'disabled nil)
 
+;; what the hell do i press next?
 (use-package which-key
   :diminish which-key-mode
   :init (which-key-mode +1))
@@ -481,7 +515,6 @@ or session. Otherwise, the addition is permanent."
   :hook ((prog-mode LaTex-mode) . highlight-parentheses-mode))
 
 (use-package hl-line
-  :disabled
   :straight nil
   :hook ((prog-mode text-mode conf-mode special-mode) . hl-line-mode)
   :config
@@ -495,6 +528,14 @@ or session. Otherwise, the addition is permanent."
 (use-package anzu
   :hook (after-init . global-anzu-mode))
 (use-package evil-anzu)
+
+(use-package evil-terminal-cursor-changer
+  :straight (:host github :repo "kisaragi-hiu/evil-terminal-cursor-changer")
+  :hook (tty-setup . evil-terminal-cursor-changer-activate))
+
+(use-package xterm-mouse-mode
+  :straight nil
+  :hook (tty-setup . xterm-mouse-mode))
 
 (use-package ace-window
   :custom
@@ -520,24 +561,25 @@ or session. Otherwise, the addition is permanent."
   (doom-themes-enable-bold t)
   (doom-themes-enable-italic t)
   :config
-  (load-theme 'doom-wilmersdorf)
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
+(use-package +load-theme
+  :straight nil
+  :after doom-themes
+  :init
+  (defvar +active-theme (if (display-graphic-p)
+			    'doom-wilmersdorf
+			  'doom-old-hope))
+  (load-theme +active-theme t))
+
 (use-package fira-code-mode
   :diminish fira-code-mode
-  :unless IS-MAC
+  :when (eq window-system 'x)
   :custom
   (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+" ">=" "*"))
   (fira-code-mode-enable-hex-literal nil)
   :hook prog-mode)
-
-(use-package evil-goggles
-  :hook (after-init . evil-goggles-mode)
-  :config (evil-goggles-use-diff-faces))
-
-(use-package evil-exchange
-  :config (evil-exchange-install))
 
 (use-package display-line-numbers
   :disabled
@@ -637,7 +679,7 @@ or session. Otherwise, the addition is permanent."
   (ein:polymode t)
   :commands ein:run ein:login
   :init
-  (evil-define-minor-mode-key mode 'ein:notebook-mode
+  (evil-define-minor-mode-key '(normal visual) 'ein:notebook-mode
     (kbd "<C-return>") 'ein:worksheet-execute-cell-km
     (kbd "<S-return>") 'ein:worksheet-execute-cell-and-goto-next-km)
   :general
@@ -702,35 +744,35 @@ or session. Otherwise, the addition is permanent."
   (TeX-auto-fold t)
   :general (:keymaps 'TeX-mode-map
 		     [remap compile] #'TeX-command-master
-		     [remap recompile] (lambda () (TeX-command-master +1))
-		     :init
-		     (defun +latex-setup ()
-		       (turn-on-visual-line-mode)
-		       (unless word-wrap
-			 (toggle-word-wrap))
+		     [remap recompile] (lambda () (TeX-command-master +1)))
+  :init
+  (defun +latex-setup ()
+    (turn-on-visual-line-mode)
+    (unless word-wrap
+      (toggle-word-wrap))
 
-		       (TeX-fold-buffer)
-		       (setq-local visual-fill-column-center-text t
-				   visual-fill-column-width 100
-				   company-backends (append '(company-auctex-labels
-							      company-auctex-bibs
-							      company-auctex-macros
-							      company-auctex-symbols
-							      company-auctex-environments
-							      company-reftex-citations
-							      company-reftex-labels
-							      company-math-symbols-latex
-							      company-math-symbols-unicode
-							      company-latex-commands)
-							    company-backends)))
-		     (defun +latex-smartparens ()
-		       (setq-local  TeX-electric-math (cons "\\(" "\\)")
-				    ;; Smartparens for whatever reason treats the
-				    ;; insertion of dollar signs and quotes as single characters.
-				    sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands)
-				    sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands)
-				    ;; After selecting a region, we can wrap it in parenthesis or quotes.
-				    sp-autowrap-region t))))
+    (TeX-fold-buffer)
+    (setq-local visual-fill-column-center-text t
+		visual-fill-column-width 100
+		company-backends (append '(company-auctex-labels
+					   company-auctex-bibs
+					   company-auctex-macros
+					   company-auctex-symbols
+					   company-auctex-environments
+					   company-reftex-citations
+					   company-reftex-labels
+					   company-math-symbols-latex
+					   company-math-symbols-unicode
+					   company-latex-commands)
+					 company-backends)))
+  (defun +latex-smartparens ()
+    (setq-local  TeX-electric-math (cons "\\(" "\\)")
+		 ;; Smartparens for whatever reason treats the
+		 ;; insertion of dollar signs and quotes as single characters.
+		 sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands)
+		 sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands)
+		 ;; After selecting a region, we can wrap it in parenthesis or quotes.
+		 sp-autowrap-region t)))
 
 (use-package bibtex
   :straight nil
@@ -819,7 +861,7 @@ or session. Otherwise, the addition is permanent."
 
 ;; Org Mode
 (use-package org)
-(use-package org-plus-contrib)
+;; (use-package org-plus-contrib)
 (use-package org-superstar
   :custom (org-superstar-special-todo-items t)
   :hook (org-mode . org-superstar-mode))
