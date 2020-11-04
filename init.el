@@ -302,6 +302,14 @@
   (:prefix-map '+insert-map
 	       "y" '(+yank-pop :which-key "insert from kill ring")))
 
+(use-package flimenu
+  :config (flimenu-global-mode))
+
+(use-package amx
+  :after selectrum
+  :custom (amx-backend 'selectrum)
+  :config (amx-mode))
+
 (use-package deadgrep
   :general
   (:prefix-map '+search-map
@@ -754,13 +762,16 @@ or session. Otherwise, the addition is permanent."
     (TeX-fold-buffer)
     (setq-local visual-fill-column-center-text t
 		visual-fill-column-width 100
-		company-backends (append '(company-auctex-labels
+
+		;; important that reftex comes before auctex otherwise
+		;; citation autocomplete doesn't work
+		company-backends (append '(company-reftex-citations
+					   company-reftex-labels
+					   company-auctex-labels
 					   company-auctex-bibs
 					   company-auctex-macros
 					   company-auctex-symbols
 					   company-auctex-environments
-					   company-reftex-citations
-					   company-reftex-labels
 					   company-math-symbols-latex
 					   company-math-symbols-unicode
 					   company-latex-commands)
