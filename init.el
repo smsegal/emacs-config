@@ -46,6 +46,7 @@
 ;; Personal Information
 (setq user-full-name "Shane Segal"
       user-mail-address "shane@smsegal.ca")
+
 ;; load custom settings from a seperate file instead of polluting this file
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (if (file-exists-p custom-file)
@@ -212,6 +213,8 @@
     "gL" 'evil-lion-right))
 
 (use-package evil-goggles
+  :after evil
+  :demand t
   :config
   (evil-goggles-mode)
   (evil-goggles-use-diff-faces))
@@ -234,34 +237,6 @@
   (evil-vimish-fold-mode-lighter " ⮒")
   (evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
   :init (global-evil-vimish-fold-mode +1))
-;; :general
-;; (general-nvmap
-;;   "zf" #'evil-vimish-fold/create
-;;   "zd" #'evil-vimish-fold/delete
-;;   "zF" #'evil-vimish-fold/create-line
-;;   "zj" #'evil-vimish-fold/next-fold
-;;   "zk" #'evil-vimish-fold/previous-fold
-;;   "zE" #'evil-vimish-fold/delete-all))
-
-
-(use-package icomplete-vertical
-  :disabled
-  :demand t
-  :custom
-  (completion-styles '(partial-completion substring))
-  (completion-category-overrides '((file (styles basic substring))))
-  (read-file-name-completion-ignore-case t)
-  (read-buffer-completion-ignore-case t)
-  (completion-ignore-case t)
-  :config
-  (icomplete-mode)
-  (icomplete-vertical-mode)
-  :general (:keymaps icomplete-minibuffer-map
-		     "<down>"  #'icomplete-forward-completions
-		     "C-j"     #'icomplete-forward-completions
-		     "<up>"    #'icomplete-backward-completions
-		     "C-k"     #'icomplete-backward-completions
-		     "C-v"     #'icomplete-vertical-toggle))
 
 ;; incremental narrowing a la ivy
 (use-package selectrum
@@ -401,7 +376,7 @@ or session. Otherwise, the addition is permanent."
   :general (:keymaps 'popup-menu-keymap [escape] #'keyboard-quit))
 
 (use-package flyspell-lazy
-  :disabled
+  ;; :disabled
   :after flyspell
   :config
   (setq flyspell-lazy-idle-seconds 1
@@ -477,10 +452,10 @@ or session. Otherwise, the addition is permanent."
   (:prefix-map '+code-map
 	       "f" 'apheleia-format-buffer))
 
-(use-package format-all)
-;; :general
-;; (:prefix-map '+code-map
-;; 	       "f" 'format-all-buffer))
+(use-package format-all
+  :general
+  (:prefix-map '+code-map
+	       "f" 'format-all-buffer))
 
 ;; buffers
 (defalias 'list-buffers 'ibuffer-other-window)
@@ -609,14 +584,23 @@ or session. Otherwise, the addition is permanent."
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
-(use-package load-theme
-  :straight nil
-  :after doom-themes
-  :init
-  (defvar +active-theme (if (display-graphic-p)
-			    'doom-wilmersdorf
-			  'doom-old-hope))
-  (load-theme +active-theme t))
+;; (use-package load-theme
+;;   :straight nil
+;;   :after (doom-themes circadian)
+;;   :init
+;;   (defvar +active-theme (if (display-graphic-p)
+;; 			    'doom-wilmersdorf
+;; 			  'doom-old-hope))
+;;   (load-theme +active-theme t))
+
+(use-package circadian
+  :custom
+  (calendar-latitude 43.6)
+  (calendar-longitude -79.4)
+  (circadian-themes '((:sunrise . doom-acario-light)
+                      (:sunset  . doom-wilmersdorf)))
+  :hook
+  (after-init . circadian-setup))
 
 (use-package fira-code-mode
   :diminish fira-code-mode
@@ -686,20 +670,18 @@ or session. Otherwise, the addition is permanent."
 ;; (use-package lsp-ui :commands lsp-ui-mode)
 
 (use-package eglot
-  :after company yasnippet
+  :after (company yasnippet)
   :ghook
-  ('(python-mode-hook TeX-mode-hook) #'eglot-ensure))
-
-(defun +format-dwim ()
-  (interactive)
-  (if (and (fboundp 'lsp-mode) lsp-mode)
-      (if (eq evil-state "visual")
-	  (lsp-format-region)
-	(lsp-format-buffer))
-    (format-all-buffer)))
-
-(general-def :prefix-map '+code-map
-  "f" #'+format-dwim)
+  ;; ('(python-mode-hook TeX-mode-hook) #'eglot-ensure)
+  ('python-mode-hook  #'eglot-ensure)
+  :general
+  (general-def
+    :prefix-map '+code-map
+    :predicate '(eglot-managed-p)
+    "r" #'eglot-rename)
+  ;; "f" #'eglot-format))
+  (:keymaps 'eglot-mode-map
+	    [remap format-all-buffer] #'eglot-format))
 
 ;; python tweaks
 (use-package python
@@ -778,9 +760,14 @@ or session. Otherwise, the addition is permanent."
 (use-package tex-site
   :after smartparens
   :straight auctex
-  :hook ((TeX-mode . +latex-setup)
-	 (TeX-mode . +latex-smartparens)
-	 (TeX-mode . TeX-fold-mode))
+  :gfhook
+  #'+latex-setup
+  #'+latex-smartparens
+  :ghook
+  #'Tex-fold-mode
+  ;; :hook ((TeX-mode . +latex-setup)
+  ;; 	 (TeX-mode . +latex-smartparens)
+  ;; 	 (TeX-mode . TeX-fold-mode))
   :mode ("\\.tex\\'" . LaTeX-mode)
   :custom
   (TeX-master t)
@@ -808,8 +795,8 @@ or session. Otherwise, the addition is permanent."
 		;; important that reftex comes before auctex otherwise
 		;; citation autocomplete doesn't work
 		company-backends (append '(
-					   ;; company-reftex-citations
-					   ;; company-reftex-labels
+					   company-reftex-citations
+					   company-reftex-labels
 					   company-auctex-labels
 					   company-auctex-bibs
 					   company-auctex-macros
@@ -830,7 +817,7 @@ or session. Otherwise, the addition is permanent."
 
 (use-package bibtex
   :straight nil
-  :hook (bibtex-mode . +bibtex-setup)
+  :gfhook #'+bibtex-setup
   :init
   (defun +bibtex-setup ()
     (turn-on-visual-line-mode)
@@ -931,11 +918,6 @@ or session. Otherwise, the addition is permanent."
   :straight nil
   :after tree-sitter tree-sitter-langs
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
-
-(use-package ssh-config-mode
-  :mode "~/."
-  :config
-  (add-to-list 'auto-mode-alist '("~/.ssh/config\\'" . ssh-config-mode)))
 
 ;; vterm
 (use-package vterm)
