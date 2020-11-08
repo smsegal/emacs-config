@@ -16,9 +16,11 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t
       straight-fix-flycheck t
-      straight-check-for-modifications '(watch-files find-when-checking))
+      straight-check-for-modifications '(watch-files find-when-checking)
 
-;; macos needs a few different tweaks sjs
+      use-package-alway-defer t)
+
+;; macos needs a few different tweaks
 (defvar IS-MAC (eq system-type 'darwin))
 
 ;; garbage collection hacks
@@ -27,6 +29,7 @@
   :init (gcmh-mode 1))
 
 (use-package no-littering
+  :demand t
   :config
   (setq auto-save-file-name-transforms
 	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
@@ -69,8 +72,10 @@
 ;;   (exec-path-from-shell-initialize))
 
 ;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies)
+(use-package undo-fu)
 (use-package evil
   :after undo-fu
+  :demand t
   :custom
   (evil-want-integration t)
   (evil-want-keybinding nil)
@@ -88,10 +93,9 @@
   :custom (evil-undo-system 'undo-tree)
   :config (global-undo-tree-mode +1))
 
-(use-package undo-fu)
-
 (use-package evil-collection
   :after evil
+  :demand t
   :custom
   (evil-collection-setup-minibuffer t)
   :config
@@ -99,10 +103,11 @@
 
 (use-package evil-escape
   :diminish evil-escape-mode
+  :demand t
   :custom
   (evil-escape-delay 0.1)
   (evil-escape-key-sequence "fd")
-  :hook (after-init . evil-escape-mode))
+  :config (evil-escape-mode +1))
 
 (use-package smartparens
   :hook (after-init . smartparens-global-mode))
@@ -111,6 +116,7 @@
 
 ;; general keybindings
 (use-package general
+  :demand t
   :commands general-define-key general-def general-swap-key general-create-definer
   :custom
   (general-override-states '(insert
@@ -135,7 +141,6 @@
   :keymaps 'override
   :states '(normal visual))
 
-
 (general-def :prefix-map '+file-map
   "f" #'find-file
   "s" #'save-buffer)
@@ -150,6 +155,7 @@
   "r" 'restart-emacs)
 
 (general-def :prefix-map '+buffer-map
+  :wk-full-keys nil
   ;; "b" 'switch-to-buffer
   "p" 'previous-buffer
   "n" 'next-buffer
@@ -165,10 +171,14 @@
 
 (general-def :prefix-map '+search-map)
 
+(general-def :prefix-map '+bookmark-map
+  :wk-full-keys nil)
+
 (+leader-def
   "SPC" '(execute-extended-command :which-key "M-x")
   "w" '(:keymap evil-window-map :which-key "windows")
   "b" '(:keymap +buffer-map :which-key "buffers")
+  "B" '(:keymap +bookmark-map :which-key "bookmarks")
   "q" '(:keymap +quit-restart-map :which-key "quit/restart")
   "c" '(:keymap +code-map :which-key "code")
   "g" '(:keymap +vc-map :which-key "vc/git")
@@ -220,11 +230,19 @@
 
 (use-package evil-vimish-fold
   :after vimish-fold
-  :init
-  (setq evil-vimish-fold-mode-lighter " ⮒")
-  (setq evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
-  :config
-  (global-evil-vimish-fold-mode))
+  :custom
+  (evil-vimish-fold-mode-lighter " ⮒")
+  (evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
+  :init (global-evil-vimish-fold-mode +1))
+;; :general
+;; (general-nvmap
+;;   "zf" #'evil-vimish-fold/create
+;;   "zd" #'evil-vimish-fold/delete
+;;   "zF" #'evil-vimish-fold/create-line
+;;   "zj" #'evil-vimish-fold/next-fold
+;;   "zk" #'evil-vimish-fold/previous-fold
+;;   "zE" #'evil-vimish-fold/delete-all))
+
 
 (use-package icomplete-vertical
   :disabled
@@ -317,6 +335,7 @@
 
 (use-package flyspell
   :straight nil
+  :defer t
   :custom
   (flyspell-issue-welcome-flag nil)
   ;; Significantly speeds up flyspell, which would otherwise print
@@ -391,9 +410,10 @@ or session. Otherwise, the addition is permanent."
 
 ;; crux useful commands
 (use-package crux
-  :hook (after-init . crux-reopen-as-root-mode)
+  ;; :hook (after-init . crux-reopen-as-root-mode)
   :general
   (:prefix-map '+file-map
+	       "E" #'crux-sudo-edit
 	       "p" #'crux-find-user-init-file
 	       "R" #'crux-rename-file-and-buffer)
   (:prefix-map '+open-map
@@ -401,8 +421,7 @@ or session. Otherwise, the addition is permanent."
 
 (use-package super-save
   :custom (super-save-auto-save-when-idle t)
-  :config
-  (super-save-mode +1))
+  :hook (after-init . super-save-mode))
 
 (use-package +copy-file-name
   :straight nil
@@ -432,18 +451,23 @@ or session. Otherwise, the addition is permanent."
 
 (use-package bufler
   :diminish bufler-mode
-  :config (bufler-mode)
+  :hook (after-init . bufler-mode)
   :general
   (:keymaps 'bufler-list-mode-map
 	    :states '(normal visual)
 	    "RET" #'bufler-list-buffer-switch
 	    "q" #'quit-window)
   (:prefix-map '+buffer-map
-	       "b" #'bufler-switch-buffer
-	       "B" #'bufler-list))
+	       "b" '(bufler-switch-buffer :which-key "switch buffer")
+	       "B" '(bufler-list :which-key "buffer list")))
 
 (use-package burly
-  :straight (:host github :repo "alphapapa/burly.el"))
+  :straight (:host github :repo "alphapapa/burly.el")
+  :general
+  (:prefix-map '+bookmark-map
+	       "l" 'list-bookmarks
+	       "w" 'burly-bookmark-windows
+	       "F" 'burly-bookmark-frames))
 
 ;; code formatting
 (use-package apheleia
@@ -466,6 +490,9 @@ or session. Otherwise, the addition is permanent."
 ;; what the hell do i press next?
 (use-package which-key
   :diminish which-key-mode
+  :demand t
+  :custom
+  (which-key-enable-extended-define-key t)
   :init (which-key-mode +1))
 
 ;; UI Tweaks
@@ -554,6 +581,16 @@ or session. Otherwise, the addition is permanent."
 			"w" #'ace-window
 			"W" #'ace-swap-window))
 
+(use-package switch-to-buffer
+  :straight nil
+  :init
+  (defun +switch-to-scratch ()
+    (interactive)
+    (switch-to-buffer "*scratch*"))
+  :general
+  (:prefix-map '+buffer-map
+	       "s" #'+switch-to-scratch))
+
 ;; dashboard
 (use-package dashboard
   :custom
@@ -572,7 +609,7 @@ or session. Otherwise, the addition is permanent."
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
-(use-package +load-theme
+(use-package load-theme
   :straight nil
   :after doom-themes
   :init
@@ -583,7 +620,7 @@ or session. Otherwise, the addition is permanent."
 
 (use-package fira-code-mode
   :diminish fira-code-mode
-  :when (eq window-system 'x)
+  :when (memq window-system '(pgtk x))
   :custom
   (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+" ">=" "*"))
   (fira-code-mode-enable-hex-literal nil)
@@ -632,21 +669,26 @@ or session. Otherwise, the addition is permanent."
 ;; syntax highlighting
 (use-package flycheck
   :diminish flycheck-mode
-  :init
-  (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+  :custom
+  (flycheck-disabled-checkers '(emacs-lisp-checkdoc))
   :hook (after-init . global-flycheck-mode)
   :general
   (:prefix-map '+code-map
 	       "x" '(flycheck-list-errors :which-key "show errors")))
 
 ;; lsp-mode
-(use-package lsp-mode
-  :commands (lsp lsp-deferred)
-  :custom
-  (lsp-keymap-prefix "C-l")
-  :hook (((python-mode TeX-mode LaTeX-mode) . lsp-deferred)
-         (lsp-mode . lsp-enable-which-key-integration)))
-(use-package lsp-ui :commands lsp-ui-mode)
+;; (use-package lsp-mode
+;;   :commands (lsp lsp-deferred)
+;;   :custom
+;;   (lsp-keymap-prefix "C-l")
+;;   :hook (((python-mode TeX-mode LaTeX-mode) . lsp-deferred)
+;;          (lsp-mode . lsp-enable-which-key-integration)))
+;; (use-package lsp-ui :commands lsp-ui-mode)
+
+(use-package eglot
+  :after company yasnippet
+  :ghook
+  ('(python-mode-hook TeX-mode-hook) #'eglot-ensure))
 
 (defun +format-dwim ()
   (interactive)
@@ -765,8 +807,9 @@ or session. Otherwise, the addition is permanent."
 
 		;; important that reftex comes before auctex otherwise
 		;; citation autocomplete doesn't work
-		company-backends (append '(company-reftex-citations
-					   company-reftex-labels
+		company-backends (append '(
+					   ;; company-reftex-citations
+					   ;; company-reftex-labels
 					   company-auctex-labels
 					   company-auctex-bibs
 					   company-auctex-macros
@@ -840,6 +883,8 @@ or session. Otherwise, the addition is permanent."
   :custom
   (magit-diff-refine-hunk 'all)
   :general
+  (:keymaps 'transient-map
+	    "q" #'transient-quit-one)
   (:prefix-map '+vc-map
 	       "g" 'magit-status)
   (+local-leader-def :keymaps 'with-editor-mode-map
@@ -877,7 +922,6 @@ or session. Otherwise, the addition is permanent."
   :custom (org-superstar-special-todo-items t)
   :hook (org-mode . org-superstar-mode))
 
-
 ;; languages + highlighting
 (use-package tree-sitter
   :diminish tree-sitter-mode
@@ -889,6 +933,7 @@ or session. Otherwise, the addition is permanent."
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
 
 (use-package ssh-config-mode
+  :mode "~/."
   :config
   (add-to-list 'auto-mode-alist '("~/.ssh/config\\'" . ssh-config-mode)))
 
