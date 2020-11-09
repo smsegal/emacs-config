@@ -760,15 +760,6 @@ or session. Otherwise, the addition is permanent."
 (use-package tex-site
   :after smartparens
   :straight auctex
-  :gfhook
-  #'+latex-setup
-  #'+latex-smartparens
-  :ghook
-  #'Tex-fold-mode
-  ;; :hook ((TeX-mode . +latex-setup)
-  ;; 	 (TeX-mode . +latex-smartparens)
-  ;; 	 (TeX-mode . TeX-fold-mode))
-  :mode ("\\.tex\\'" . LaTeX-mode)
   :custom
   (TeX-master t)
   (TeX-parse-self t) ;; parse on load
@@ -779,6 +770,15 @@ or session. Otherwise, the addition is permanent."
   (bibtex-align-at-equal-sign t)
   (bibtex-text-indentation 20)
   (TeX-auto-fold t)
+  ;; :gfhook
+  ;; #'+latex-setup
+  ;; #'+latex-smartparens
+  ;; :ghook
+  ;; #'Tex-fold-mode
+  :hook ((TeX-mode . +latex-setup)
+	 (TeX-mode . +latex-smartparens)
+	 (TeX-mode . TeX-fold-mode))
+  :mode ("\\.tex\\'" . LaTeX-mode)
   :general (:keymaps 'TeX-mode-map
 		     [remap compile] #'TeX-command-master
 		     [remap recompile] (lambda () (TeX-command-master +1)))
@@ -794,8 +794,7 @@ or session. Otherwise, the addition is permanent."
 
 		;; important that reftex comes before auctex otherwise
 		;; citation autocomplete doesn't work
-		company-backends (append '(
-					   company-reftex-citations
+		company-backends (append '(company-reftex-citations
 					   company-reftex-labels
 					   company-auctex-labels
 					   company-auctex-bibs
