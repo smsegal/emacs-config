@@ -25,7 +25,7 @@
 
 ;; garbage collection hacks
 (use-package gcmh
-  :diminish gcmh-mode
+  :blackout
   :init (gcmh-mode 1))
 
 (use-package no-littering
@@ -38,6 +38,8 @@
   :straight nil
   :after no-littering
   :hook (after-init . recentf-mode)
+  :custom
+  (recentf-exclude '(".gz" ".xz" ".zip" "/elpa/" "/ssh:" "/sudo:"))
   :config
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory)
@@ -52,19 +54,15 @@
 (if (file-exists-p custom-file)
     (load custom-file))
 
-;; set font
-;; macos needs a larger font due to hidpi
-(set-face-attribute 'default nil
-                    :family "Cascadia Code"
-                    :height (if IS-MAC 140 120))
 
 (setq enable-recursive-minibuffers t)
 
 (when IS-MAC
   (mac-auto-operator-composition-mode))
 
-(use-package diminish)
-
+(use-package diminish
+  :disabled)
+(use-package blackout)
 ;; (use-package exec-path-from-shell
 ;;   :when (memq window-system '(mac ns x))
 ;;   ;; :custom (exec-path-from-shell-arguments '("-l"))
@@ -103,7 +101,7 @@
   (evil-collection-init))
 
 (use-package evil-escape
-  :diminish evil-escape-mode
+  :blackout
   :demand t
   :custom
   (evil-escape-delay 0.1)
@@ -111,6 +109,7 @@
   :config (evil-escape-mode +1))
 
 (use-package smartparens
+  :blackout
   :hook (after-init . smartparens-global-mode))
 (use-package smartparens-config
   :straight nil)
@@ -214,6 +213,7 @@
 
 (use-package evil-goggles
   :after evil
+  :blackout
   :demand t
   :config
   (evil-goggles-mode)
@@ -233,8 +233,8 @@
 
 (use-package evil-vimish-fold
   :after vimish-fold
+  :blackout
   :custom
-  (evil-vimish-fold-mode-lighter " ⮒")
   (evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
   :init (global-evil-vimish-fold-mode +1))
 
@@ -311,6 +311,7 @@
 (use-package flyspell
   :straight nil
   :defer t
+  :blackout
   :custom
   (flyspell-issue-welcome-flag nil)
   ;; Significantly speeds up flyspell, which would otherwise print
@@ -394,7 +395,15 @@ or session. Otherwise, the addition is permanent."
   (:prefix-map '+open-map
 	       "w" #'crux-open-with))
 
+(defun +find-init-file-here ()
+  (interactive)
+  (find-file user-init-file))
+
+(general-def :prefix-map '+file-map
+  "P" #'+find-init-file-here)
+
 (use-package super-save
+  :blackout
   :custom (super-save-auto-save-when-idle t)
   :hook (after-init . super-save-mode))
 
@@ -424,9 +433,13 @@ or session. Otherwise, the addition is permanent."
     "]r" #'rotate-text
     "[r" #'rotate-text-backward))
 
+(use-package subword
+  :blackout
+  :hook (prog-mode . subword-mode))
+
 (use-package bufler
-  :diminish bufler-mode
-  :hook (after-init . bufler-mode)
+  :blackout
+  ;; :hook (after-init . bufler-mode)
   :general
   (:keymaps 'bufler-list-mode-map
 	    :states '(normal visual)
@@ -464,19 +477,21 @@ or session. Otherwise, the addition is permanent."
 
 ;; what the hell do i press next?
 (use-package which-key
-  :diminish which-key-mode
+  :blackout
   :demand t
   :custom
   (which-key-enable-extended-define-key t)
   :init (which-key-mode +1))
 
-;; UI Tweaks
-(setq confirm-kill-emacs 'y-or-n-p
-      confirm-nonexistent-file-or-buffer nil
+;;; UI Tweaks
+
+;; set this for all prompts
+(defalias 'yes-or-no-p 'y-or-n-p)
+(setq confirm-nonexistent-file-or-buffer nil
       mouse-yank-at-point t
-      ;; fringes
-      indicate-buffer-boundaries nil
-      indicate-empty-lines nil
+
+      ;; make underlines look a little better
+      x-underline-at-descent-line t
 
       ;; window resizing
       window-resize-pixelwise t
@@ -488,17 +503,49 @@ or session. Otherwise, the addition is permanent."
   (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
   (add-to-list 'default-frame-alist '(vertical-scroll-bars)))
 
-;;window dividers
-(setq window-divider-default-places 'bottom-only
-      window-divider-default-bottom-width 1)
-(window-divider-mode +1)
+(use-package avoid
+  :straight nil
+  :config
+  ;; doesn't seem to do any animating, at least on wayland should
+  ;; check it out on X (but I never use X soooo)
+  (mouse-avoidance-mode 'animate))
 
-(when (fboundp 'set-fringe-style)
-  (set-fringe-style 1))
+;;window dividers
+(use-package window-divider
+  :straight nil
+  :custom
+  (window-divider-default-right-width 1)
+  (window-divider-default-bottom-width 1)
+  (window-divider-default-places 'right-only)
+  :hook (after-init . window-divider-mode))
+
+(use-package fringe
+  :straight nil
+  :init
+  (set-fringe-style 0)
+  :custom
+  ;; fringes
+  (indicate-buffer-boundaries   nil)
+  (indicate-empty-lines         nil)
+  (fringes-outside-margins      nil)
+  (indicate-buffer-boundaries   nil)
+  (indicate-empty-lines         nil)
+  (overflow-newline-into-fringe t))
 
 (setq menu-bar-mode   nil
       tool-bar-mode   nil
       scroll-bar-mode nil)
+
+(use-package hl-todo
+  :hook (prog-mode . hl-todo-mode))
+
+
+
+(use-package auto-dim-other-buffers
+  :hook (after-init . auto-dim-other-buffers-mode)
+  :custom
+  (auto-dim-other-buffers-dim-on-switch-to-minibuffer nil)
+  (auto-dim-other-buffers-dim-on-focus-out t))
 
 (use-package winner
   :straight nil
@@ -518,14 +565,21 @@ or session. Otherwise, the addition is permanent."
   :init (sml/setup))
 
 (use-package telephone-line
+  :disabled
   :config (telephone-line-mode +1))
 
-;; (show-paren-mode 1)
+(use-package moody
+  :config
+  (moody-replace-mode-line-buffer-identification)
+  (moody-replace-vc-mode))
+
 (use-package highlight-parentheses
+  :blackout
   :hook ((prog-mode LaTex-mode) . highlight-parentheses-mode))
 
 (use-package hl-line
   :straight nil
+  :blackout
   :hook ((prog-mode text-mode conf-mode special-mode) . hl-line-mode)
   :config
   (setq hl-line-sticky-flag nil
@@ -536,6 +590,7 @@ or session. Otherwise, the addition is permanent."
   :hook (dired-mode . all-the-icons-dired-mode))
 
 (use-package anzu
+  :blackout
   :hook (after-init . global-anzu-mode))
 (use-package evil-anzu)
 
@@ -584,26 +639,52 @@ or session. Otherwise, the addition is permanent."
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
-;; (use-package load-theme
-;;   :straight nil
-;;   :after (doom-themes circadian)
-;;   :init
-;;   (defvar +active-theme (if (display-graphic-p)
-;; 			    'doom-wilmersdorf
-;; 			  'doom-old-hope))
-;;   (load-theme +active-theme t))
+(use-package modus-operandi-theme
+  :custom
+  (modus-operandi-theme-bold-constructs t)
+  (modus-operandi-theme-slanted-constructs t)
+  (modus-operandi-theme-syntax 'alt-syntax)
+  (modus-operandi-theme-mode-line 'moody))
+
+(use-package modus-vivendi-theme
+  :custom
+  (modus-vivendi-theme-bold-constructs t)
+  (modus-vivendi-theme-slanted-constructs t)
+  (modus-vivendi-theme-mode-line 'moody)
+  (modus-vivendi-theme-syntax 'faint))
+
+(use-package load-theme
+  :disabled
+  :straight nil
+  :after
+  (doom-themes modus-operandi-theme modus-vivendi-theme)
+  :init
+  (defvar +active-theme (if (display-graphic-p)
+			    'modus-operandi
+			  'doom-old-hope))
+  (load-theme +active-theme t))
 
 (use-package circadian
+  ;; :disabled
+  :after (doom-themes modus-operandi-theme modus-vivendi-theme)
   :custom
   (calendar-latitude 43.6)
   (calendar-longitude -79.4)
-  (circadian-themes '((:sunrise . doom-acario-light)
-                      (:sunset  . doom-wilmersdorf)))
+  (circadian-themes '((:sunrise . modus-operandi)
+                      (:sunset  . modus-vivendi)))
   :hook
   (after-init . circadian-setup))
 
+;;; font
+;; macos needs a larger font due to hidpi
+(set-face-attribute 'default nil
+                    :family "JetBrains Mono"
+                    :height (if IS-MAC 140 110))
+;; italic comments
+(set-face-attribute 'font-lock-comment-face nil :slant 'italic)
+
 (use-package fira-code-mode
-  :diminish fira-code-mode
+  :blackout
   :when (memq window-system '(pgtk x))
   :custom
   (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+" ">=" "*"))
@@ -641,18 +722,20 @@ or session. Otherwise, the addition is permanent."
 
 ;;autocomplete
 (use-package company
+  :blackout
   :custom
   (company-idle-delay 0.0)
   :hook (after-init . global-company-mode)
   :general (general-imap "C-SPC" 'company-complete))
 (use-package company-box
+  :blackout
   :hook (company-mode . company-box-mode))
 (use-package company-quickhelp
   :hook (company-mode . company-quickhelp-mode))
 
 ;; syntax highlighting
 (use-package flycheck
-  :diminish flycheck-mode
+  :blackout
   :custom
   (flycheck-disabled-checkers '(emacs-lisp-checkdoc))
   :hook (after-init . global-flycheck-mode)
@@ -672,7 +755,6 @@ or session. Otherwise, the addition is permanent."
 (use-package eglot
   :after (company yasnippet)
   :ghook
-  ;; ('(python-mode-hook TeX-mode-hook) #'eglot-ensure)
   ('python-mode-hook  #'eglot-ensure)
   :general
   (general-def
@@ -682,6 +764,16 @@ or session. Otherwise, the addition is permanent."
   ;; "f" #'eglot-format))
   (:keymaps 'eglot-mode-map
 	    [remap format-all-buffer] #'eglot-format))
+
+(use-package +flycheck-eglot
+  :straight nil
+  :after (eglot flycheck)
+  :commands +lsp-eglot-prefer-flycheck-h +add-flycheck-eglot-checker
+  :load-path "modules/"
+  :init
+  (+add-flycheck-eglot-checker)
+  :ghook
+  ('eglot--managed-mode-hook #'+lsp-eglot-prefer-flycheck-h))
 
 ;; python tweaks
 (use-package python
@@ -730,8 +822,8 @@ or session. Otherwise, the addition is permanent."
   (let ((files (mapcar 'abbreviate-file-name recentf-list)))
     (find-file (completing-read "Find recent file: " files nil t))))
 
-
 (use-package yasnippet
+  :blackout yas-mode
   :hook ((prog-mode text-mode) . yas-global-mode)
   :general (:prefix-map '+insert-map
 			"s" 'yas-insert-snippet))
@@ -750,8 +842,7 @@ or session. Otherwise, the addition is permanent."
 	       "k" #'helpful-key
 	       "h" #'helpful-at-point))
 
-;; latex
-
+;;; latex
 (use-package company-auctex)
 (use-package company-reftex)
 (use-package company-math)
@@ -770,18 +861,14 @@ or session. Otherwise, the addition is permanent."
   (bibtex-align-at-equal-sign t)
   (bibtex-text-indentation 20)
   (TeX-auto-fold t)
-  ;; :gfhook
-  ;; #'+latex-setup
-  ;; #'+latex-smartparens
-  ;; :ghook
-  ;; #'Tex-fold-mode
   :hook ((TeX-mode . +latex-setup)
 	 (TeX-mode . +latex-smartparens)
 	 (TeX-mode . TeX-fold-mode))
   :mode ("\\.tex\\'" . LaTeX-mode)
-  :general (:keymaps 'TeX-mode-map
-		     [remap compile] #'TeX-command-master
-		     [remap recompile] (lambda () (TeX-command-master +1)))
+  :general
+  (:keymaps 'TeX-mode-map
+	    [remap compile] #'TeX-command-master
+	    [remap recompile] (lambda () (TeX-command-master +1)))
   :init
   (defun +latex-setup ()
     (turn-on-visual-line-mode)
@@ -867,7 +954,7 @@ or session. Otherwise, the addition is permanent."
 
 (use-package magit
   :custom
-  (magit-diff-refine-hunk 'all)
+  (magit-diff-refine-hunk t)
   :general
   (:keymaps 'transient-map
 	    "q" #'transient-quit-one)
@@ -879,12 +966,14 @@ or session. Otherwise, the addition is permanent."
 
 (use-package evil-magit
   :after magit)
+  ;; :demand t)
 
 (use-package magit-todos
   :after magit
   :config (magit-todos-mode))
 
 (use-package git-gutter
+  :blackout
   :config (global-git-gutter-mode +1))
 
 ;; TODO: needs evil keybindings
@@ -910,13 +999,15 @@ or session. Otherwise, the addition is permanent."
 
 ;; languages + highlighting
 (use-package tree-sitter
-  :diminish tree-sitter-mode
+  :blackout
   :init (global-tree-sitter-mode))
 (use-package tree-sitter-langs)
 (use-package tree-sitter-hl
   :straight nil
   :after tree-sitter tree-sitter-langs
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+
+(blackout 'eldoc-mode)
 
 ;; vterm
 (use-package vterm)
@@ -942,5 +1033,10 @@ or session. Otherwise, the addition is permanent."
 
 ;; direnv support
 (use-package envrc
-  :diminish envrc-mode
+  :blackout
   :init (envrc-global-mode +1))
+
+
+;; arch PKGBUILDS
+(use-package pkgbuild-mode
+  :mode ("PKGBUILD" . pkgbuild-mode))
