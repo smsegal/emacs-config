@@ -89,28 +89,37 @@
 (advice-add #'selectrum-swiper :around #'selectrum:reveal-if-in-org-folds)
 
 (defun +yank-pop (&optional arg)
-  "Call `yank-pop' with ARG when appropriate, or offer completion."
-  (interactive "*P")
-  (if arg (yank-pop arg)
-    (let* ((old-last-command last-command)
-           (selectrum-should-sort-p nil)
-           (enable-recursive-minibuffers t)
-           (text (completing-read
-                  "Yank: "
-                  (cl-remove-duplicates
-                   kill-ring :test #'string= :from-end t)
-                  nil t nil nil))
-           ;; Find `text' in `kill-ring'.
-           (pos (cl-position text kill-ring :test #'string=))
-           ;; Translate relative to `kill-ring-yank-pointer'.
-           (n (+ pos (length kill-ring-yank-pointer))))
-      (unless (string= text (current-kill n t))
-	(error "Could not setup for `current-kill'"))
-      ;; Restore `last-command' over Selectrum commands.
-      (setq last-command old-last-command)
-      ;; Delegate to `yank-pop' if appropriate or just insert.
-      (if (eq last-command 'yank)
-          (yank-pop n) (insert-for-yank text)))))
+  "Paste a previously killed string.
+With just \\[universal-argument] as ARG, put point at beginning,
+and mark at end.  Otherwise, put point at the end, and mark at
+the beginning without activating it.
+
+This is like `yank-pop'.  The differences are:
+
+- This let you manually choose a candidate to paste.
+
+- This doesn't delete the text just pasted if the previous
+  command is `yank'."
+  (interactive "P")
+  (let* ((selectrum-should-sort-p nil)
+         (text nil))
+    (setq text
+          (completing-read "Yank: "
+                           (cl-remove-duplicates
+                            kill-ring :test #'equal :from-end t)
+                           nil 'require-match))
+    (unless (eq last-command 'yank)
+      (push-mark))
+    (setq last-command 'yank)
+    (setq yank-window-start (window-start))
+    (when (and delete-selection-mode (use-region-p))
+      (delete-region (region-beginning) (region-end)))
+    (insert-for-yank text)
+    (if (consp arg)
+        (goto-char (prog1 (mark t)
+                     (set-marker (mark-marker) (point) (current-buffer)))))))
+
+
 
 (require 'all-the-icons)
 
@@ -205,5 +214,39 @@ list of strings."
     (find-file (completing-read "Select recent file: " propertized-files
                                 nil t nil 'file-name-history
                                 (car propertized-files)))))
+
+
+(defvar selectrum-imenu+ nil)
+(defun +selectrum-imenu ()
+  "Choose from `imenu' just like `counsel-imenu'."
+  (interactive)
+  (require 'imenu)
+  (let* ((selectrum-should-sort-p nil)
+         (candidates (let* ((imenu-auto-rescan t)
+                            (items (imenu--make-index-alist t)))
+                       ;; remove *Rescan*
+                       (setq items (delete (assoc "*Rescan*" items) items))
+                       ;; special mode
+                       (when (eq major-mode 'emacs-lisp-mode)
+                         (let ((fns (cl-remove-if #'listp items :key #'cdr)))
+                           (if fns (setq items (nconc (cl-remove-if #'nlistp items :key #'cdr) `(("Functions" ,@fns)))))))
+                       ;; refine
+                       (cl-labels ((get-candidates (alist &optional prefix)
+						   (cl-mapcan
+						    (lambda (elm)
+						      (if (imenu--subalist-p elm)
+							  (get-candidates
+							   (cl-loop for (e . v) in (cdr elm)
+								    collect (cons e (if (integerp v) (copy-marker v) v)))
+							   (concat prefix (if prefix ".") (car elm)))
+							(let ((key (concat (if prefix (concat (propertize prefix 'face 'font-lock-keyword-face) ": "))
+									   (car elm))))
+							  (list (cons key (cons key (if (overlayp (cdr elm)) (overlay-start (cdr elm)) (cdr elm))))))))
+						    alist)))
+                         (setq items (get-candidates items)))
+                       ;; sort
+                       (cl-sort items #'string< :key #'car)))
+         (cand (completing-read "Imenu: " (mapcar #'car candidates) nil t nil selectrum-imenu+)))
+    (imenu (cdr (cl-find cand candidates :test #'string= :key #'car)))))
 
 (provide 'selectrum-contrib)

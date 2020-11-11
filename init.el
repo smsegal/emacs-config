@@ -25,7 +25,6 @@
 
 ;; garbage collection hacks
 (use-package gcmh
-  :blackout
   :init (gcmh-mode 1))
 
 (use-package no-littering
@@ -48,21 +47,19 @@
 ;; Personal Information
 (setq user-full-name "Shane Segal"
       user-mail-address "shane@smsegal.ca")
+(setq auth-sources '("~/.authinfo.gpg"))
 
 ;; load custom settings from a seperate file instead of polluting this file
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (if (file-exists-p custom-file)
     (load custom-file))
 
-
 (setq enable-recursive-minibuffers t)
 
 (when IS-MAC
   (mac-auto-operator-composition-mode))
 
-(use-package diminish
-  :disabled)
-(use-package blackout)
+
 ;; (use-package exec-path-from-shell
 ;;   :when (memq window-system '(mac ns x))
 ;;   ;; :custom (exec-path-from-shell-arguments '("-l"))
@@ -101,7 +98,6 @@
   (evil-collection-init))
 
 (use-package evil-escape
-  :blackout
   :demand t
   :custom
   (evil-escape-delay 0.1)
@@ -109,7 +105,6 @@
   :config (evil-escape-mode +1))
 
 (use-package smartparens
-  :blackout
   :hook (after-init . smartparens-global-mode))
 (use-package smartparens-config
   :straight nil)
@@ -163,14 +158,11 @@
   "k" 'kill-this-buffer)
 
 (general-def :prefix-map '+vc-map)
-
 (general-def :prefix-map '+insert-map)
-
 (general-def :prefix-map '+open-map
   "-" 'dired-jump)
-
+(general-def :prefix-map '+toggle-map)
 (general-def :prefix-map '+search-map)
-
 (general-def :prefix-map '+bookmark-map
   :wk-full-keys nil)
 
@@ -186,6 +178,7 @@
   "i" '(:keymap +insert-map :which-key "insert")
   "o" '(:keymap +open-map :which-key "open")
   "s" '(:keymap +search-map :which-key "search")
+  "t" '(:keymap +toggle-map :which-key "toggle")
   "h" '(:keymap help-map :which-key "help"))
 
 (use-package evil-surround
@@ -213,7 +206,6 @@
 
 (use-package evil-goggles
   :after evil
-  :blackout
   :demand t
   :config
   (evil-goggles-mode)
@@ -233,7 +225,6 @@
 
 (use-package evil-vimish-fold
   :after vimish-fold
-  :blackout
   :custom
   (evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
   :init (global-evil-vimish-fold-mode +1))
@@ -289,14 +280,12 @@
   ;; 	#'+selectrum-candidate-highlight-with-icons-function)
   :general
   (:prefix-map '+file-map
-	       "r" 'selectrum-recentf)
+	       "r" #'selectrum-recentf)
   (:prefix-map '+search-map
-	       "s" 'selectrum-swiper)
+	       "s" #'selectrum-swiper
+	       "i" #'+selectrum-imenu)
   (:prefix-map '+insert-map
 	       "y" '(+yank-pop :which-key "insert from kill ring")))
-
-(use-package flimenu
-  :config (flimenu-global-mode))
 
 (use-package amx
   :after selectrum
@@ -311,7 +300,6 @@
 (use-package flyspell
   :straight nil
   :defer t
-  :blackout
   :custom
   (flyspell-issue-welcome-flag nil)
   ;; Significantly speeds up flyspell, which would otherwise print
@@ -332,11 +320,7 @@
 (use-package flyspell-correct
   :after flyspell
   :commands flyspell-correct-previous
-  :general
-  ([remap ispell-word] #'flyspell-correct-wrapper)
-  (general-nvmap
-    "zg" #'+spell/add-word)
-  :config
+  :preface
   (defun +spell/add-word (word &optional scope)
     "Add WORD to your personal dictionary, within SCOPE.
 SCOPE can be `buffer' or `session' to exclude words only from the current buffer
@@ -367,6 +351,11 @@ or session. Otherwise, the addition is permanent."
       (if (eq replace 'buffer)
           (ispell-add-per-file-word-list word))))
     (ispell-pdict-save t))
+  :general
+  ([remap ispell-word] #'flyspell-correct-wrapper)
+  (general-nvmap
+    "zg" #'+spell/add-word)
+  :config
   (require 'flyspell-correct-popup nil t)
   (define-key 'popup-menu-keymap [escape] #'keyboard-quit))
 
@@ -386,7 +375,6 @@ or session. Otherwise, the addition is permanent."
 
 ;; crux useful commands
 (use-package crux
-  ;; :hook (after-init . crux-reopen-as-root-mode)
   :general
   (:prefix-map '+file-map
 	       "E" #'crux-sudo-edit
@@ -403,13 +391,12 @@ or session. Otherwise, the addition is permanent."
   "P" #'+find-init-file-here)
 
 (use-package super-save
-  :blackout
   :custom (super-save-auto-save-when-idle t)
   :hook (after-init . super-save-mode))
 
 (use-package +copy-file-name
   :straight nil
-  :init
+  :preface
   (defun +copy-file-name-to-clipboard ()
     "Copy the current buffer file name to the clipboard."
     (interactive)
@@ -434,11 +421,13 @@ or session. Otherwise, the addition is permanent."
     "[r" #'rotate-text-backward))
 
 (use-package subword
-  :blackout
   :hook (prog-mode . subword-mode))
 
+(use-package ws-butler
+  :hook (prog-mode . ws-butler-mode))
+
+;;; Buffers
 (use-package bufler
-  :blackout
   ;; :hook (after-init . bufler-mode)
   :general
   (:keymaps 'bufler-list-mode-map
@@ -477,9 +466,9 @@ or session. Otherwise, the addition is permanent."
 
 ;; what the hell do i press next?
 (use-package which-key
-  :blackout
   :demand t
   :custom
+  (which-key-popup-type 'minibuffer)
   (which-key-enable-extended-define-key t)
   :init (which-key-mode +1))
 
@@ -539,8 +528,6 @@ or session. Otherwise, the addition is permanent."
 (use-package hl-todo
   :hook (prog-mode . hl-todo-mode))
 
-
-
 (use-package auto-dim-other-buffers
   :hook (after-init . auto-dim-other-buffers-mode)
   :custom
@@ -558,39 +545,55 @@ or session. Otherwise, the addition is permanent."
 (use-package dumb-jump
   :hook (xref-backend-functions . dumb-jump-xreg-activate))
 
-;; smart modeline
-(use-package smart-mode-line
-  :disabled
-  :custom (sml/theme 'respectful)
-  :init (sml/setup))
+;;; modeline
 
-(use-package telephone-line
-  :disabled
-  :config (telephone-line-mode +1))
-
+;; used for buffer identification in moody modeline
+(use-package smart-mode-line)
+(use-package minions
+  :config (minions-mode 1))
 (use-package moody
+  :after smart-mode-line
+  ;; :preface
+  ;; (defvar moody-evil-state-indicator
+  ;;   '(:eval (moody-tab (format-mode-line (cond ((eq evil-state 'normal)
+  ;; 						"Normal")
+  ;; 					       ((eq evil-state 'insert)
+  ;; 						"Vis")))
+  ;; 		       20 'up)))
+  ;; ;; (put 'moody-evil-state-indicator 'risky-local-variable t)
+  ;; (make-variable-buffer-local 'moody-evil-state-indicator)
+  ;; (defun +moody-replace-mode-line-evil-state (&optional reverse)
+  ;;   (interactive "P")
+  ;;   (moody-replace-element 'evil-mode-line-tag
+  ;; 			   '+moody-replace-mode-line-evil-state
+  ;; 			   reverse))
   :config
+  ;; (+moody-replace-mode-line-evil-state)
+  (moody-replace-sml/mode-line-buffer-identification)
   (moody-replace-mode-line-buffer-identification)
   (moody-replace-vc-mode))
 
 (use-package highlight-parentheses
-  :blackout
   :hook ((prog-mode LaTex-mode) . highlight-parentheses-mode))
 
 (use-package hl-line
   :straight nil
-  :blackout
+  :preface
+  (defun +highlight-visual-line ()
+    (save-excursion
+      (cons (progn (beginning-of-visual-line) (+ 1 (point)))
+            (progn (beginning-of-visual-line 2) (point)))))
   :hook ((prog-mode text-mode conf-mode special-mode) . hl-line-mode)
-  :config
-  (setq hl-line-sticky-flag nil
-        global-hl-line-sticky-flag nil))
+  :custom
+  (hl-line-range-function '+highlight-visual-line)
+  (hl-line-sticky-flag nil)
+  (global-hl-line-sticky-flag nil))
 
 (use-package all-the-icons)
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
 
 (use-package anzu
-  :blackout
   :hook (after-init . global-anzu-mode))
 (use-package evil-anzu)
 
@@ -611,9 +614,25 @@ or session. Otherwise, the addition is permanent."
 			"w" #'ace-window
 			"W" #'ace-swap-window))
 
+;; window enlargement
+(use-package zoom
+  :custom
+  (zoom-size '(0.618 . 0.618))
+  (zoom-ignored-major-modes '(vterm-mode
+			      help-mode
+			      helpful-mode
+			      rxt-help-mode
+			      help-mode-menu))
+  (zoom-ignored-buffer-names '("*info*"  "*helpful variable: argv*"))
+  (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
+  :general
+  (:prefix-map 'evil-window-map)
+  (:prefix-map '+toggle-map
+	       "z" #'zoom-mode))
+
 (use-package switch-to-buffer
   :straight nil
-  :init
+  :preface
   (defun +switch-to-scratch ()
     (interactive)
     (switch-to-buffer "*scratch*"))
@@ -684,7 +703,6 @@ or session. Otherwise, the addition is permanent."
 (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
 
 (use-package fira-code-mode
-  :blackout
   :when (memq window-system '(pgtk x))
   :custom
   (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+" ">=" "*"))
@@ -718,30 +736,34 @@ or session. Otherwise, the addition is permanent."
 ;; visual fill column
 (use-package visual-fill-column
   :hook (visual-line-mode . visual-fill-column-mode)
+  :config
+  (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
   :commands visual-fill-column-mode)
 
 ;;autocomplete
 (use-package company
-  :blackout
   :custom
   (company-idle-delay 0.0)
   :hook (after-init . global-company-mode)
   :general (general-imap "C-SPC" 'company-complete))
 (use-package company-box
-  :blackout
+
   :hook (company-mode . company-box-mode))
 (use-package company-quickhelp
   :hook (company-mode . company-quickhelp-mode))
 
 ;; syntax highlighting
 (use-package flycheck
-  :blackout
+
   :custom
   (flycheck-disabled-checkers '(emacs-lisp-checkdoc))
   :hook (after-init . global-flycheck-mode)
   :general
   (:prefix-map '+code-map
-	       "x" '(flycheck-list-errors :which-key "show errors")))
+	       "x" '(flycheck-list-errors :which-key "show errors"))
+  (general-nmap :keymaps 'flycheck-mode-map
+    "]e" #'flycheck-next-error
+    "[e" #'flycheck-previous-error))
 
 ;; lsp-mode
 ;; (use-package lsp-mode
@@ -823,7 +845,6 @@ or session. Otherwise, the addition is permanent."
     (find-file (completing-read "Find recent file: " files nil t))))
 
 (use-package yasnippet
-  :blackout yas-mode
   :hook ((prog-mode text-mode) . yas-global-mode)
   :general (:prefix-map '+insert-map
 			"s" 'yas-insert-snippet))
@@ -841,6 +862,11 @@ or session. Otherwise, the addition is permanent."
 	       "v" #'helpful-variable
 	       "k" #'helpful-key
 	       "h" #'helpful-at-point))
+
+(use-package adaptive-wrap
+  :general
+  (:prefix-map '+toggle-map
+	       "w" #'adaptive-wrap-prefix-mode))
 
 ;;; latex
 (use-package company-auctex)
@@ -869,12 +895,11 @@ or session. Otherwise, the addition is permanent."
   (:keymaps 'TeX-mode-map
 	    [remap compile] #'TeX-command-master
 	    [remap recompile] (lambda () (TeX-command-master +1)))
-  :init
+  :preface
   (defun +latex-setup ()
     (turn-on-visual-line-mode)
     (unless word-wrap
       (toggle-word-wrap))
-
     (TeX-fold-buffer)
     (setq-local visual-fill-column-center-text t
 		visual-fill-column-width 100
@@ -904,7 +929,7 @@ or session. Otherwise, the addition is permanent."
 (use-package bibtex
   :straight nil
   :gfhook #'+bibtex-setup
-  :init
+  :preface
   (defun +bibtex-setup ()
     (turn-on-visual-line-mode)
     (setq-local visual-fill-column-center-text t
@@ -966,14 +991,16 @@ or session. Otherwise, the addition is permanent."
 
 (use-package evil-magit
   :after magit)
-  ;; :demand t)
+
+(use-package forge
+  :after magit)
 
 (use-package magit-todos
   :after magit
   :config (magit-todos-mode))
 
 (use-package git-gutter
-  :blackout
+
   :config (global-git-gutter-mode +1))
 
 ;; TODO: needs evil keybindings
@@ -999,7 +1026,6 @@ or session. Otherwise, the addition is permanent."
 
 ;; languages + highlighting
 (use-package tree-sitter
-  :blackout
   :init (global-tree-sitter-mode))
 (use-package tree-sitter-langs)
 (use-package tree-sitter-hl
@@ -1007,7 +1033,7 @@ or session. Otherwise, the addition is permanent."
   :after tree-sitter tree-sitter-langs
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
 
-(blackout 'eldoc-mode)
+
 
 ;; vterm
 (use-package vterm)
@@ -1033,10 +1059,22 @@ or session. Otherwise, the addition is permanent."
 
 ;; direnv support
 (use-package envrc
-  :blackout
   :init (envrc-global-mode +1))
-
 
 ;; arch PKGBUILDS
 (use-package pkgbuild-mode
   :mode ("PKGBUILD" . pkgbuild-mode))
+
+;; Emacs Application Framework
+;; doesn't seem to work currently
+(use-package eaf
+  :disabled
+  :straight nil
+  :load-path "/usr/share/emacs/site-lisp/eaf"
+  :custom
+  (eaf-find-alternate-file-in-dired t)
+  :config
+  (eaf-bind-key scroll_up "C-j" eaf-pdf-viewer-keybinding)
+  (eaf-bind-key scroll_down "C-k" eaf-pdf-viewer-keybinding)
+  (eaf-bind-key take_photo "p" eaf-camera-keybinding)
+  (eaf-enable-evil-intergration))
