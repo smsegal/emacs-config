@@ -427,12 +427,15 @@ or session. Otherwise, the addition is permanent."
   :hook (prog-mode . ws-butler-mode))
 
 ;;; Buffers
+
+;; TODO: bufler needs evil-keybindings
 (use-package bufler
   ;; :hook (after-init . bufler-mode)
   :general
   (:keymaps 'bufler-list-mode-map
 	    :states '(normal visual)
 	    "RET" #'bufler-list-buffer-switch
+	    (kbd "<escape>") #'quit-window
 	    "q" #'quit-window)
   (:prefix-map '+buffer-map
 	       "b" '(bufler-switch-buffer :which-key "switch buffer")
@@ -730,7 +733,7 @@ or session. Otherwise, the addition is permanent."
       ;; for tall lines.
       auto-window-vscroll nil
       ;; mouse
-      mouse-wheel-scroll-amount '(5 ((shift) . 2))
+      ;; mouse-wheel-scroll-amount '(5 ((shift) . 2))
       mouse-wheel-progressive-speed nil)  ; don't accelerate scrolling
 
 ;; visual fill column
@@ -975,13 +978,21 @@ or session. Otherwise, the addition is permanent."
 	    "q" #'kill-current-buffer))
 
 ;; vc-mode tweaks
-(setq vc-follow-symlinks t)
+(use-package vc
+  :straight nil
+  :custom
+  (vc-command-messages t)
+  (vc-follow-symlinks t)
+  ;; don't make an extra frame for the ediff control panel (doesn't
+  ;; work well in tiling wms)
+  (ediff-window-setup-function 'ediff-setup-windows-plain))
 
 (use-package magit
   :custom
   (magit-diff-refine-hunk t)
   :general
   (:keymaps 'transient-map
+	    (kbd "<escape>") #'transient-quit-one
 	    "q" #'transient-quit-one)
   (:prefix-map '+vc-map
 	       "g" 'magit-status)
@@ -1032,8 +1043,6 @@ or session. Otherwise, the addition is permanent."
   :straight nil
   :after tree-sitter tree-sitter-langs
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
-
-
 
 ;; vterm
 (use-package vterm)
