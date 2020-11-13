@@ -1,5 +1,4 @@
 ;;; init.el -*- lexical-binding: t; -*-
-
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -15,10 +14,7 @@
 
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t
-      straight-fix-flycheck t
-      straight-check-for-modifications '(watch-files find-when-checking)
-
-      use-package-alway-defer t)
+      straight-check-for-modifications '(watch-files find-when-checking))
 
 ;; macos needs a few different tweaks
 (defvar IS-MAC (eq system-type 'darwin))
@@ -28,9 +24,8 @@
   :init (gcmh-mode 1))
 
 (use-package no-littering
-  :demand t
-  :config
-  (setq auto-save-file-name-transforms
+  :custom
+  (auto-save-file-name-transforms
 	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
 (use-package recentf-mode
@@ -58,7 +53,6 @@
 
 (when IS-MAC
   (mac-auto-operator-composition-mode))
-
 
 ;; (use-package exec-path-from-shell
 ;;   :when (memq window-system '(mac ns x))
@@ -114,72 +108,69 @@
   :demand t
   :commands general-define-key general-def general-swap-key general-create-definer
   :custom
-  (general-override-states '(insert
-                             emacs
-                             hybrid
-                             normal
-                             visual
-                             motion
-                             operator
-                             replace))
-  :init (general-evil-setup))
+  (general-override-states '(insert emacs
+                             hybrid normal
+                             visual motion
+                             operator replace))
+  :config
+  (general-evil-setup)
 
-;; leader key setup
-(general-create-definer +leader-def
-  :prefix "SPC"
-  :keymaps 'override
-  :states '(normal visual))
+  ;; leader key setup
+  (general-create-definer +leader-def
+    :prefix "SPC"
+    :keymaps 'override
+    :states '(normal visual))
 
-;; local leader
-(general-create-definer +local-leader-def
-  :prefix ","
-  :keymaps 'override
-  :states '(normal visual))
+  ;; local leader
+  (general-create-definer +local-leader-def
+    :prefix ","
+    :keymaps 'override
+    :states '(normal visual))
 
-(general-def :prefix-map '+file-map
-  "f" #'find-file
-  "s" #'save-buffer)
+  (general-def :prefix-map '+file-map
+    "f" #'find-file
+    "s" #'save-buffer)
 
-(general-def :prefix-map '+code-map
-  "e" #'eval-buffer
-  "c" #'compile
-  "m" #'recompile)
+  (general-def :prefix-map '+code-map
+    "e" #'eval-buffer
+    "c" #'compile
+    "m" #'recompile)
 
-(general-def :prefix-map '+quit-restart-map
-  "q" 'save-buffers-kill-emacs
-  "r" 'restart-emacs)
+  (general-def :prefix-map '+quit-restart-map
+    "q" 'save-buffers-kill-emacs
+    "r" 'restart-emacs)
 
-(general-def :prefix-map '+buffer-map
-  :wk-full-keys nil
-  ;; "b" 'switch-to-buffer
-  "p" 'previous-buffer
-  "n" 'next-buffer
-  "r" 'revert-buffer
-  "k" 'kill-this-buffer)
+  (general-def :prefix-map '+buffer-map
+    :wk-full-keys nil
+    ;; "b" 'switch-to-buffer
+    "p" 'previous-buffer
+    "n" 'next-buffer
+    "r" 'revert-buffer
+    "k" 'kill-this-buffer)
 
-(general-def :prefix-map '+vc-map)
-(general-def :prefix-map '+insert-map)
-(general-def :prefix-map '+open-map
-  "-" 'dired-jump)
-(general-def :prefix-map '+toggle-map)
-(general-def :prefix-map '+search-map)
-(general-def :prefix-map '+bookmark-map
-  :wk-full-keys nil)
+  (general-def :prefix-map '+vc-map)
+  (general-def :prefix-map '+insert-map)
+  (general-def :prefix-map '+open-map
+    "-" 'dired-jump)
+  (general-def :prefix-map '+toggle-map)
+  (general-def :prefix-map '+search-map)
+  (general-def :prefix-map '+bookmark-map
+    :wk-full-keys nil)
 
-(+leader-def
-  "SPC" '(execute-extended-command :which-key "M-x")
-  "w" '(:keymap evil-window-map :which-key "windows")
-  "b" '(:keymap +buffer-map :which-key "buffers")
-  "B" '(:keymap +bookmark-map :which-key "bookmarks")
-  "q" '(:keymap +quit-restart-map :which-key "quit/restart")
-  "c" '(:keymap +code-map :which-key "code")
-  "g" '(:keymap +vc-map :which-key "vc/git")
-  "f" '(:keymap +file-map :which-key "files")
-  "i" '(:keymap +insert-map :which-key "insert")
-  "o" '(:keymap +open-map :which-key "open")
-  "s" '(:keymap +search-map :which-key "search")
-  "t" '(:keymap +toggle-map :which-key "toggle")
-  "h" '(:keymap help-map :which-key "help"))
+  (+leader-def
+    "SPC" '(execute-extended-command :which-key "M-x")
+    "w" '(:keymap evil-window-map :which-key "windows")
+    "b" '(:keymap +buffer-map :which-key "buffers")
+    "B" '(:keymap +bookmark-map :which-key "bookmarks")
+    "q" '(:keymap +quit-restart-map :which-key "quit/restart")
+    "c" '(:keymap +code-map :which-key "code")
+    "g" '(:keymap +vc-map :which-key "vc/git")
+    "f" '(:keymap +file-map :which-key "files")
+    "i" '(:keymap +insert-map :which-key "insert")
+    "o" '(:keymap +open-map :which-key "open")
+    "s" '(:keymap +search-map :which-key "search")
+    "t" '(:keymap +toggle-map :which-key "toggle")
+    "h" '(:keymap help-map :which-key "help")))
 
 (use-package evil-surround
   :config
@@ -187,6 +178,13 @@
 (use-package evil-embrace
   :after evil-surround
   :init (evil-embrace-enable-evil-surround-integration))
+
+(use-package evil-snipe
+  :after evil
+  :custom (evil-snipe-use-vim-sneak-bindings t)
+  :config
+  (evil-snipe-mode +1)
+  (evil-snipe-override-mode +1))
 
 (use-package evil-nerd-commenter
   :commands evilnc-comment-operator
@@ -215,14 +213,7 @@
   :config (evil-exchange-install))
 
 ;; code folding
-(use-package origami
-  :disabled
-  :straight (:host github :repo "jcs-elpa/origami.el")
-  :hook (after-init . global-origami-mode))
-
-(use-package vimish-fold
-  :after evil)
-
+(use-package vimish-fold :after evil)
 (use-package evil-vimish-fold
   :after vimish-fold
   :custom
@@ -239,45 +230,16 @@
   (:keymaps 'selectrum-minibuffer-map
 	    "C-j" 'selectrum-next-candidate
 	    "C-k" 'selectrum-previous-candidate))
-
-(use-package prescient)
+(use-package prescient
+  :hook (selectrum-mode . prescient-persist-mode))
 (use-package selectrum-prescient
-  ;; :disabled
-  :after selectrum prescient
-  :init
-  (selectrum-prescient-mode +1)
-  (prescient-persist-mode +1))
+  :hook (selectrum-mode . selectrum-prescient-mode))
 (use-package company-prescient
   :hook (company-mode . company-prescient-mode))
-
-(use-package orderless
-  :disabled
-  :after selectrum
-  :custom
-  (completion-styles '(orderless))
-  :config
-  (setq selectrum-refine-candidates-function #'orderless-filter)
-  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
-  ;; If you also configure `completion-styles` for orderless you might want to use the
-  ;; following advice because orderless isn't well suited for initial gathering of
-  ;; candidates by completion in region.
-  (advice-add #'completion--category-override :filter-return
-              (defun completion-in-region-style-setup+ (res)
-		"Fallback to default styles for region completions with orderless."
-		(or res
-                    ;; Don't use orderless for initial candidate gathering.
-                    (and completion-in-region-mode-predicate
-			 (not (minibufferp))
-			 (equal '(orderless) completion-styles)
-			 '(basic partial-completion emacs22))))))
-
 (use-package selectrum-contrib
   :straight nil
-  ;; :after selectrum
+  :after selectrum
   :load-path "modules/"
-  ;; :config
-  ;; (setq selectrum-highlight-candidates-function
-  ;; 	#'+selectrum-candidate-highlight-with-icons-function)
   :general
   (:prefix-map '+file-map
 	       "r" #'selectrum-recentf)
@@ -322,9 +284,9 @@
   :commands flyspell-correct-previous
   :preface
   (defun +spell/add-word (word &optional scope)
-    "Add WORD to your personal dictionary, within SCOPE.
-SCOPE can be `buffer' or `session' to exclude words only from the current buffer
-or session. Otherwise, the addition is permanent."
+    "Add WORD to your personal dictionary, within SCOPE.  SCOPE can be
+`buffer' or `session' to exclude words only from the current buffer or
+session. Otherwise, the addition is permanent."
     (interactive
      (list (progn (require 'flyspell)
                   (car (flyspell-get-word)))
@@ -354,10 +316,7 @@ or session. Otherwise, the addition is permanent."
   :general
   ([remap ispell-word] #'flyspell-correct-wrapper)
   (general-nvmap
-    "zg" #'+spell/add-word)
-  :config
-  (require 'flyspell-correct-popup nil t)
-  (define-key 'popup-menu-keymap [escape] #'keyboard-quit))
+    "zg" #'+spell/add-word))
 
 (use-package flyspell-correct-popup
   :after flyspell-correct
@@ -702,6 +661,7 @@ or session. Otherwise, the addition is permanent."
 (set-face-attribute 'default nil
                     :family "JetBrains Mono"
                     :height (if IS-MAC 140 110))
+(add-to-list 'default-frame-alist '(line-spacing . 0.2))
 ;; italic comments
 (set-face-attribute 'font-lock-comment-face nil :slant 'italic)
 
@@ -733,7 +693,8 @@ or session. Otherwise, the addition is permanent."
       ;; for tall lines.
       auto-window-vscroll nil
       ;; mouse
-      ;; mouse-wheel-scroll-amount '(5 ((shift) . 2))
+
+      mouse-wheel-scroll-amount '(2 ((shift) . hscroll) ((meta)) ((control) . text-scale))
       mouse-wheel-progressive-speed nil)  ; don't accelerate scrolling
 
 ;; visual fill column
@@ -929,6 +890,9 @@ or session. Otherwise, the addition is permanent."
 		 ;; After selecting a region, we can wrap it in parenthesis or quotes.
 		 sp-autowrap-region t)))
 
+(use-package evil-tex
+  :hook (LaTeX-mode . evil-tex-mode))
+
 (use-package bibtex
   :straight nil
   :gfhook #'+bibtex-setup
@@ -1023,10 +987,12 @@ or session. Otherwise, the addition is permanent."
   :custom
   (projectile-completion-system 'default)
   (projectile-auto-discovery t)
-  :hook (after-init . projectile-mode)
+  :config (projectile-mode +1)
   :general
   (+leader-def
-    "p" '(:keymap projectile-command-map :package projectile :which-key "projects")))
+    "p" '(:keymap projectile-command-map
+		  :package projectile
+		  :which-key "projects")))
 
 ;; Org Mode
 (use-package org)
@@ -1043,6 +1009,12 @@ or session. Otherwise, the addition is permanent."
   :straight nil
   :after tree-sitter tree-sitter-langs
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+
+(use-package emacs-lisp
+  :straight nil
+  :general
+  (+local-leader-def :keymaps 'emacs-lisp-mode-map
+    "e" #'eval-last-sexp))
 
 ;; vterm
 (use-package vterm)
