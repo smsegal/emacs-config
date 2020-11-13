@@ -26,7 +26,7 @@
 (use-package no-littering
   :custom
   (auto-save-file-name-transforms
-	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+   `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
 (use-package recentf-mode
   :straight nil
@@ -106,12 +106,9 @@
 ;; general keybindings
 (use-package general
   :demand t
-  :commands general-define-key general-def general-swap-key general-create-definer
   :custom
-  (general-override-states '(insert emacs
-                             hybrid normal
-                             visual motion
-                             operator replace))
+  (general-override-states
+   '(insert emacs hybrid normal visual motion operator replace))
   :config
   (general-evil-setup)
 
@@ -157,8 +154,16 @@
   (general-def :prefix-map '+bookmark-map
     :wk-full-keys nil)
 
+  (general-def :prefix-map '+narrow/notes-map
+    "n" #'(crux-with-region-or-buffer narrow-to-region)
+    "p" #'narrow-to-page
+    "d" #'narrow-to-defun
+    "w" #'widen
+    "c" #'org-capture)
+
   (+leader-def
     "SPC" '(execute-extended-command :which-key "M-x")
+    "u" 'universal-argument
     "w" '(:keymap evil-window-map :which-key "windows")
     "b" '(:keymap +buffer-map :which-key "buffers")
     "B" '(:keymap +bookmark-map :which-key "bookmarks")
@@ -169,6 +174,7 @@
     "i" '(:keymap +insert-map :which-key "insert")
     "o" '(:keymap +open-map :which-key "open")
     "s" '(:keymap +search-map :which-key "search")
+    "n" '(:keymap +narrow/notes-map :which-key "narrow/notes")
     "t" '(:keymap +toggle-map :which-key "toggle")
     "h" '(:keymap help-map :which-key "help")))
 
@@ -220,6 +226,11 @@
   (evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
   :init (global-evil-vimish-fold-mode +1))
 
+;; text indentation stuff
+(with-eval-after-load 'general
+  (general-add-hook (list 'prog-mode-hook 'text-mode-hook)
+                    (lambda () (setq-local indent-tabs-mode nil))))
+
 ;; incremental narrowing a la ivy
 (use-package selectrum
   :commands selectrum-next-candidate selectrum-previous-candidate
@@ -228,8 +239,8 @@
   :general
   (general-imap "C-k" nil)
   (:keymaps 'selectrum-minibuffer-map
-	    "C-j" 'selectrum-next-candidate
-	    "C-k" 'selectrum-previous-candidate))
+            "C-j" 'selectrum-next-candidate
+            "C-k" 'selectrum-previous-candidate))
 (use-package prescient
   :hook (selectrum-mode . prescient-persist-mode))
 (use-package selectrum-prescient
@@ -242,12 +253,12 @@
   :load-path "modules/"
   :general
   (:prefix-map '+file-map
-	       "r" #'selectrum-recentf)
+               "r" #'selectrum-recentf)
   (:prefix-map '+search-map
-	       "s" #'selectrum-swiper
-	       "i" #'+selectrum-imenu)
+               "s" #'selectrum-swiper
+               "i" #'+selectrum-imenu)
   (:prefix-map '+insert-map
-	       "y" '(+yank-pop :which-key "insert from kill ring")))
+               "y" '(+yank-pop :which-key "insert from kill ring")))
 
 (use-package amx
   :after selectrum
@@ -257,7 +268,7 @@
 (use-package deadgrep
   :general
   (:prefix-map '+search-map
-	       "d" #'deadgrep))
+               "d" #'deadgrep))
 
 (use-package flyspell
   :straight nil
@@ -292,7 +303,7 @@ session. Otherwise, the addition is permanent."
                   (car (flyspell-get-word)))
            (cond ((equal current-prefix-arg '(16))
                   'session)
-		 ((equal current-prefix-arg '(4))
+                 ((equal current-prefix-arg '(4))
                   'buffer))))
     (require 'flyspell)
     (cond
@@ -309,7 +320,7 @@ session. Otherwise, the addition is permanent."
       (flyspell-unhighlight-at (point))
       (if (null ispell-pdict-modified-p)
           (setq ispell-pdict-modified-p
-		(list ispell-pdict-modified-p)))
+                (list ispell-pdict-modified-p)))
       (if (eq replace 'buffer)
           (ispell-add-per-file-word-list word))))
     (ispell-pdict-save t))
@@ -329,18 +340,18 @@ session. Otherwise, the addition is permanent."
   :after flyspell
   :config
   (setq flyspell-lazy-idle-seconds 1
-	flyspell-lazy-window-idle-seconds 3)
+        flyspell-lazy-window-idle-seconds 3)
   (flyspell-lazy-mode +1))
 
 ;; crux useful commands
 (use-package crux
   :general
   (:prefix-map '+file-map
-	       "E" #'crux-sudo-edit
-	       "p" #'crux-find-user-init-file
-	       "R" #'crux-rename-file-and-buffer)
+               "E" #'crux-sudo-edit
+               "p" #'crux-find-user-init-file
+               "R" #'crux-rename-file-and-buffer)
   (:prefix-map '+open-map
-	       "w" #'crux-open-with))
+               "w" #'crux-open-with))
 
 (defun +find-init-file-here ()
   (interactive)
@@ -360,14 +371,14 @@ session. Otherwise, the addition is permanent."
     "Copy the current buffer file name to the clipboard."
     (interactive)
     (let ((filename (if (equal major-mode 'dired-mode)
-			default-directory
+                        default-directory
                       (buffer-file-name))))
       (when filename
-	(kill-new filename)
-	(message "Copied buffer file name '%s' to the clipboard." filename))))
+        (kill-new filename)
+        (message "Copied buffer file name '%s' to the clipboard." filename))))
   :general
   (:prefix-map '+file-map
-	       "C" '(+copy-file-name-to-clipboard :which-key "copy filename")))
+               "C" '(+copy-file-name-to-clipboard :which-key "copy filename")))
 
 (use-package rotate-text
   :straight (:host github :repo "debug-ito/rotate-text.el")
@@ -392,21 +403,21 @@ session. Otherwise, the addition is permanent."
   ;; :hook (after-init . bufler-mode)
   :general
   (:keymaps 'bufler-list-mode-map
-	    :states '(normal visual)
-	    "RET" #'bufler-list-buffer-switch
-	    (kbd "<escape>") #'quit-window
-	    "q" #'quit-window)
+            :states '(normal visual)
+            "RET" #'bufler-list-buffer-switch
+            (kbd "<escape>") #'quit-window
+            "q" #'quit-window)
   (:prefix-map '+buffer-map
-	       "b" '(bufler-switch-buffer :which-key "switch buffer")
-	       "B" '(bufler-list :which-key "buffer list")))
+               "b" '(bufler-switch-buffer :which-key "switch buffer")
+               "B" '(bufler-list :which-key "buffer list")))
 
 (use-package burly
   :straight (:host github :repo "alphapapa/burly.el")
   :general
   (:prefix-map '+bookmark-map
-	       "l" 'list-bookmarks
-	       "w" 'burly-bookmark-windows
-	       "F" 'burly-bookmark-frames))
+               "l" 'list-bookmarks
+               "w" 'burly-bookmark-windows
+               "F" 'burly-bookmark-frames))
 
 ;; code formatting
 (use-package apheleia
@@ -414,12 +425,12 @@ session. Otherwise, the addition is permanent."
   :straight (:host github :repo "raxod502/apheleia")
   :general
   (:prefix-map '+code-map
-	       "f" 'apheleia-format-buffer))
+               "f" 'apheleia-format-buffer))
 
 (use-package format-all
   :general
   (:prefix-map '+code-map
-	       "f" 'format-all-buffer))
+               "f" 'format-all-buffer))
 
 ;; buffers
 (defalias 'list-buffers 'ibuffer-other-window)
@@ -501,8 +512,8 @@ session. Otherwise, the addition is permanent."
   :hook (after-init . winner-mode)
   :general
   (:prefix-map 'evil-window-map
-	       "u" 'winner-undo
-	       "r" 'winner-redo))
+               "u" 'winner-undo
+               "r" 'winner-redo))
 
 (use-package dumb-jump
   :hook (xref-backend-functions . dumb-jump-xreg-activate))
@@ -518,17 +529,17 @@ session. Otherwise, the addition is permanent."
   ;; :preface
   ;; (defvar moody-evil-state-indicator
   ;;   '(:eval (moody-tab (format-mode-line (cond ((eq evil-state 'normal)
-  ;; 						"Normal")
-  ;; 					       ((eq evil-state 'insert)
-  ;; 						"Vis")))
-  ;; 		       20 'up)))
+  ;;                                            "Normal")
+  ;;                                           ((eq evil-state 'insert)
+  ;;                                            "Vis")))
+  ;;                   20 'up)))
   ;; ;; (put 'moody-evil-state-indicator 'risky-local-variable t)
   ;; (make-variable-buffer-local 'moody-evil-state-indicator)
   ;; (defun +moody-replace-mode-line-evil-state (&optional reverse)
   ;;   (interactive "P")
   ;;   (moody-replace-element 'evil-mode-line-tag
-  ;; 			   '+moody-replace-mode-line-evil-state
-  ;; 			   reverse))
+  ;;                       '+moody-replace-mode-line-evil-state
+  ;;                       reverse))
   :config
   ;; (+moody-replace-mode-line-evil-state)
   (moody-replace-sml/mode-line-buffer-identification)
@@ -573,24 +584,24 @@ session. Otherwise, the addition is permanent."
   :config
   (set-face-attribute 'aw-leading-char-face nil :height 3.0)
   :general (:prefix-map 'evil-window-map
-			"w" #'ace-window
-			"W" #'ace-swap-window))
+                        "w" #'ace-window
+                        "W" #'ace-swap-window))
 
 ;; window enlargement
 (use-package zoom
   :custom
   (zoom-size '(0.618 . 0.618))
   (zoom-ignored-major-modes '(vterm-mode
-			      help-mode
-			      helpful-mode
-			      rxt-help-mode
-			      help-mode-menu))
+                              help-mode
+                              helpful-mode
+                              rxt-help-mode
+                              help-mode-menu))
   (zoom-ignored-buffer-names '("*info*"  "*helpful variable: argv*"))
   (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
   :general
   (:prefix-map 'evil-window-map)
   (:prefix-map '+toggle-map
-	       "z" #'zoom-mode))
+               "z" #'zoom-mode))
 
 (use-package switch-to-buffer
   :straight nil
@@ -600,7 +611,7 @@ session. Otherwise, the addition is permanent."
     (switch-to-buffer "*scratch*"))
   :general
   (:prefix-map '+buffer-map
-	       "s" #'+switch-to-scratch))
+               "s" #'+switch-to-scratch))
 
 ;; dashboard
 (use-package dashboard
@@ -641,8 +652,8 @@ session. Otherwise, the addition is permanent."
   (doom-themes modus-operandi-theme modus-vivendi-theme)
   :init
   (defvar +active-theme (if (display-graphic-p)
-			    'modus-operandi
-			  'doom-old-hope))
+                            'modus-operandi
+                          'doom-old-hope))
   (load-theme +active-theme t))
 
 (use-package circadian
@@ -702,7 +713,10 @@ session. Otherwise, the addition is permanent."
   :hook (visual-line-mode . visual-fill-column-mode)
   :config
   (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
-  :commands visual-fill-column-mode)
+  :commands visual-fill-column-mode
+  :general
+  (:prefix-map '+toggle-map
+               "v" 'visual-line-mode))
 
 ;;autocomplete
 (use-package company
@@ -724,7 +738,7 @@ session. Otherwise, the addition is permanent."
   :hook (after-init . global-flycheck-mode)
   :general
   (:prefix-map '+code-map
-	       "x" '(flycheck-list-errors :which-key "show errors"))
+               "x" '(flycheck-list-errors :which-key "show errors"))
   (general-nmap :keymaps 'flycheck-mode-map
     "]e" #'flycheck-next-error
     "[e" #'flycheck-previous-error))
@@ -749,7 +763,7 @@ session. Otherwise, the addition is permanent."
     "r" #'eglot-rename)
   ;; "f" #'eglot-format))
   (:keymaps 'eglot-mode-map
-	    [remap format-all-buffer] #'eglot-format))
+            [remap format-all-buffer] #'eglot-format))
 
 (use-package +flycheck-eglot
   :straight nil
@@ -794,8 +808,8 @@ session. Otherwise, the addition is permanent."
     (kbd "<S-return>") 'ein:worksheet-execute-cell-and-goto-next-km)
   :general
   (:keymaps 'ein:notebook-mode-map
-	    "C-j" #'ein:worksheet-goto-next-input-km
-	    "C-k" #'ein:worksheet-goto-prev-input-km))
+            "C-j" #'ein:worksheet-goto-next-input-km
+            "C-k" #'ein:worksheet-goto-prev-input-km))
 
 ;; utilities
 (use-package restart-emacs
@@ -811,7 +825,7 @@ session. Otherwise, the addition is permanent."
 (use-package yasnippet
   :hook ((prog-mode text-mode) . yas-global-mode)
   :general (:prefix-map '+insert-map
-			"s" 'yas-insert-snippet))
+                        "s" 'yas-insert-snippet))
 (use-package yasnippet-snippets
   :after yasnippet)
 (use-package doom-snippets
@@ -822,15 +836,15 @@ session. Otherwise, the addition is permanent."
 (use-package helpful
   :general
   (:prefix-map 'help-map
-	       "f" #'helpful-callable
-	       "v" #'helpful-variable
-	       "k" #'helpful-key
-	       "h" #'helpful-at-point))
+               "f" #'helpful-callable
+               "v" #'helpful-variable
+               "k" #'helpful-key
+               "h" #'helpful-at-point))
 
 (use-package adaptive-wrap
   :general
   (:prefix-map '+toggle-map
-	       "w" #'adaptive-wrap-prefix-mode))
+               "w" #'adaptive-wrap-prefix-mode))
 
 ;;; latex
 (use-package company-auctex)
@@ -852,13 +866,13 @@ session. Otherwise, the addition is permanent."
   (bibtex-text-indentation 20)
   (TeX-auto-fold t)
   :hook ((TeX-mode . +latex-setup)
-	 (TeX-mode . +latex-smartparens)
-	 (TeX-mode . TeX-fold-mode))
+         (TeX-mode . +latex-smartparens)
+         (TeX-mode . TeX-fold-mode))
   :mode ("\\.tex\\'" . LaTeX-mode)
   :general
   (:keymaps 'TeX-mode-map
-	    [remap compile] #'TeX-command-master
-	    [remap recompile] (lambda () (TeX-command-master +1)))
+            [remap compile] #'TeX-command-master
+            [remap recompile] (lambda () (TeX-command-master +1)))
   :preface
   (defun +latex-setup ()
     (turn-on-visual-line-mode)
@@ -866,29 +880,29 @@ session. Otherwise, the addition is permanent."
       (toggle-word-wrap))
     (TeX-fold-buffer)
     (setq-local visual-fill-column-center-text t
-		visual-fill-column-width 100
+                visual-fill-column-width 100
 
-		;; important that reftex comes before auctex otherwise
-		;; citation autocomplete doesn't work
-		company-backends (append '(company-reftex-citations
-					   company-reftex-labels
-					   company-auctex-labels
-					   company-auctex-bibs
-					   company-auctex-macros
-					   company-auctex-symbols
-					   company-auctex-environments
-					   company-math-symbols-latex
-					   company-math-symbols-unicode
-					   company-latex-commands)
-					 company-backends)))
+                ;; important that reftex comes before auctex otherwise
+                ;; citation autocomplete doesn't work
+                company-backends (append '(company-reftex-citations
+                                           company-reftex-labels
+                                           company-auctex-labels
+                                           company-auctex-bibs
+                                           company-auctex-macros
+                                           company-auctex-symbols
+                                           company-auctex-environments
+                                           company-math-symbols-latex
+                                           company-math-symbols-unicode
+                                           company-latex-commands)
+                                         company-backends)))
   (defun +latex-smartparens ()
     (setq-local  TeX-electric-math (cons "\\(" "\\)")
-		 ;; Smartparens for whatever reason treats the
-		 ;; insertion of dollar signs and quotes as single characters.
-		 sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands)
-		 sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands)
-		 ;; After selecting a region, we can wrap it in parenthesis or quotes.
-		 sp-autowrap-region t)))
+                 ;; Smartparens for whatever reason treats the
+                 ;; insertion of dollar signs and quotes as single characters.
+                 sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands)
+                 sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands)
+                 ;; After selecting a region, we can wrap it in parenthesis or quotes.
+                 sp-autowrap-region t)))
 
 (use-package evil-tex
   :hook (LaTeX-mode . evil-tex-mode))
@@ -900,7 +914,7 @@ session. Otherwise, the addition is permanent."
   (defun +bibtex-setup ()
     (turn-on-visual-line-mode)
     (setq-local visual-fill-column-center-text t
-		visual-fill-column-width 100)))
+                visual-fill-column-width 100)))
 
 (use-package auctex-latexmk
   :custom
@@ -911,19 +925,19 @@ session. Otherwise, the addition is permanent."
 (use-package reftex
   :straight nil
   :hook ((TeX-mode . reftex-mode)
-	 (LaTeX-mode . reftex-mode))
+         (LaTeX-mode . reftex-mode))
   :init
   (setq reftex-cite-format
-	'((?a . "\\autocite[]{%l}")
-	  (?b . "\\blockcquote[]{%l}{}")
-	  (?c . "\\cite[]{%l}")
-	  (?f . "\\footcite[]{%l}")
-	  (?n . "\\nocite{%l}")
-	  (?p . "\\parencite[]{%l}")
-	  (?s . "\\smartcite[]{%l}")
-	  (?t . "\\textcite[]{%l}"))
-	reftex-plug-into-AUCTeX t
-	reftex-toc-split-windows-fraction 0.3))
+        '((?a . "\\autocite[]{%l}")
+          (?b . "\\blockcquote[]{%l}{}")
+          (?c . "\\cite[]{%l}")
+          (?f . "\\footcite[]{%l}")
+          (?n . "\\nocite{%l}")
+          (?p . "\\parencite[]{%l}")
+          (?s . "\\smartcite[]{%l}")
+          (?t . "\\textcite[]{%l}"))
+        reftex-plug-into-AUCTeX t
+        reftex-toc-split-windows-fraction 0.3))
 
 (use-package pdf-tools
   :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
@@ -939,7 +953,7 @@ session. Otherwise, the addition is permanent."
   (+local-leader-def :keymaps 'pdf-view-mode-map
     "s" 'pdf-view-auto-slice-minor-mode)
   (:keymaps 'pdf-view-mode-map
-	    "q" #'kill-current-buffer))
+            "q" #'kill-current-buffer))
 
 ;; vc-mode tweaks
 (use-package vc
@@ -956,10 +970,10 @@ session. Otherwise, the addition is permanent."
   (magit-diff-refine-hunk t)
   :general
   (:keymaps 'transient-map
-	    (kbd "<escape>") #'transient-quit-one
-	    "q" #'transient-quit-one)
+            (kbd "<escape>") #'transient-quit-one
+            "q" #'transient-quit-one)
   (:prefix-map '+vc-map
-	       "g" 'magit-status)
+               "g" 'magit-status)
   (+local-leader-def :keymaps 'with-editor-mode-map
     "," 'with-editor-finish
     "k" 'with-editor-cancel))
@@ -991,15 +1005,24 @@ session. Otherwise, the addition is permanent."
   :general
   (+leader-def
     "p" '(:keymap projectile-command-map
-		  :package projectile
-		  :which-key "projects")))
+                  :package projectile
+                  :which-key "projects")))
 
 ;; Org Mode
-(use-package org)
-;; (use-package org-plus-contrib)
+(use-package org
+  :custom
+  (org-startup-indented t)
+  (org-directory "~/Documents/org")
+  (org-default-notes-file (concat org-directory "/notes.org"))
+  :ghook
+  ('org-mode-hook '(visual-line-mode org-superstar-mode))
+  :general
+  (+local-leader-def :keymaps 'org-mode-map
+    "," #'org-ctrl-c-ctrl-c
+    "o" #'org-open-at-point))
+
 (use-package org-superstar
-  :custom (org-superstar-special-todo-items t)
-  :hook (org-mode . org-superstar-mode))
+  :custom (org-superstar-special-todo-items t))
 
 ;; languages + highlighting
 (use-package tree-sitter
@@ -1024,19 +1047,19 @@ session. Otherwise, the addition is permanent."
   (+leader-def
     "'" #'vterm-toggle)
   (:prefix-map '+open-map
-	       "t" #'vterm-toggle
-	       "T" #'vterm-other-window)
+               "t" #'vterm-toggle
+               "T" #'vterm-other-window)
   :config
   (setq vterm-toggle-fullscreen-p nil)
   (add-to-list 'display-buffer-alist
-	       '((lambda (bufname _)
-		   (with-current-buffer bufname (equal major-mode 'vterm-mode)))
-		 (display-buffer-reuse-window display-buffer-in-direction)
-		 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-		 (direction . bottom)
-		 (dedicated . t) ;dedicated is supported in emacs27
-		 (reusable-frames . visible)
-		 (window-height . 0.3))))
+               '((lambda (bufname _)
+                   (with-current-buffer bufname (equal major-mode 'vterm-mode)))
+                 (display-buffer-reuse-window display-buffer-in-direction)
+                 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+                 (direction . bottom)
+                 (dedicated . t) ;dedicated is supported in emacs27
+                 (reusable-frames . visible)
+                 (window-height . 0.3))))
 
 ;; direnv support
 (use-package envrc
