@@ -1075,6 +1075,9 @@ session. Otherwise, the addition is permanent."
 (use-package pkgbuild-mode
   :mode ("PKGBUILD" . pkgbuild-mode))
 
+;; different git file modes
+(use-package git-modes)
+
 ;; Emacs Application Framework
 ;; doesn't seem to work currently
 (use-package eaf
