@@ -21,7 +21,7 @@
 
 ;; garbage collection hacks
 (use-package gcmh
-  :init (gcmh-mode 1))
+  :hook (after-init . gcmh-mode))
 
 (use-package no-littering
   :custom
@@ -75,6 +75,8 @@
   (evil-split-window-below t)
   (evil-vsplit-window-right t)
   (evil-undo-system 'undo-fu)
+  (evil-regexp-search t)
+  (evil-move-cursor-back nil)
   :config
   (evil-mode 1))
 
@@ -111,6 +113,8 @@
    '(insert emacs hybrid normal visual motion operator replace))
   :config
   (general-evil-setup)
+
+  (general-add-advice #'evil-force-normal-state :after #'evil-escape)
 
   ;; leader key setup
   (general-create-definer +leader-def
@@ -155,7 +159,7 @@
     :wk-full-keys nil)
 
   (general-def :prefix-map '+narrow/notes-map
-    "n" #'(crux-with-region-or-buffer narrow-to-region)
+    "n" #'narrow-to-region
     "p" #'narrow-to-page
     "d" #'narrow-to-defun
     "w" #'widen
@@ -218,13 +222,14 @@
 (use-package evil-exchange
   :config (evil-exchange-install))
 
+
 ;; code folding
 (use-package vimish-fold :after evil)
 (use-package evil-vimish-fold
   :after vimish-fold
   :custom
   (evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
-  :init (global-evil-vimish-fold-mode +1))
+  :hook (after-init . global-evil-vimish-fold-mode))
 
 ;; text indentation stuff
 (with-eval-after-load 'general
@@ -234,8 +239,8 @@
 ;; incremental narrowing a la ivy
 (use-package selectrum
   :commands selectrum-next-candidate selectrum-previous-candidate
-  :init
-  (selectrum-mode +1)
+  :hook
+  (after-init . selectrum-mode)
   :general
   (general-imap "C-k" nil)
   (:keymaps 'selectrum-minibuffer-map
@@ -443,7 +448,7 @@ session. Otherwise, the addition is permanent."
   :custom
   (which-key-popup-type 'minibuffer)
   (which-key-enable-extended-define-key t)
-  :init (which-key-mode +1))
+  :hook (after-init . which-key-mode))
 
 ;;; UI Tweaks
 
@@ -483,8 +488,7 @@ session. Otherwise, the addition is permanent."
 
 (use-package fringe
   :straight nil
-  :init
-  (set-fringe-style 0)
+  :init (set-fringe-style 0)
   :custom
   ;; fringes
   (indicate-buffer-boundaries   nil)
@@ -919,25 +923,25 @@ session. Otherwise, the addition is permanent."
 (use-package auctex-latexmk
   :custom
   (auctex-latexmk-inherit-TeX-PDF-mode t)
-  :init
-  (auctex-latexmk-setup))
+  :hook
+  (TeX-mode . auctex-latexmk-setup))
 
 (use-package reftex
   :straight nil
   :hook ((TeX-mode . reftex-mode)
          (LaTeX-mode . reftex-mode))
-  :init
-  (setq reftex-cite-format
-        '((?a . "\\autocite[]{%l}")
-          (?b . "\\blockcquote[]{%l}{}")
-          (?c . "\\cite[]{%l}")
-          (?f . "\\footcite[]{%l}")
-          (?n . "\\nocite{%l}")
-          (?p . "\\parencite[]{%l}")
-          (?s . "\\smartcite[]{%l}")
-          (?t . "\\textcite[]{%l}"))
-        reftex-plug-into-AUCTeX t
-        reftex-toc-split-windows-fraction 0.3))
+  :custom
+  (reftex-cite-format
+   '((?a . "\\autocite[]{%l}")
+     (?b . "\\blockcquote[]{%l}{}")
+     (?c . "\\cite[]{%l}")
+     (?f . "\\footcite[]{%l}")
+     (?n . "\\nocite{%l}")
+     (?p . "\\parencite[]{%l}")
+     (?s . "\\smartcite[]{%l}")
+     (?t . "\\textcite[]{%l}"))
+   reftex-plug-into-AUCTeX t
+   reftex-toc-split-windows-fraction 0.3))
 
 (use-package pdf-tools
   :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
@@ -985,6 +989,7 @@ session. Otherwise, the addition is permanent."
   :after magit)
 
 (use-package magit-todos
+  :disabled
   :after magit
   :config (magit-todos-mode))
 
@@ -1026,7 +1031,7 @@ session. Otherwise, the addition is permanent."
 
 ;; languages + highlighting
 (use-package tree-sitter
-  :init (global-tree-sitter-mode))
+  :hook (after-init . global-tree-sitter-mode))
 (use-package tree-sitter-langs)
 (use-package tree-sitter-hl
   :straight nil
@@ -1063,7 +1068,7 @@ session. Otherwise, the addition is permanent."
 
 ;; direnv support
 (use-package envrc
-  :init (envrc-global-mode +1))
+  :hook (after-init . envrc-global-mode))
 
 ;; arch PKGBUILDS
 (use-package pkgbuild-mode
