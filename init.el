@@ -1024,6 +1024,7 @@ session. Otherwise, the addition is permanent."
   :general
   (+local-leader-def :keymaps 'org-mode-map
     "," #'org-ctrl-c-ctrl-c
+    "t" #'org-todo
     "o" #'org-open-at-point))
 
 (use-package org-superstar

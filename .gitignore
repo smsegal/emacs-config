@@ -54,6 +54,8 @@ flycheck_*.el
 
 # End of https://www.toptal.com/developers/gitignore/api/emacs
 
-straight
+# specific to this repo
+/var/
 custom.el
-eln-cache/
+/eln-cache/
+/straight/
