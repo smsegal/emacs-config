@@ -78,7 +78,9 @@
   (evil-regexp-search t)
   (evil-move-cursor-back nil)
   :config
+  (evil-select-search-module 'evil-search-module 'evil-search)
   (evil-mode 1))
+
 
 (use-package undo-tree
   :disabled
@@ -98,6 +100,8 @@
   :custom
   (evil-escape-delay 0.1)
   (evil-escape-key-sequence "fd")
+  :init
+  (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
   :config (evil-escape-mode +1))
 
 (use-package smartparens
@@ -182,6 +186,15 @@
     "t" '(:keymap +toggle-map :which-key "toggle")
     "h" '(:keymap help-map :which-key "help")))
 
+(use-package +evil-contrib
+  :straight nil
+  :load-path "modules/"
+  :config
+  (evil-ex-define-cmd "@" #'+evil:apply-macro)
+  :general
+  (general-vmap "@" #'+evil:apply-macro)
+  (general-mmap "g@" #'+evil:apply-macro))
+
 (use-package evil-surround
   :config
   (global-evil-surround-mode +1))
@@ -196,6 +209,9 @@
   (evil-snipe-mode +1)
   (evil-snipe-override-mode +1))
 
+(use-package evil-visualstar
+  :config (global-evil-visualstar-mode))
+
 (use-package evil-nerd-commenter
   :commands evilnc-comment-operator
   :general
@@ -204,7 +220,8 @@
 (use-package evil-easymotion
   :general
   (general-nmap
-    "gs" '(:keymap evilem-map :which-key "easymotion")))
+    "gs" '(:keymap evilem-map
+           :which-key "easymotion")))
 
 (use-package evil-lion
   :general
@@ -252,9 +269,8 @@
   :hook (selectrum-mode . selectrum-prescient-mode))
 (use-package company-prescient
   :hook (company-mode . company-prescient-mode))
-(use-package selectrum-contrib
+(use-package +selectrum-contrib
   :straight nil
-  :after selectrum
   :load-path "modules/"
   :general
   (:prefix-map '+file-map
@@ -331,8 +347,7 @@ session. Otherwise, the addition is permanent."
     (ispell-pdict-save t))
   :general
   ([remap ispell-word] #'flyspell-correct-wrapper)
-  (general-nvmap
-    "zg" #'+spell/add-word))
+  (general-nvmap "zg" #'+spell/add-word))
 
 (use-package flyspell-correct-popup
   :after flyspell-correct
@@ -401,17 +416,63 @@ session. Otherwise, the addition is permanent."
 (use-package ws-butler
   :hook (prog-mode . ws-butler-mode))
 
+;;; vc-mode and Magit
+(use-package vc
+  :straight nil
+  :custom
+  (vc-command-messages t)
+  (vc-follow-symlinks t)
+  ;; don't make an extra frame for the ediff control panel (doesn't
+  ;; work well in tiling wms)
+  (ediff-window-setup-function 'ediff-setup-windows-plain))
+
+(use-package magit
+  :custom
+  (magit-diff-refine-hunk t)
+  :general
+  (:keymaps 'transient-map
+            (kbd "<escape>") #'transient-quit-one
+            "q" #'transient-quit-one)
+  (general-nmap :keymaps 'magit-section-mode-map
+    "TAB" #'magit-section-toggle
+    "j" #'magit-section-forward
+    "k" #'magit-section-backward)
+  (:prefix-map '+vc-map
+               "g" 'magit-status)
+  (+local-leader-def :keymaps 'with-editor-mode-map
+    "," 'with-editor-finish
+    "k" 'with-editor-cancel))
+
+(use-package evil-magit
+  :after magit)
+
+(use-package forge
+  :after magit)
+
+(use-package magit-todos
+  :disabled
+  :after magit
+  :config (magit-todos-mode))
+
+(use-package git-gutter
+  :config (global-git-gutter-mode +1))
+
+;; TODO: needs evil keybindings
+(use-package git-timemachine
+  :commands git-timemachine)
+
 ;;; Buffers
 
-;; TODO: bufler needs evil-keybindings
 (use-package bufler
   ;; :hook (after-init . bufler-mode)
+  :commands bufler-ex
   :general
-  (:keymaps 'bufler-list-mode-map
-            :states '(normal visual)
-            "RET" #'bufler-list-buffer-switch
-            (kbd "<escape>") #'quit-window
-            "q" #'quit-window)
+  (general-nvmap
+    :keymaps 'bufler-list-mode-map
+    "RET" #'bufler-list-buffer-switch
+    ;; "TAB" #'bufler-ex
+    (kbd "<escape>") #'quit-window
+    "q" #'quit-window)
   (:prefix-map '+buffer-map
                "b" '(bufler-switch-buffer :which-key "switch buffer")
                "B" '(bufler-list :which-key "buffer list")))
@@ -509,7 +570,7 @@ session. Otherwise, the addition is permanent."
   :hook (after-init . auto-dim-other-buffers-mode)
   :custom
   (auto-dim-other-buffers-dim-on-switch-to-minibuffer nil)
-  (auto-dim-other-buffers-dim-on-focus-out t))
+  (auto-dim-other-buffers-dim-on-focus-out nil))
 
 (use-package winner
   :straight nil
@@ -736,7 +797,6 @@ session. Otherwise, the addition is permanent."
 
 ;; syntax highlighting
 (use-package flycheck
-
   :custom
   (flycheck-disabled-checkers '(emacs-lisp-checkdoc))
   :hook (after-init . global-flycheck-mode)
@@ -959,47 +1019,6 @@ session. Otherwise, the addition is permanent."
   (:keymaps 'pdf-view-mode-map
             "q" #'kill-current-buffer))
 
-;; vc-mode tweaks
-(use-package vc
-  :straight nil
-  :custom
-  (vc-command-messages t)
-  (vc-follow-symlinks t)
-  ;; don't make an extra frame for the ediff control panel (doesn't
-  ;; work well in tiling wms)
-  (ediff-window-setup-function 'ediff-setup-windows-plain))
-
-(use-package magit
-  :custom
-  (magit-diff-refine-hunk t)
-  :general
-  (:keymaps 'transient-map
-            (kbd "<escape>") #'transient-quit-one
-            "q" #'transient-quit-one)
-  (:prefix-map '+vc-map
-               "g" 'magit-status)
-  (+local-leader-def :keymaps 'with-editor-mode-map
-    "," 'with-editor-finish
-    "k" 'with-editor-cancel))
-
-(use-package evil-magit
-  :after magit)
-
-(use-package forge
-  :after magit)
-
-(use-package magit-todos
-  :disabled
-  :after magit
-  :config (magit-todos-mode))
-
-(use-package git-gutter
-
-  :config (global-git-gutter-mode +1))
-
-;; TODO: needs evil keybindings
-(use-package git-timemachine
-  :commands git-timemachine)
 
 ;; projectile
 (use-package projectile
@@ -1010,8 +1029,8 @@ session. Otherwise, the addition is permanent."
   :general
   (+leader-def
     "p" '(:keymap projectile-command-map
-                  :package projectile
-                  :which-key "projects")))
+          :package projectile
+          :which-key "projects")))
 
 ;; Org Mode
 (use-package org
@@ -1045,6 +1064,13 @@ session. Otherwise, the addition is permanent."
   (+local-leader-def :keymaps 'emacs-lisp-mode-map
     "e" #'eval-last-sexp))
 
+(use-package +lisp-indent
+  :straight nil
+  :load-path "modules/"
+  :init
+  (general-add-advice #'calculate-lisp-indent
+                      :override #'void~calculate-lisp-indent))
+
 ;; vterm
 (use-package vterm)
 (use-package vterm-toggle
@@ -1076,18 +1102,8 @@ session. Otherwise, the addition is permanent."
   :mode ("PKGBUILD" . pkgbuild-mode))
 
 ;; different git file modes
-(use-package git-modes)
+(use-package git-modes
+  :mode ("/.dockerignore\\'" . gitignore-mode))
 
-;; Emacs Application Framework
-;; doesn't seem to work currently
-(use-package eaf
-  :disabled
-  :straight nil
-  :load-path "/usr/share/emacs/site-lisp/eaf"
-  :custom
-  (eaf-find-alternate-file-in-dired t)
-  :config
-  (eaf-bind-key scroll_up "C-j" eaf-pdf-viewer-keybinding)
-  (eaf-bind-key scroll_down "C-k" eaf-pdf-viewer-keybinding)
-  (eaf-bind-key take_photo "p" eaf-camera-keybinding)
-  (eaf-enable-evil-intergration))
+(use-package prism
+  :straight (:host github :repo "alphapapa/prism.el"))
