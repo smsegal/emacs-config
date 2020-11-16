@@ -76,7 +76,7 @@
   (evil-vsplit-window-right t)
   (evil-undo-system 'undo-fu)
   (evil-regexp-search t)
-  (evil-move-cursor-back nil)
+  (evil-move-cursor-back t)
   :config
   (evil-select-search-module 'evil-search-module 'evil-search)
   (evil-mode 1))

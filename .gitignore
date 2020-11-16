@@ -59,3 +59,4 @@ flycheck_*.el
 custom.el
 /eln-cache/
 /straight/
+/url/
