@@ -664,9 +664,14 @@ session. Otherwise, the addition is permanent."
   (zoom-ignored-buffer-names '("*info*"  "*helpful variable: argv*"))
   (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
   :general
-  (:prefix-map 'evil-window-map)
   (:prefix-map '+toggle-map
                "z" #'zoom-mode))
+
+(use-package +enlarge-window
+  :straight nil
+  :load-path "modules/"
+  :general (:prefix-map 'evil-window-map
+                        "o" #'+window-enlargen))
 
 (use-package switch-to-buffer
   :straight nil
