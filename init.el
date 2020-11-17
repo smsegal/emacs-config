@@ -100,8 +100,8 @@
   :custom
   (evil-escape-delay 0.1)
   (evil-escape-key-sequence "fd")
-  :init
-  (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
+  ;; :init
+  ;; (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
   :config (evil-escape-mode +1))
 
 (use-package smartparens
@@ -608,7 +608,7 @@ session. Otherwise, the addition is permanent."
   :config
   ;; (+moody-replace-mode-line-evil-state)
   (moody-replace-sml/mode-line-buffer-identification)
-  (moody-replace-mode-line-buffer-identification)
+  ;; (moody-replace-mode-line-buffer-identification)
   (moody-replace-vc-mode))
 
 (use-package highlight-parentheses
@@ -684,6 +684,8 @@ session. Otherwise, the addition is permanent."
   (dashboard-set-footer nil)
   (initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
   (dashboard-center-content t)
+  (dashboard-set-file-icons t)
+  (dashboard-set-heading-icons t)
   :config
   (dashboard-setup-startup-hook))
 
@@ -788,9 +790,11 @@ session. Otherwise, the addition is permanent."
   :custom
   (company-idle-delay 0.0)
   :hook (after-init . global-company-mode)
-  :general (general-imap "C-SPC" 'company-complete))
+  :general
+  (general-imap "C-SPC" 'company-complete)
+  (:keymaps 'company-search-map
+            "C-s" #'company-filter-candidates))
 (use-package company-box
-
   :hook (company-mode . company-box-mode))
 (use-package company-quickhelp
   :hook (company-mode . company-quickhelp-mode))
@@ -819,15 +823,18 @@ session. Otherwise, the addition is permanent."
 (use-package eglot
   :after (company yasnippet)
   :ghook
-  ('python-mode-hook  #'eglot-ensure)
+  ('(python-mode-hook js-mode-hook)  #'eglot-ensure)
+  :config
+  (add-to-list 'eglot-server-programs
+               '((js-mode typescript-mode) . ("typescript-language-server" "--stdio")))
   :general
   (general-def
     :prefix-map '+code-map
     :predicate '(eglot-managed-p)
-    "r" #'eglot-rename)
-  ;; "f" #'eglot-format))
-  (:keymaps 'eglot-mode-map
-            [remap format-all-buffer] #'eglot-format))
+    "r" #'eglot-rename))
+;; "f" #'eglot-format))
+;; (:keymaps 'eglot-mode-map
+;;           [remap format-all-buffer] #'eglot-format))
 
 (use-package +flycheck-eglot
   :straight nil
@@ -874,6 +881,45 @@ session. Otherwise, the addition is permanent."
   (:keymaps 'ein:notebook-mode-map
             "C-j" #'ein:worksheet-goto-next-input-km
             "C-k" #'ein:worksheet-goto-prev-input-km))
+
+(use-package js2-mode
+  :interpreter "node"
+  :commands js2-line-break
+  :hook (js-mode . js2-minor-mode)
+  :custom
+  (js-chain-indent t)
+  ;; Don't mishighlight shebang lines
+  (js2-skip-preprocessor-directives t)
+  ;; let flycheck handle this
+  (js2-mode-show-parse-errors nil)
+  (js2-mode-show-strict-warnings nil)
+  ;; Flycheck provides these features, so disable them: conflicting with
+  ;; the eslint settings.
+  (js2-strict-trailing-comma-warning nil)
+  (js2-strict-missing-semi-warning nil)
+  ;; maximum fontification
+  (js2-highlight-level 3)
+  (js2-highlight-external-variables t)
+  (js2-idle-timer-delay 0.1))
+
+(use-package js2-refactor
+  :hook (js2-minor-mode . js2-refactor-mode)
+  :general
+  (general-nvmap
+    :keymaps 'js2-mode
+    "," '(:keymap js2-refactor-mode-map)))
+
+(use-package rjsx-mode
+  :mode "/.*\\.js\\'")
+
+(use-package json-mode)
+
+(use-package typescript-mode)
+(use-package tide
+  :disabled
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup)
+         (typescript-mode . tide-hl-identifier-mode)))
 
 ;; utilities
 (use-package restart-emacs
@@ -1050,6 +1096,9 @@ session. Otherwise, the addition is permanent."
   :custom (org-superstar-special-todo-items t))
 
 ;; languages + highlighting
+
+
+
 (use-package tree-sitter
   :hook (after-init . global-tree-sitter-mode))
 (use-package tree-sitter-langs)
