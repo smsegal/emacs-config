@@ -29,7 +29,7 @@
    `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
 (use-package recentf-mode
-  :straight nil
+  :straight (:type built-in)
   :after no-littering
   :hook (after-init . recentf-mode)
   :custom
@@ -102,12 +102,13 @@
   (evil-escape-key-sequence "fd")
   ;; :init
   ;; (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
-  :config (evil-escape-mode +1))
+  :config
+  (add-to-list 'evil-escape-excluded-major-modes 'vterm-mode)
+  (evil-escape-mode +1))
 
 (use-package smartparens
   :hook (after-init . smartparens-global-mode))
-(use-package smartparens-config
-  :straight nil)
+(use-package smartparens-config :straight nil)
 
 ;; general keybindings
 (use-package general
@@ -429,22 +430,32 @@ session. Otherwise, the addition is permanent."
 (use-package magit
   :custom
   (magit-diff-refine-hunk t)
+  :preface
+  (defun +magit/fix-submodule-binding ()
+    ;; evil-magit seems to be overriding or setting this wrong
+    ;; somehow, so fix it here
+    (transient-append-suffix 'magit-dispatch "\""
+      '("'" "Submodules" magit-submodule)))
+  :gfhook ('magit-mode-hook #'+magit/fix-submodule-binding)
+  :config
+  (transient-bind-q-to-quit)
   :general
-  (:keymaps 'transient-map
-            (kbd "<escape>") #'transient-quit-one
-            "q" #'transient-quit-one)
-  (general-nmap :keymaps 'magit-section-mode-map
+  (:prefix-map '+vc-map
+               "g" 'magit-status)
+  (general-nmap
+    :keymaps 'magit-section-mode-map
     "TAB" #'magit-section-toggle
     "j" #'magit-section-forward
     "k" #'magit-section-backward)
-  (:prefix-map '+vc-map
-               "g" 'magit-status)
-  (+local-leader-def :keymaps 'with-editor-mode-map
+  (+local-leader-def
+    :keymaps 'with-editor-mode-map
     "," 'with-editor-finish
     "k" 'with-editor-cancel))
 
 (use-package evil-magit
   :after magit)
+;; :config
+;; (evil-magit-define-key
 
 (use-package forge
   :after magit)
@@ -515,6 +526,7 @@ session. Otherwise, the addition is permanent."
 
 ;; set this for all prompts
 (defalias 'yes-or-no-p 'y-or-n-p)
+
 (setq confirm-nonexistent-file-or-buffer nil
       mouse-yank-at-point t
 
@@ -531,8 +543,15 @@ session. Otherwise, the addition is permanent."
   (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
   (add-to-list 'default-frame-alist '(vertical-scroll-bars)))
 
+;; pulse current line on window switch
+(use-package beacon
+  :hook (after-init . beacon-mode)
+  :config
+  (add-to-list 'beacon-dont-blink-commands 'vterm-send-return)
+  (add-to-list 'beacon-dont-blink-commands 'mwheel-scroll))
+
 (use-package avoid
-  :straight nil
+  :straight (:type built-in)
   :config
   ;; doesn't seem to do any animating, at least on wayland should
   ;; check it out on X (but I never use X soooo)
@@ -540,7 +559,7 @@ session. Otherwise, the addition is permanent."
 
 ;;window dividers
 (use-package window-divider
-  :straight nil
+  :straight (:type built-in)
   :custom
   (window-divider-default-right-width 1)
   (window-divider-default-bottom-width 1)
@@ -573,7 +592,7 @@ session. Otherwise, the addition is permanent."
   (auto-dim-other-buffers-dim-on-focus-out nil))
 
 (use-package winner
-  :straight nil
+  :straight (:type built-in)
   :hook (after-init . winner-mode)
   :general
   (:prefix-map 'evil-window-map
@@ -608,14 +627,13 @@ session. Otherwise, the addition is permanent."
   :config
   ;; (+moody-replace-mode-line-evil-state)
   (moody-replace-sml/mode-line-buffer-identification)
-  ;; (moody-replace-mode-line-buffer-identification)
   (moody-replace-vc-mode))
 
 (use-package highlight-parentheses
   :hook ((prog-mode LaTex-mode) . highlight-parentheses-mode))
 
 (use-package hl-line
-  :straight nil
+  :straight (:type built-in)
   :preface
   (defun +highlight-visual-line ()
     (save-excursion
@@ -640,7 +658,7 @@ session. Otherwise, the addition is permanent."
   :hook (tty-setup . evil-terminal-cursor-changer-activate))
 
 (use-package xterm-mouse-mode
-  :straight nil
+  :straight (:type built-in)
   :hook (tty-setup . xterm-mouse-mode))
 
 (use-package ace-window
@@ -674,7 +692,7 @@ session. Otherwise, the addition is permanent."
                         "o" #'+window-enlargen))
 
 (use-package switch-to-buffer
-  :straight nil
+  :straight (:type built-in)
   :preface
   (defun +switch-to-scratch ()
     (interactive)
@@ -719,7 +737,7 @@ session. Otherwise, the addition is permanent."
 
 (use-package load-theme
   :disabled
-  :straight nil
+  :straight (:type built-in)
   :after
   (doom-themes modus-operandi-theme modus-vivendi-theme)
   :init
@@ -757,7 +775,7 @@ session. Otherwise, the addition is permanent."
 
 (use-package display-line-numbers
   :disabled
-  :straight nil
+  :straight (:type built-in)
   :init (setq display-line-numbers-type 'relative)
   :hook (prog-mode . display-line-numbers-mode))
 
@@ -782,13 +800,23 @@ session. Otherwise, the addition is permanent."
 
 ;; visual fill column
 (use-package visual-fill-column
-  :hook (visual-line-mode . visual-fill-column-mode)
   :config
   (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
   :commands visual-fill-column-mode
+  :preface
+  (defun +toggle-visual-fill-and-line-mode ()
+    (interactive)
+    (with)
+    (if (and visual-fill-column-mode visual-line-mode)
+        (progn
+          (visual-fill-column-mode -1)
+          (visual-line-mode -1))
+      (progn
+        (visual-fill-column-mode +1) tz
+        (visual-line-mode +1))))
   :general
   (:prefix-map '+toggle-map
-               "v" 'visual-line-mode))
+               "v" #'+toggle-visual-fill-and-line-mode))
 
 ;;autocomplete
 (use-package company
@@ -853,7 +881,7 @@ session. Otherwise, the addition is permanent."
 
 ;; python tweaks
 (use-package python
-  :straight nil
+  :straight (:type built-in)
   :custom
   (python-shell-interpreter "ipython")
   (python-shell-interpreter-args "--simple-prompt -i"))
@@ -1023,7 +1051,7 @@ session. Otherwise, the addition is permanent."
   :hook (LaTeX-mode . evil-tex-mode))
 
 (use-package bibtex
-  :straight nil
+  :straight (:type built-in)
   :gfhook #'+bibtex-setup
   :preface
   (defun +bibtex-setup ()
@@ -1038,7 +1066,7 @@ session. Otherwise, the addition is permanent."
   (TeX-mode . auctex-latexmk-setup))
 
 (use-package reftex
-  :straight nil
+  :straight (:type built-in)
   :hook ((TeX-mode . reftex-mode)
          (LaTeX-mode . reftex-mode))
   :custom
@@ -1102,7 +1130,18 @@ session. Otherwise, the addition is permanent."
 
 ;; languages + highlighting
 
+(use-package julia-mode
+  :mode "\.*\.jl")
 
+(use-package markdown-mode
+  :commands (markdown-mode gfm-mode)
+  :custom (markdown-commnd "multimarkdown")
+  :ghook
+  ('(markdown-mode-hook gfm-mode-hook)
+   '(visual-line-mode #'visual-fill-column-mode))
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode)))
 
 (use-package tree-sitter
   :hook (after-init . global-tree-sitter-mode))
@@ -1113,7 +1152,7 @@ session. Otherwise, the addition is permanent."
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
 
 (use-package emacs-lisp
-  :straight nil
+  :straight (:type built-in)
   :general
   (+local-leader-def :keymaps 'emacs-lisp-mode-map
     "e" #'eval-last-sexp))
