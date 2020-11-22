@@ -859,7 +859,7 @@ session. Otherwise, the addition is permanent."
   (lsp-eldoc-enable-hover nil)
   (lsp-headerline-breadcrumb-enable t)
   :ghook
-  ('TeX-mode-hook #'lsp-deferred)
+  ('(TeX-mode-hook js2-mode-hook) #'lsp-deferred)
   ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
                     lsp-modeline-diagnostics-mode
                     lsp-enable-which-key-integration))
