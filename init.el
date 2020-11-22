@@ -71,7 +71,7 @@
   (evil-want-keybinding nil)
   (evil-respect-visual-line-mode t)
   (evil-want-Y-yank-to-eol t)
-  (evil-cross-lines t)
+  (evil-cross-lines nil)
   (evil-split-window-below t)
   (evil-vsplit-window-right t)
   (evil-undo-system 'undo-fu)
@@ -80,7 +80,6 @@
   :config
   (evil-select-search-module 'evil-search-module 'evil-search)
   (evil-mode 1))
-
 
 (use-package undo-tree
   :disabled
@@ -194,7 +193,8 @@
   (evil-ex-define-cmd "@" #'+evil:apply-macro)
   :general
   (general-vmap "@" #'+evil:apply-macro)
-  (general-mmap "g@" #'+evil:apply-macro))
+  (general-mmap "g@" #'+evil:apply-macro)
+  (general-nvmap "gD" #'xref-find-references))
 
 (use-package evil-surround
   :config
@@ -661,6 +661,8 @@ session. Otherwise, the addition is permanent."
   :straight (:type built-in)
   :hook (tty-setup . xterm-mouse-mode))
 
+
+
 (use-package ace-window
   :custom
   (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
@@ -689,7 +691,8 @@ session. Otherwise, the addition is permanent."
   :straight nil
   :load-path "modules/"
   :general (:prefix-map 'evil-window-map
-                        "o" #'+window-enlargen))
+                        "o" #'+window-enlargen
+                        "O" #'delete-other-windows))
 
 (use-package switch-to-buffer
   :straight (:type built-in)
@@ -698,6 +701,9 @@ session. Otherwise, the addition is permanent."
     (interactive)
     (switch-to-buffer "*scratch*"))
   :general
+  (:keymaps 'global-map
+            (kbd "<mouse-9>") 'next-buffer
+            (kbd "<mouse-8>") 'previous-buffer)
   (:prefix-map '+buffer-map
                "s" #'+switch-to-scratch))
 
@@ -806,13 +812,12 @@ session. Otherwise, the addition is permanent."
   :preface
   (defun +toggle-visual-fill-and-line-mode ()
     (interactive)
-    (with)
     (if (and visual-fill-column-mode visual-line-mode)
         (progn
           (visual-fill-column-mode -1)
           (visual-line-mode -1))
       (progn
-        (visual-fill-column-mode +1) tz
+        (visual-fill-column-mode +1)
         (visual-line-mode +1))))
   :general
   (:prefix-map '+toggle-map
@@ -821,6 +826,7 @@ session. Otherwise, the addition is permanent."
 ;;autocomplete
 (use-package company
   :custom
+  (company-minimum-prefix-length 1)
   (company-idle-delay 0.0)
   :hook (after-init . global-company-mode)
   :general
@@ -839,21 +845,56 @@ session. Otherwise, the addition is permanent."
   :hook (after-init . global-flycheck-mode)
   :general
   (:prefix-map '+code-map
-               "x" '(flycheck-list-errors :which-key "show errors"))
-  (general-nmap :keymaps 'flycheck-mode-map
-    "]e" #'flycheck-next-error
-    "[e" #'flycheck-previous-error))
+               "x" '(flycheck-list-errors :which-key "show errors")))
 
 ;; lsp-mode
-;; (use-package lsp-mode
-;;   :commands (lsp lsp-deferred)
-;;   :custom
-;;   (lsp-keymap-prefix "C-l")
-;;   :hook (((python-mode TeX-mode LaTeX-mode) . lsp-deferred)
-;;          (lsp-mode . lsp-enable-which-key-integration)))
-;; (use-package lsp-ui :commands lsp-ui-mode)
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :custom
+  (read-process-output-max (* 1024 1024)) ;; 1mb
+  (lsp-completion-provider :capf)
+  (lsp-enable-folding nil)
+  (lsp-enable-on-type-formatting nil)
+  (lsp-enable-snippet t)
+  (lsp-eldoc-enable-hover nil)
+  (lsp-headerline-breadcrumb-enable t)
+  :ghook
+  ('TeX-mode-hook #'lsp-deferred)
+  ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
+                    lsp-modeline-diagnostics-mode
+                    lsp-enable-which-key-integration))
+  :general
+  (general-nvmap :keymaps 'lsp-mode-map
+    "," '(:keymap lsp-command-map))
+  (general-def
+    :prefix-map '+code-map
+    :predicate 'lsp-mode
+    "r" #'lsp-rename
+    "a" #'lsp-execute-code-action)
+  (general-def
+    :keymaps 'lsp-mode-map
+    :predicate '(not python-mode)
+    [remap format-all-buffer] #'lsp-format-buffer)
+  (general-def :predicate 'lsp-mode
+    [remap evil-goto-definition] #'lsp-find-definition
+    [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
+    [remap xref-find-references] #'lsp-ui-peek-find-references)
+  (general-def :keymaps 'lsp-ui-peek-mode-map
+    "j"   #'lsp-ui-peek--select-next
+    "k"   #'lsp-ui-peek--select-prev
+    "C-j" #'lsp-ui-peek--select-next
+    "C-k" #'lsp-ui-peek--select-prev))
+(use-package lsp-ui :commands lsp-ui-mode)
+
+(use-package lsp-pyright
+  :preface
+  (defun +pyright__enable-lsp ()
+    (require 'lsp-pyright)
+    (lsp-deferred))
+  :hook (python-mode . +pyright__enable-lsp))
 
 (use-package eglot
+  :disabled
   :after (company yasnippet)
   :ghook
   ('(python-mode-hook js-mode-hook)  #'eglot-ensure)
@@ -870,6 +911,7 @@ session. Otherwise, the addition is permanent."
 ;;           [remap format-all-buffer] #'eglot-format))
 
 (use-package +flycheck-eglot
+  :disabled
   :straight nil
   :after (eglot flycheck)
   :commands +lsp-eglot-prefer-flycheck-h +add-flycheck-eglot-checker
@@ -888,8 +930,9 @@ session. Otherwise, the addition is permanent."
 
 (use-package pyimport
   :general
-  (+local-leader-def
+  (general-nvmap
     :keymaps 'python-mode-map
+    :prefix ","
     "i" '(nil :which-key "imports")
     "iu" 'pyimport-remove-unused
     "ii" 'pyimport-insert-missing))
@@ -946,7 +989,7 @@ session. Otherwise, the addition is permanent."
   :mode "/.*\\.js\\'")
 
 (use-package json-mode)
-
+(use-package yaml-mode)
 (use-package typescript-mode)
 (use-package tide
   :disabled
@@ -1019,6 +1062,7 @@ session. Otherwise, the addition is permanent."
   :preface
   (defun +latex-setup ()
     (turn-on-visual-line-mode)
+    (visual-fill-column-mode +1)
     (unless word-wrap
       (toggle-word-wrap))
     (TeX-fold-buffer)
@@ -1118,7 +1162,7 @@ session. Otherwise, the addition is permanent."
   (org-directory "~/Documents/org")
   (org-default-notes-file (concat org-directory "/notes.org"))
   :ghook
-  ('org-mode-hook '(visual-line-mode org-superstar-mode))
+  ('org-mode-hook '(visual-line-mode visual-fill-column-mode org-superstar-mode))
   :general
   (+local-leader-def :keymaps 'org-mode-map
     "," #'org-ctrl-c-ctrl-c
@@ -1143,13 +1187,15 @@ session. Otherwise, the addition is permanent."
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode)))
 
+(use-package systemd)
+
 (use-package tree-sitter
-  :hook (after-init . global-tree-sitter-mode))
+  :init (global-tree-sitter-mode))
 (use-package tree-sitter-langs)
 (use-package tree-sitter-hl
   :straight nil
   :after tree-sitter tree-sitter-langs
-  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+  :ghook (#'tree-sitter-after-on-hook  #'tree-sitter-hl-mode))
 
 (use-package emacs-lisp
   :straight (:type built-in)
@@ -1163,6 +1209,13 @@ session. Otherwise, the addition is permanent."
   :init
   (general-add-advice #'calculate-lisp-indent
                       :override #'void~calculate-lisp-indent))
+
+(use-package calc
+  :straight (:type built-in)
+  :hook (calc-mode . calc-algebraic-mode)
+  :general
+  (:prefix-map '+open-map
+               "c" #'calc-dispatch))
 
 ;; vterm
 (use-package vterm)
@@ -1198,5 +1251,13 @@ session. Otherwise, the addition is permanent."
 (use-package git-modes
   :mode ("/.dockerignore\\'" . gitignore-mode))
 
-(use-package prism
-  :straight (:host github :repo "alphapapa/prism.el"))
+;; eshell fish completion
+(use-package eshell
+  :straight (:type built-in)
+  :ghook 'visual-line-mode
+  :general
+  (:prefix-map '+open-map
+               "e" 'eshell))
+(use-package fish-completion
+  :hook (eshell-mode . fish-completion-mode)
+  :custom (fish-completion-fallback-on-bash-p t))
