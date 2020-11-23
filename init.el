@@ -54,12 +54,19 @@
 (when IS-MAC
   (mac-auto-operator-composition-mode))
 
-;; (use-package exec-path-from-shell
-;;   :when (memq window-system '(mac ns x))
-;;   ;; :custom (exec-path-from-shell-arguments '("-l"))
-;;   :config
-;;   (setq exec-path-from-shell-variables '("PATH"))
-;;   (exec-path-from-shell-initialize))
+(use-package emacs
+  :straight (:type built-in)
+  :config
+  (server-start))
+
+;; gnome handles this fine
+(use-package exec-path-from-shell
+  :disabled
+  :when (memq window-system '(mac ns x))
+  ;; :custom (exec-path-from-shell-arguments '("-l"))
+  :config
+  (setq exec-path-from-shell-variables '("PATH"))
+  (exec-path-from-shell-initialize))
 
 ;; EVIL Mode (Can't do the emacs keybindings, hurts my pinkies)
 (use-package undo-fu)
@@ -99,8 +106,8 @@
   :custom
   (evil-escape-delay 0.1)
   (evil-escape-key-sequence "fd")
-  ;; :init
-  ;; (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
+  :init
+  (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
   :config
   (add-to-list 'evil-escape-excluded-major-modes 'vterm-mode)
   (evil-escape-mode +1))
@@ -118,7 +125,7 @@
   :config
   (general-evil-setup)
 
-  (general-add-advice #'evil-force-normal-state :after #'evil-escape)
+  ;; (general-add-advice #'evil-force-normal-state :after #'evil-escape)
 
   ;; leader key setup
   (general-create-definer +leader-def
@@ -156,7 +163,8 @@
   (general-def :prefix-map '+vc-map)
   (general-def :prefix-map '+insert-map)
   (general-def :prefix-map '+open-map
-    "-" 'dired-jump)
+    "-" 'dired-jump
+    "f" 'make-frame)
   (general-def :prefix-map '+toggle-map)
   (general-def :prefix-map '+search-map)
   (general-def :prefix-map '+bookmark-map
@@ -191,6 +199,7 @@
   :load-path "modules/"
   :config
   (evil-ex-define-cmd "@" #'+evil:apply-macro)
+  (general-add-advice 'evil-ret :after 'evil-ex-nohighlight)
   :general
   (general-vmap "@" #'+evil:apply-macro)
   (general-mmap "g@" #'+evil:apply-macro)
@@ -510,8 +519,6 @@ session. Otherwise, the addition is permanent."
                "f" 'format-all-buffer))
 
 ;; buffers
-(defalias 'list-buffers 'ibuffer-other-window)
-
 (put 'narrow-to-region 'disabled nil)
 
 ;; what the hell do i press next?
@@ -545,6 +552,7 @@ session. Otherwise, the addition is permanent."
 
 ;; pulse current line on window switch
 (use-package beacon
+  :disabled
   :hook (after-init . beacon-mode)
   :config
   (add-to-list 'beacon-dont-blink-commands 'vterm-send-return)
@@ -675,14 +683,21 @@ session. Otherwise, the addition is permanent."
 ;; window enlargement
 (use-package zoom
   :custom
-  (zoom-size '(0.618 . 0.618))
-  (zoom-ignored-major-modes '(vterm-mode
-                              help-mode
-                              helpful-mode
-                              rxt-help-mode
-                              help-mode-menu))
-  (zoom-ignored-buffer-names '("*info*"  "*helpful variable: argv*"))
+  (zoom-size '(0.7 . 0.7))
+  (zoom-ignored-major-modes '(dired-mode vterm-mode help-mode helpful-mode rxt-help-mode help-mode-menu org-mode))
+  (zoom-ignored-buffer-names '("*scratch*" "*info*" "*helpful variable: argv*"))
   (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
+  (zoom-ignore-predicates (list (lambda () (< (count-lines (point-min) (point-max)) 20))))
+  ;; (zoom-size '(0.618 . 0.618))
+  ;; (zoom-ignored-major-modes '(vterm-mode
+  ;;                             help-mode
+  ;;                             helpful-mode
+  ;;                             rxt-help-mode
+  ;;                             help-mode-menu))
+  ;; (zoom-ignored-buffer-names '("*info*"
+  ;;                              "*helpful variable: argv*"
+  ;;                              "*compilation*"))
+  ;; (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
   :general
   (:prefix-map '+toggle-map
                "z" #'zoom-mode))
@@ -859,7 +874,10 @@ session. Otherwise, the addition is permanent."
   (lsp-eldoc-enable-hover nil)
   (lsp-headerline-breadcrumb-enable t)
   :ghook
-  ('(TeX-mode-hook js2-mode-hook) #'lsp-deferred)
+  ('(TeX-mode-hook
+     yaml-mode-hook
+     js2-mode-hook)
+   #'lsp-deferred)
   ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
                     lsp-modeline-diagnostics-mode
                     lsp-enable-which-key-integration))
@@ -871,11 +889,11 @@ session. Otherwise, the addition is permanent."
     :predicate 'lsp-mode
     "r" #'lsp-rename
     "a" #'lsp-execute-code-action)
-  (general-def
-    :keymaps 'lsp-mode-map
-    :predicate '(not python-mode)
-    [remap format-all-buffer] #'lsp-format-buffer)
+  ;; (general-def
+  ;;   :keymaps 'lsp-mode-map
+  ;;   :predicate '(not python-mode)
   (general-def :predicate 'lsp-mode
+    [remap format-all-buffer] #'lsp-format-buffer
     [remap evil-goto-definition] #'lsp-find-definition
     [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
     [remap xref-find-references] #'lsp-ui-peek-find-references)
@@ -955,6 +973,7 @@ session. Otherwise, the addition is permanent."
     (kbd "<S-return>") 'ein:worksheet-execute-cell-and-goto-next-km)
   :general
   (:keymaps 'ein:notebook-mode-map
+            [remap save-buffer] #'ein:notebook-save-notebook-command-km
             "C-j" #'ein:worksheet-goto-next-input-km
             "C-k" #'ein:worksheet-goto-prev-input-km))
 
@@ -1217,6 +1236,24 @@ session. Otherwise, the addition is permanent."
   (:prefix-map '+open-map
                "c" #'calc-dispatch))
 
+(use-package compile
+  :straight (:type built-in)
+  :preface
+  (defun +apply-ansi-color-to-compilation-buffer-h ()
+    "Applies ansi codes to the compilation buffers. Meant for
+     `compilation-filter-hook'."
+    (with-silent-modifications
+      (ansi-color-apply-on-region compilation-filter-start (point))))
+  (defun my/fix-compilation-size ()
+    (with-selected-window (get-buffer-window "*compilation*")
+      (setq window-size-fixed t)
+      (window-resize (selected-window) (- 30 (window-total-width)) t t)))
+  :custom
+  (compilation-scroll-output 'first-error)
+  :ghook
+  ('compilation-filter-hook #'(+apply-ansi-color-to-compilation-buffer-h
+                               my/fix-compilation-size)))
+
 ;; vterm
 (use-package vterm)
 (use-package vterm-toggle
@@ -1258,6 +1295,7 @@ session. Otherwise, the addition is permanent."
   :general
   (:prefix-map '+open-map
                "e" 'eshell))
+
 (use-package fish-completion
   :hook (eshell-mode . fish-completion-mode)
   :custom (fish-completion-fallback-on-bash-p t))
