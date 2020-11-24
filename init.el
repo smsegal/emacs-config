@@ -876,6 +876,7 @@ session. Otherwise, the addition is permanent."
   :ghook
   ('(TeX-mode-hook
      yaml-mode-hook
+     sh-mode-hook
      js2-mode-hook)
    #'lsp-deferred)
   ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
@@ -889,20 +890,20 @@ session. Otherwise, the addition is permanent."
     :predicate 'lsp-mode
     "r" #'lsp-rename
     "a" #'lsp-execute-code-action)
-  ;; (general-def
-  ;;   :keymaps 'lsp-mode-map
-  ;;   :predicate '(not python-mode)
-  (general-def :predicate 'lsp-mode
-    [remap format-all-buffer] #'lsp-format-buffer
-    [remap evil-goto-definition] #'lsp-find-definition
-    [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
-    [remap xref-find-references] #'lsp-ui-peek-find-references)
-  (general-def :keymaps 'lsp-ui-peek-mode-map
-    "j"   #'lsp-ui-peek--select-next
-    "k"   #'lsp-ui-peek--select-prev
-    "C-j" #'lsp-ui-peek--select-next
-    "C-k" #'lsp-ui-peek--select-prev))
-(use-package lsp-ui :commands lsp-ui-mode)
+  (:keymaps 'lsp-mode-map
+            [remap format-all-buffer] #'lsp-format-buffer
+            [remap evil-goto-definition] #'lsp-find-definition))
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :general
+  (:keymaps 'lsp-mode-map
+            [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
+            [remap xref-find-references] #'lsp-ui-peek-find-references)
+  (:keymaps 'lsp-ui-peek-mode-map
+            "j"   #'lsp-ui-peek--select-next
+            "k"   #'lsp-ui-peek--select-prev
+            "C-j" #'lsp-ui-peek--select-next
+            "C-k" #'lsp-ui-peek--select-prev))
 
 (use-package lsp-pyright
   :preface
@@ -1239,23 +1240,41 @@ session. Otherwise, the addition is permanent."
 (use-package compile
   :straight (:type built-in)
   :preface
-  (defun +apply-ansi-color-to-compilation-buffer-h ()
+  (defun +compile/apply-ansi-color-to-compilation-buffer-h ()
     "Applies ansi codes to the compilation buffers. Meant for
      `compilation-filter-hook'."
     (with-silent-modifications
       (ansi-color-apply-on-region compilation-filter-start (point))))
-  (defun my/fix-compilation-size ()
+  (defun +compile/fix-compilation-size ()
     (with-selected-window (get-buffer-window "*compilation*")
       (setq window-size-fixed t)
       (window-resize (selected-window) (- 30 (window-total-width)) t t)))
   :custom
   (compilation-scroll-output 'first-error)
   :ghook
-  ('compilation-filter-hook #'(+apply-ansi-color-to-compilation-buffer-h
-                               my/fix-compilation-size)))
+  ('compilation-filter-hook #'(+compile/apply-ansi-color-to-compilation-buffer-h
+                               +compile/fix-compilation-size)))
 
 ;; vterm
-(use-package vterm)
+(use-package vterm
+  :preface
+  (defun +vterm/evil-collection-vterm-escape-stay ()
+    "Go back to normal state but don't move cursor backwards. Moving
+    cursor backwards is the default vim behaviour but it is not appropriate
+    in some cases like terminals."
+    (setq-local evil-move-cursor-back nil))
+  (defun +vterm/set-cursor-shape ()
+    (setq-local cursor-type 'bar))
+  :custom
+  (vterm-buffer-name-string "vterm: %s")
+  :ghook
+  ('vterm-mode-hook #'(+vterm/evil-collection-vterm-escape-stay
+                       +vterm/set-cursor-shape))
+  :general
+  (general-imap :keymap 'vterm-mode-map
+    "f" (general-key-dispatch 'self-insert-command
+          :timeout 0.1
+          "d" 'vterm-send-escape)))
 (use-package vterm-toggle
   :after vterm
   :general
