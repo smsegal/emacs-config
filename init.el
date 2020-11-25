@@ -126,7 +126,6 @@
   (general-evil-setup)
 
   ;; (general-add-advice #'evil-force-normal-state :after #'evil-escape)
-
   ;; leader key setup
   (general-create-definer +leader-def
     :prefix "SPC"
@@ -154,7 +153,6 @@
 
   (general-def :prefix-map '+buffer-map
     :wk-full-keys nil
-    ;; "b" 'switch-to-buffer
     "p" 'previous-buffer
     "n" 'next-buffer
     "r" 'revert-buffer
@@ -169,13 +167,7 @@
   (general-def :prefix-map '+search-map)
   (general-def :prefix-map '+bookmark-map
     :wk-full-keys nil)
-
-  (general-def :prefix-map '+narrow/notes-map
-    "n" #'narrow-to-region
-    "p" #'narrow-to-page
-    "d" #'narrow-to-defun
-    "w" #'widen
-    "c" #'org-capture)
+  (general-def :prefix-map '+narrow/notes-map)
 
   (+leader-def
     "SPC" '(execute-extended-command :which-key "M-x")
@@ -283,13 +275,28 @@
   :straight nil
   :load-path "modules/"
   :general
+  (:keymaps 'selectrum-minibuffer-map
+            "C-s" #'selectrum-restrict-to-matches)
   (:prefix-map '+file-map
-               "r" #'selectrum-recentf)
+               "r" (general-predicate-dispatch 'crux-recentf-find-file
+                     (not IS-MAC) 'selectrum-recentf
+                     :docstring "find recent file"))
   (:prefix-map '+search-map
                "s" #'selectrum-swiper
+               "o" #'selectrum-outline
                "i" #'+selectrum-imenu)
   (:prefix-map '+insert-map
                "y" '(+yank-pop :which-key "insert from kill ring")))
+
+;; narrow-to-region etc is defined in builtin package page
+(use-package page
+  :straight (:type built-in)
+  :general
+  (:prefix-map '+narrow/notes-map
+               "n" #'narrow-to-region
+               "p" #'narrow-to-page
+               "d" #'narrow-to-defun
+               "w" #'widen))
 
 (use-package amx
   :after selectrum
@@ -360,6 +367,7 @@ session. Otherwise, the addition is permanent."
   (general-nvmap "zg" #'+spell/add-word))
 
 (use-package flyspell-correct-popup
+  :disabled
   :after flyspell-correct
   :custom
   (flyspell-correct-interface #'flyspell-correct-popup)
@@ -448,6 +456,15 @@ session. Otherwise, the addition is permanent."
   :gfhook ('magit-mode-hook #'+magit/fix-submodule-binding)
   :config
   (transient-bind-q-to-quit)
+  (define-advice magit-list-refs (:around (orig &optional namespaces format sortby)
+                                          prescient-sort)
+    "Apply prescient sorting when listing refs."
+    (let ((res (funcall orig namespaces format sortby)))
+      (if (or sortby
+              magit-list-refs-sortby
+              (not selectrum-should-sort-p))
+          res
+        (prescient-sort res))))
   :general
   (:prefix-map '+vc-map
                "g" 'magit-status)
@@ -779,13 +796,16 @@ session. Otherwise, the addition is permanent."
   (after-init . circadian-setup))
 
 ;;; font
-;; macos needs a larger font due to hidpi
-(set-face-attribute 'default nil
-                    :family "JetBrains Mono"
-                    :height (if IS-MAC 140 110))
-(add-to-list 'default-frame-alist '(line-spacing . 0.2))
-;; italic comments
-(set-face-attribute 'font-lock-comment-face nil :slant 'italic)
+(use-package emacs
+  :straight (:type built-in)
+  :config
+  ;; macos needs a larger font due to hidpi
+  (set-face-attribute 'default nil
+                      :family "JetBrains Mono"
+                      :height (if IS-MAC 140 110))
+  (add-to-list 'default-frame-alist '(line-spacing . 0.2))
+  ;; italic comments
+  (set-face-attribute 'font-lock-comment-face nil :slant 'italic))
 
 (use-package fira-code-mode
   :when (memq window-system '(pgtk x))
@@ -1143,8 +1163,8 @@ session. Otherwise, the addition is permanent."
      (?p . "\\parencite[]{%l}")
      (?s . "\\smartcite[]{%l}")
      (?t . "\\textcite[]{%l}"))
-   reftex-plug-into-AUCTeX t
-   reftex-toc-split-windows-fraction 0.3))
+   (reftex-plug-into-AUCTeX t)
+   (reftex-toc-split-windows-fraction 0.3)))
 
 (use-package pdf-tools
   :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
@@ -1162,13 +1182,12 @@ session. Otherwise, the addition is permanent."
   (:keymaps 'pdf-view-mode-map
             "q" #'kill-current-buffer))
 
-
 ;; projectile
 (use-package projectile
   :custom
   (projectile-completion-system 'default)
   (projectile-auto-discovery t)
-  :config (projectile-mode +1)
+  :hook (after-init . projectile-mode)
   :general
   (+leader-def
     "p" '(:keymap projectile-command-map
@@ -1184,6 +1203,8 @@ session. Otherwise, the addition is permanent."
   :ghook
   ('org-mode-hook '(visual-line-mode visual-fill-column-mode org-superstar-mode))
   :general
+  (:prefix-map '+open-map
+               "c" #'org-capture)
   (+local-leader-def :keymaps 'org-mode-map
     "," #'org-ctrl-c-ctrl-c
     "t" #'org-todo
@@ -1227,8 +1248,9 @@ session. Otherwise, the addition is permanent."
   :straight nil
   :load-path "modules/"
   :init
-  (general-add-advice #'calculate-lisp-indent
-                      :override #'void~calculate-lisp-indent))
+  (general-add-advice
+   #'calculate-lisp-indent
+   :override #'void~calculate-lisp-indent))
 
 (use-package calc
   :straight (:type built-in)
@@ -1275,6 +1297,7 @@ session. Otherwise, the addition is permanent."
     "f" (general-key-dispatch 'self-insert-command
           :timeout 0.1
           "d" 'vterm-send-escape)))
+
 (use-package vterm-toggle
   :after vterm
   :general
