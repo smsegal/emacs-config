@@ -275,6 +275,13 @@
 (use-package +selectrum-contrib
   :straight nil
   :load-path "modules/"
+  :commands (selectrum-swiper selectrum-recentf)
+  :preface
+  (defun +recenter-advice ()
+    "unclear why this has be in its own function but ::shrug::"
+    (recenter))
+  :config
+  (general-add-advice 'selectrum-swiper :after '+recenter-advice)
   :general
   (:keymaps 'selectrum-minibuffer-map
             "C-s" #'selectrum-restrict-to-matches)

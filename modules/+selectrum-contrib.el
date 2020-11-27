@@ -61,8 +61,7 @@ This command obeys narrowing."
                               :no-move-default-candidate t))))
         (push-mark (point) t)
         (forward-line (- chosen-line-number current-line-number))
-        (beginning-of-line-text 1)
-        (recenter)))))
+        (beginning-of-line-text 1)))))
 
 (defun org:show-subtree-headlines ()
   "Show headlines surrounding point."
