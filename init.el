@@ -818,16 +818,9 @@ session. Otherwise, the addition is permanent."
   ;; italic comments
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic))
 
-(use-package fira-code-mode
-  :disabled
-  :when (memq window-system '(pgtk x))
-  :custom
-  (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+" ">=" "*"))
-  (fira-code-mode-enable-hex-literal nil)
-  :hook prog-mode)
-
 ;; Note: Doesn't work on emacs28+
 (use-package ligature
+  :unless IS-MAC
   :straight (:host github :repo "mickeynp/ligature.el")
   :ghook ('after-init-hook #'global-ligature-mode)
   :init
@@ -849,12 +842,6 @@ session. Otherwise, the addition is permanent."
                        "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
                        "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
                        "/=" "//=" "/==" "@_" "__")))))
-
-(use-package display-line-numbers
-  :disabled
-  :straight (:type built-in)
-  :init (setq display-line-numbers-type 'relative)
-  :hook (prog-mode . display-line-numbers-mode))
 
 ;; scrolling
 (setq hscroll-margin 2
