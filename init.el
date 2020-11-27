@@ -394,6 +394,7 @@ session. Otherwise, the addition is permanent."
   :general
   (:prefix-map '+file-map
                "E" #'crux-sudo-edit
+               "D" #'crux-delete-file-and-buffer
                "p" #'crux-find-user-init-file
                "R" #'crux-rename-file-and-buffer)
   (:prefix-map '+open-map
@@ -541,15 +542,19 @@ session. Otherwise, the addition is permanent."
 ;; buffers
 (put 'narrow-to-region 'disabled nil)
 
+;;; UI Tweaks
+
 ;; what the hell do i press next?
 (use-package which-key
   :demand t
   :custom
-  (which-key-popup-type 'minibuffer)
+  (which-key-popup-type 'side-window)
   (which-key-enable-extended-define-key t)
-  :hook (after-init . which-key-mode))
-
-;;; UI Tweaks
+  :hook (after-init . which-key-mode)
+  :general
+  (:keymaps 'help-map
+            "b" #'which-key-show-major-mode
+            "B" #'which-key-show-top-level))
 
 ;; set this for all prompts
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -866,7 +871,7 @@ session. Otherwise, the addition is permanent."
   :custom
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0)
-  :hook (after-init . global-company-mode)
+  :hook (emacs-startup . global-company-mode)
   :general
   (general-imap "C-SPC" 'company-complete)
   (:keymaps 'company-search-map
@@ -1094,8 +1099,9 @@ session. Otherwise, the addition is permanent."
   (bibtex-align-at-equal-sign t)
   (bibtex-text-indentation 20)
   (TeX-auto-fold t)
+  (TeX-electric-math (cons "\\(" "\\)"))
   :hook ((TeX-mode . +latex-setup)
-         (TeX-mode . +latex-smartparens)
+         ;; (TeX-mode . +latex-smartparens)
          (TeX-mode . TeX-fold-mode))
   :mode ("\\.tex\\'" . LaTeX-mode)
   :general
