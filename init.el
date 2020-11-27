@@ -112,9 +112,12 @@
   (add-to-list 'evil-escape-excluded-major-modes 'vterm-mode)
   (evil-escape-mode +1))
 
-(use-package smartparens
-  :hook (after-init . smartparens-global-mode))
-(use-package smartparens-config :straight nil)
+;; (use-package smartparens
+;;   :hook (after-init . smartparens-global-mode))
+;; (use-package smartparens-config :straight nil)
+(use-package electric-pair
+  :straight (:type built-in)
+  :hook (emacs-startup . electric-pair-mode))
 
 ;; general keybindings
 (use-package general
@@ -810,7 +813,7 @@ session. Otherwise, the addition is permanent."
   ;; macos needs a larger font due to hidpi
   (set-face-attribute 'default nil
                       :family "JetBrains Mono"
-                      :height (if IS-MAC 140 110))
+                      :height (if IS-MAC 140 105))
   (add-to-list 'default-frame-alist '(line-spacing . 0.2))
   ;; italic comments
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic))
@@ -1045,7 +1048,7 @@ session. Otherwise, the addition is permanent."
   :hook ((typescript-mode . tide-setup)
          (typescript-mode . tide-hl-identifier-mode)))
 
-;; utilities
+;;; utilities
 (use-package restart-emacs
   :general
   (:prefix-map '+quit-map "r" 'restart-emacs))
@@ -1056,6 +1059,7 @@ session. Otherwise, the addition is permanent."
   (let ((files (mapcar 'abbreviate-file-name recentf-list)))
     (find-file (completing-read "Find recent file: " files nil t))))
 
+;;; Snippets
 (use-package yasnippet
   :hook ((prog-mode text-mode) . yas-global-mode)
   :general (:prefix-map '+insert-map
@@ -1065,6 +1069,15 @@ session. Otherwise, the addition is permanent."
 (use-package doom-snippets
   :straight (:host github :repo "hlissner/doom-snippets")
   :after yasnippet)
+
+(use-package auto-activating-snippets
+  :straight (:host github :repo "ymarco/auto-activating-snippets")
+  :ghook ('LaTeX-mode-hook #'auto-activating-snippets-mode)
+  :config
+  (aas-set-snippets 'latex-mode
+                    "On" "O(n)"
+                    "$" (lambda () (interactive)
+                          (yas-expand-snippet "\\($0\\)"))))
 
 ;; better help buffers
 (use-package helpful
@@ -1086,9 +1099,7 @@ session. Otherwise, the addition is permanent."
 (use-package company-math)
 (use-package company-bibtex)
 
-(use-package tex-site
-  :after smartparens
-  :straight auctex
+(use-package auctex
   :custom
   (TeX-master t)
   (TeX-parse-self t) ;; parse on load
@@ -1224,6 +1235,10 @@ session. Otherwise, the addition is permanent."
 
 ;; languages + highlighting
 
+(use-package editorconfig
+  :custom (editorconfig-trim-whitespaces-mode 'ws-butler-mode)
+  :hook (after-init . editorconfig-mode))
+
 (use-package julia-mode
   :mode "\.*\.jl")
 
@@ -1232,7 +1247,7 @@ session. Otherwise, the addition is permanent."
   :custom (markdown-commnd "multimarkdown")
   :ghook
   ('(markdown-mode-hook gfm-mode-hook)
-   '(visual-line-mode #'visual-fill-column-mode))
+   #'(visual-line-mode visual-fill-column-mode))
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode)))
@@ -1303,12 +1318,8 @@ session. Otherwise, the addition is permanent."
                        +vterm/set-cursor-shape))
   :general
   (general-imap :keymap 'vterm-mode-map
-    "f" (general-key-dispatch 'self-insert-command
-          :timeout 0.1
-          "d" 'vterm-send-escape)))
-
+    "C-i" #'vterm-send-escape))
 (use-package vterm-toggle
-  :after vterm
   :general
   (+leader-def
     "'" #'vterm-toggle)
