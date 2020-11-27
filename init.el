@@ -819,11 +819,36 @@ session. Otherwise, the addition is permanent."
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic))
 
 (use-package fira-code-mode
+  :disabled
   :when (memq window-system '(pgtk x))
   :custom
   (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x" "www" ":" "+" ">=" "*"))
   (fira-code-mode-enable-hex-literal nil)
   :hook prog-mode)
+
+;; Note: Doesn't work on emacs28+
+(use-package ligature
+  :straight (:host github :repo "mickeynp/ligature.el")
+  :ghook ('prog-mode-hook #'ligature-mode)
+  :init
+  ;; JetBrains Mono Ligatures
+  (cond ((string= (face-attribute 'default :family) "JetBrains Mono")
+         (ligature-set-ligatures
+          'prog-mode '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/="
+                       "<=" ">=" "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!"
+                       "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<"
+                       ">>>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||="
+                       "##" "###" "####" "#{" "#[" "]#" "#(" "#?"  "#_" "#_("
+                       "#:" "#!"  "#=" "^=" "<$>" "<$" "$>" "<+>" "<+" "+>"
+                       "<*>" "<*" "*>" "</" "</>" "/>" "<!--" "<#--" "-->"
+                       "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>"
+                       "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" ">--"
+                       "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<->"
+                       "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]"
+                       "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||"
+                       "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
+                       "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
+                       "/=" "//=" "/==" "@_" "__")))))
 
 (use-package display-line-numbers
   :disabled
@@ -1320,6 +1345,7 @@ session. Otherwise, the addition is permanent."
   (general-imap :keymap 'vterm-mode-map
     "C-i" #'vterm-send-escape))
 (use-package vterm-toggle
+  :commands (vterm-toggle)
   :general
   (+leader-def
     "'" #'vterm-toggle)
@@ -1339,6 +1365,8 @@ session. Otherwise, the addition is permanent."
                  (window-height . 0.3))))
 
 ;; direnv support
+;; This should be at/near the bottom since you want this hook to be
+;; run before others. Hooks are apparently a stack
 (use-package envrc
   :hook (after-init . envrc-global-mode))
 
