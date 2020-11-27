@@ -208,6 +208,7 @@
   :after evil
   :custom (evil-snipe-use-vim-sneak-bindings t)
   :config
+  (push 'magit-mode evil-snipe-disabled-modes)
   (evil-snipe-mode +1)
   (evil-snipe-override-mode +1))
 
@@ -477,11 +478,6 @@ session. Otherwise, the addition is permanent."
     :keymaps 'with-editor-mode-map
     "," 'with-editor-finish
     "k" 'with-editor-cancel))
-
-(use-package evil-magit
-  :after magit)
-;; :config
-;; (evil-magit-define-key
 
 (use-package forge
   :after magit)
