@@ -829,12 +829,12 @@ session. Otherwise, the addition is permanent."
 ;; Note: Doesn't work on emacs28+
 (use-package ligature
   :straight (:host github :repo "mickeynp/ligature.el")
-  :ghook ('prog-mode-hook #'ligature-mode)
+  :ghook ('after-init-hook #'global-ligature-mode)
   :init
   ;; JetBrains Mono Ligatures
   (cond ((string= (face-attribute 'default :family) "JetBrains Mono")
          (ligature-set-ligatures
-          'prog-mode '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/="
+          't '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/="
                        "<=" ">=" "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!"
                        "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<"
                        ">>>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||="
