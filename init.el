@@ -192,9 +192,12 @@
 (use-package +evil-contrib
   :straight nil
   :load-path "modules/"
+  :preface
+  (defun +evil-clear-search-hl ()
+    (evil-ex-nohighlight))
   :config
   (evil-ex-define-cmd "@" #'+evil:apply-macro)
-  (general-add-advice 'evil-ret :after 'evil-ex-nohighlight)
+  (general-add-advice 'evil-ret :after '+evil-clear-search-hl)
   :general
   (general-vmap "@" #'+evil:apply-macro)
   (general-mmap "g@" #'+evil:apply-macro)
@@ -758,6 +761,8 @@ session. Otherwise, the addition is permanent."
   (dashboard-center-content t)
   (dashboard-set-file-icons t)
   (dashboard-set-heading-icons t)
+  (dashboard-set-init-info t)
+  (dashboard-startup-banner (concat user-emacs-directory "emacs-bigsur_small.png"))
   :config
   (dashboard-setup-startup-hook))
 
@@ -1001,7 +1006,7 @@ session. Otherwise, the addition is permanent."
 
 ;; this is great for org etc, but for existing notebooks is lacking
 (use-package jupyter
-  :straight (:no-native-compile t)
+  ;; :straight (:no-native-compile t)
   :commands jupyter-connect-repl jupyter-run-repl)
 
 (use-package emacs-ipython-notebook
@@ -1329,7 +1334,7 @@ session. Otherwise, the addition is permanent."
   ('vterm-mode-hook #'(+vterm/evil-collection-vterm-escape-stay
                        +vterm/set-cursor-shape))
   :general
-  (general-imap :keymap 'vterm-mode-map
+  (general-imap :keymaps 'vterm-mode-map
     "C-i" #'vterm-send-escape))
 (use-package vterm-toggle
   :commands (vterm-toggle)
