@@ -4,6 +4,7 @@
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (bootstrap-version 5))
   (unless (file-exists-p bootstrap-file)
+
     (with-current-buffer
         (url-retrieve-synchronously
          "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
@@ -164,7 +165,6 @@
   (general-def :prefix-map '+vc-map)
   (general-def :prefix-map '+insert-map)
   (general-def :prefix-map '+open-map
-    "-" 'dired-jump
     "f" 'make-frame)
   (general-def :prefix-map '+toggle-map)
   (general-def :prefix-map '+search-map)
@@ -405,6 +405,28 @@ session. Otherwise, the addition is permanent."
                "R" #'crux-rename-file-and-buffer)
   (:prefix-map '+open-map
                "w" #'crux-open-with))
+
+;;; File Management with Dired
+(use-package dired
+  :straight (:type built-in)
+  :commands (dired dired-jump)
+  :custom
+  (dired-listing-switches "-agho --group-directories-first")
+  (dired-dwim-target t)
+  :ghook
+  ('dired-mode-hook #'(dired-async-mode))
+  :general
+  (:prefix-map '+open-map
+               "-" #'dired-jump)
+  (general-nmap :keymaps 'dired-mode-map
+    "h" #'dired-up-directory
+    "l" #'dired-find-file))
+(use-package diredfl
+  :hook (dired-mode . diredfl-mode))
+(use-package dired-collapse
+  :hook (dired-mode . dired-collapse-mode))
+
+(use-package ranger :disabled)
 
 (defun +find-init-file-here ()
   (interactive)
@@ -700,8 +722,6 @@ session. Otherwise, the addition is permanent."
   :straight (:type built-in)
   :hook (tty-setup . xterm-mouse-mode))
 
-
-
 (use-package ace-window
   :custom
   (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
@@ -833,20 +853,20 @@ session. Otherwise, the addition is permanent."
   (cond ((string= (face-attribute 'default :family) "JetBrains Mono")
          (ligature-set-ligatures
           't '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/="
-                       "<=" ">=" "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!"
-                       "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<"
-                       ">>>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||="
-                       "##" "###" "####" "#{" "#[" "]#" "#(" "#?"  "#_" "#_("
-                       "#:" "#!"  "#=" "^=" "<$>" "<$" "$>" "<+>" "<+" "+>"
-                       "<*>" "<*" "*>" "</" "</>" "/>" "<!--" "<#--" "-->"
-                       "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>"
-                       "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" ">--"
-                       "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<->"
-                       "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]"
-                       "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||"
-                       "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
-                       "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
-                       "/=" "//=" "/==" "@_" "__")))))
+               "<=" ">=" "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!"
+               "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<"
+               ">>>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||="
+               "##" "###" "####" "#{" "#[" "]#" "#(" "#?"  "#_" "#_("
+               "#:" "#!"  "#=" "^=" "<$>" "<$" "$>" "<+>" "<+" "+>"
+               "<*>" "<*" "*>" "</" "</>" "/>" "<!--" "<#--" "-->"
+               "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>"
+               "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" ">--"
+               "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<->"
+               "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]"
+               "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||"
+               "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
+               "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
+               "/=" "//=" "/==" "@_" "__")))))
 
 ;; scrolling
 (setq hscroll-margin 2
@@ -939,7 +959,7 @@ session. Otherwise, the addition is permanent."
     "r" #'lsp-rename
     "a" #'lsp-execute-code-action)
   (:keymaps 'lsp-mode-map
-            [remap format-all-buffer] #'lsp-format-buffer
+            ;; [remap format-all-buffer] #'lsp-format-buffer
             [remap evil-goto-definition] #'lsp-find-definition))
 (use-package lsp-ui
   :commands lsp-ui-mode
