@@ -52,8 +52,8 @@
 
 (setq enable-recursive-minibuffers t)
 
-(when IS-MAC
-  (mac-auto-operator-composition-mode))
+;;(when IS-MAC
+;;  (mac-auto-operator-composition-mode))
 
 (use-package emacs
   :straight (:type built-in)
@@ -62,8 +62,7 @@
 
 ;; gnome handles this fine
 (use-package exec-path-from-shell
-  :disabled
-  :when (memq window-system '(mac ns x))
+  :when (memq window-system '(mac ns))
   ;; :custom (exec-path-from-shell-arguments '("-l"))
   :config
   (setq exec-path-from-shell-variables '("PATH"))
@@ -247,7 +246,6 @@
 
 (use-package evil-exchange
   :config (evil-exchange-install))
-
 
 ;; code folding
 (use-package vimish-fold :after evil)
