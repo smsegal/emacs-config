@@ -276,29 +276,43 @@
   :hook (selectrum-mode . selectrum-prescient-mode))
 (use-package company-prescient
   :hook (company-mode . company-prescient-mode))
+(use-package consult
+  :straight (:host github :repo "minad/consult")
+  :config
+  (consult-annotate-mode)
+  (add-to-list 'consult-annotate-commands
+               '(execute-extended-command . consult-annotate-symbol))
+  :general
+  (:prefix-map 'help-map
+               "a" #'consult-apropos)
+  (:prefix-map '+insert-map
+               "y" #'consult-yank)
+  (:prefix-map '+search-map
+               "s" #'consult-line
+               "o" #'consult-outline
+               "m" #'consult-multi-occur))
 (use-package +selectrum-contrib
   :straight nil
+  :disabled
   :load-path "modules/"
   :commands (selectrum-swiper selectrum-recentf)
   :preface
   (defun +recenter-advice ()
     "unclear why this has be in its own function but ::shrug::"
     (recenter))
-  :config
-  (general-add-advice 'selectrum-swiper :after '+recenter-advice)
+  ;; :config
+  ;; (general-add-advice 'selectrum-swiper :after '+recenter-advice)
   :general
   (:keymaps 'selectrum-minibuffer-map
             "C-s" #'selectrum-restrict-to-matches)
-  (:prefix-map '+file-map
-               "r" (general-predicate-dispatch 'crux-recentf-find-file
-                     (not IS-MAC) 'selectrum-recentf
-                     :docstring "find recent file"))
+  ;; (:prefix-map '+file-map
+  ;;              "r" (general-predicate-dispatch 'crux-recentf-find-file
+  ;;                    (not IS-MAC) 'selectrum-recentf
+  ;;                    :docstring "find recent file"))
   (:prefix-map '+search-map
-               "s" #'selectrum-swiper
-               "o" #'selectrum-outline
-               "i" #'+selectrum-imenu)
-  (:prefix-map '+insert-map
-               "y" '(+yank-pop :which-key "insert from kill ring")))
+               "i" #'+selectrum-imenu))
+;; (:prefix-map '+insert-map
+;;              "y" '(+yank-pop :which-key "insert from kill ring")))
 
 ;; narrow-to-region etc is defined in builtin package page
 (use-package page
@@ -311,7 +325,7 @@
                "w" #'widen))
 
 (use-package amx
-  :after selectrum
+  :disabled
   :custom (amx-backend 'selectrum)
   :config (amx-mode))
 
@@ -471,7 +485,7 @@ session. Otherwise, the addition is permanent."
 
 ;;; vc-mode and Magit
 (use-package vc
-  :straight nil
+  :straight (:type built-in)
   :custom
   (vc-command-messages t)
   (vc-follow-symlinks t)
@@ -480,6 +494,7 @@ session. Otherwise, the addition is permanent."
   (ediff-window-setup-function 'ediff-setup-windows-plain))
 
 (use-package magit
+  :after evil-collection
   :custom
   (magit-diff-refine-hunk t)
   :preface
@@ -502,7 +517,8 @@ session. Otherwise, the addition is permanent."
         (prescient-sort res))))
   :general
   (:prefix-map '+vc-map
-               "g" 'magit-status)
+               "g" #'magit-status
+               "C" #'magit-clone)
   (general-nmap
     :keymaps 'magit-section-mode-map
     "TAB" #'magit-section-toggle
@@ -843,7 +859,7 @@ session. Otherwise, the addition is permanent."
 
 ;; Note: Doesn't work on emacs28+
 (use-package ligature
-  :unless IS-MAC
+  ;;    :unless IS-MAC
   :straight (:host github :repo "mickeynp/ligature.el")
   :ghook ('after-init-hook #'global-ligature-mode)
   :init
