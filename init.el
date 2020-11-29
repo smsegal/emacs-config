@@ -1343,7 +1343,7 @@ session. Otherwise, the addition is permanent."
     "'" #'vterm-toggle)
   (:prefix-map '+open-map
                "t" #'vterm-toggle
-               "T" #'vterm-other-window)
+               "T" #'vterm)
   :config
   (setq vterm-toggle-fullscreen-p nil)
   (add-to-list 'display-buffer-alist
