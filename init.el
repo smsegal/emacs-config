@@ -52,13 +52,12 @@
 
 (setq enable-recursive-minibuffers t)
 
-;;(when IS-MAC
-;;  (mac-auto-operator-composition-mode))
-
-(use-package emacs
+;; start the emacs server unless one is already running
+(use-package server
   :straight (:type built-in)
   :config
-  (server-start))
+  (unless (server-running-p)
+    (server-start)))
 
 ;; gnome handles this fine
 (use-package exec-path-from-shell
@@ -277,12 +276,12 @@
 (use-package company-prescient
   :hook (company-mode . company-prescient-mode))
 (use-package consult
-  ;; :after selectrum
   :straight (:host github :repo "minad/consult")
   :init
   ;; Replace functions (consult-multi-occur is a drop-in replacement)
   (fset 'multi-occur #'consult-multi-occur)
-  (consult-annotate-mode +1)
+  (consult-preview-mode)
+  (consult-annotate-mode)
   :config
   (setf (alist-get 'execute-extended-command consult-annotate-alist)
         #'consult-annotate-command-full)
@@ -317,10 +316,10 @@
                "d" #'narrow-to-defun
                "w" #'widen))
 
-(use-package amx
+(use-package flimenu
   :disabled
-  :custom (amx-backend 'selectrum)
-  :config (amx-mode))
+  :config
+  (flimenu-global-mode))
 
 (use-package deadgrep
   :general
