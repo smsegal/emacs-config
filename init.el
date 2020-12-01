@@ -277,42 +277,35 @@
 (use-package company-prescient
   :hook (company-mode . company-prescient-mode))
 (use-package consult
+  ;; :after selectrum
   :straight (:host github :repo "minad/consult")
+  :init
+  ;; Replace functions (consult-multi-occur is a drop-in replacement)
+  (fset 'multi-occur #'consult-multi-occur)
+  (consult-annotate-mode +1)
   :config
-  (consult-annotate-mode)
-  (add-to-list 'consult-annotate-commands
-               '(execute-extended-command . consult-annotate-symbol))
+  (setf (alist-get 'execute-extended-command consult-annotate-alist)
+        #'consult-annotate-command-full)
   :general
   (:prefix-map 'help-map
                "a" #'consult-apropos)
   (:prefix-map '+insert-map
                "y" #'consult-yank)
+  (:prefix-map '+file-map
+               "r" #'consult-recent-file)
+  (:prefix-map '+buffer-map
+               "b" #'consult-buffer)
   (:prefix-map '+search-map
                "s" #'consult-line
-               "o" #'consult-outline
-               "m" #'consult-multi-occur))
+               "o" #'consult-outline))
 (use-package +selectrum-contrib
   :straight nil
-  :disabled
   :load-path "modules/"
-  :commands (selectrum-swiper selectrum-recentf)
-  :preface
-  (defun +recenter-advice ()
-    "unclear why this has be in its own function but ::shrug::"
-    (recenter))
-  ;; :config
-  ;; (general-add-advice 'selectrum-swiper :after '+recenter-advice)
   :general
   (:keymaps 'selectrum-minibuffer-map
             "C-s" #'selectrum-restrict-to-matches)
-  ;; (:prefix-map '+file-map
-  ;;              "r" (general-predicate-dispatch 'crux-recentf-find-file
-  ;;                    (not IS-MAC) 'selectrum-recentf
-  ;;                    :docstring "find recent file"))
   (:prefix-map '+search-map
                "i" #'+selectrum-imenu))
-;; (:prefix-map '+insert-map
-;;              "y" '(+yank-pop :which-key "insert from kill ring")))
 
 ;; narrow-to-region etc is defined in builtin package page
 (use-package page
@@ -548,6 +541,7 @@ session. Otherwise, the addition is permanent."
 
 (use-package bufler
   ;; :hook (after-init . bufler-mode)
+  :disabled
   :commands bufler-ex
   :general
   (general-nvmap
@@ -1272,7 +1266,7 @@ session. Otherwise, the addition is permanent."
   (org-directory "~/Documents/org")
   (org-default-notes-file (concat org-directory "/notes.org"))
   :ghook
-  ('org-mode-hook '(visual-line-mode visual-fill-column-mode org-superstar-mode))
+  ('org-mode-hook '(visual-line-mode visual-fill-column-mode))
   :general
   (:prefix-map '+open-map
                "c" #'org-capture)
@@ -1282,6 +1276,7 @@ session. Otherwise, the addition is permanent."
     "o" #'org-open-at-point))
 
 (use-package org-superstar
+  :ghook ('org-mode-hook #'org-superstar-mode)
   :custom (org-superstar-special-todo-items t))
 
 ;; languages + highlighting
