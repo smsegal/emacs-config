@@ -316,6 +316,58 @@
                "d" #'narrow-to-defun
                "w" #'widen))
 
+(use-package embark
+  :disabled ;; until i figure out how to use this
+  :straight (:host github :repo "oantolin/embark")
+  :general
+  (:keymaps 'minibuffer-local-completion-map
+            "C-o" #'embark-act)
+  (:keymaps 'completion-list-mode-map
+            "C-o" #'embark-act)
+  :config
+  (add-hook 'embark-target-finders 'selectrum-get-current-candidate)
+
+  (add-hook 'embark-candidate-collectors
+            (defun embark-selectrum-candidates+ ()
+              (when selectrum-active-p
+                (selectrum-get-current-candidates
+                 ;; Pass relative file names for dired.
+                 minibuffer-completing-file-name))))
+
+  ;; No unnecessary computation delay after injection.
+  (add-hook 'embark-setup-hook 'selectrum-set-selected-candidate)
+
+  (add-hook 'embark-input-getters
+            (defun embark-selectrum-input-getter+ ()
+              (when selectrum-active-p
+                (let ((input (selectrum-get-current-input)))
+                  (if minibuffer-completing-file-name
+                      ;; Only get the input used for matching.
+                      (file-name-nondirectory input)
+                    input)))))
+
+  ;; The following is not selectrum specific but included here for convenience.
+  ;; If you don't want to use which-key as a key prompter skip the following code.
+
+  (setq embark-action-indicator
+        (defun embark-which-key-setup+ ()
+          (let ((help-char nil)
+                (which-key-show-transient-maps t)
+                (which-key-replacement-alist
+                 (cons '(("^[0-9-]\\|kp-[0-9]\\|kp-subtract\\|C-u$" . nil) . ignore)
+                       which-key-replacement-alist)))
+            (setq-local which-key-show-prefix nil)
+            (setq-local which-key-persistent-popup t)
+            (which-key--update)))
+        embark-become-indicator embark-action-indicator)
+
+  (add-hook 'embark-pre-action-hook
+            (defun embark-which-key-tear-down+ ()
+              (kill-local-variable 'which-key-persistent-popup)
+              (kill-local-variable 'which-key-show-prefix)
+              (unless which-key-persistent-popup
+                (which-key--hide-popup-ignore-command)))))
+
 (use-package flimenu
   :disabled
   :config
@@ -784,7 +836,7 @@ session. Otherwise, the addition is permanent."
 (use-package dashboard
   :custom
   (dashboard-set-footer nil)
-  (initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+  ;; (initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
   (dashboard-center-content t)
   (dashboard-set-file-icons t)
   (dashboard-set-heading-icons t)
@@ -898,20 +950,8 @@ session. Otherwise, the addition is permanent."
 (use-package visual-fill-column
   :config
   (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
-  :commands visual-fill-column-mode
-  :preface
-  (defun +toggle-visual-fill-and-line-mode ()
-    (interactive)
-    (if (and visual-fill-column-mode visual-line-mode)
-        (progn
-          (visual-fill-column-mode -1)
-          (visual-line-mode -1))
-      (progn
-        (visual-fill-column-mode +1)
-        (visual-line-mode +1))))
-  :general
-  (:prefix-map '+toggle-map
-               "v" #'+toggle-visual-fill-and-line-mode))
+  ;; (setq-default split-window-preferred-function 'visual-fill-column-split-window-sensibly)
+  :ghook ('visual-fill-column-mode #'visual-line-mode))
 
 ;;autocomplete
 (use-package company
@@ -1292,7 +1332,7 @@ session. Otherwise, the addition is permanent."
   :custom (markdown-commnd "multimarkdown")
   :ghook
   ('(markdown-mode-hook gfm-mode-hook)
-   #'(visual-line-mode visual-fill-column-mode))
+   #'visual-fill-column-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode)))
