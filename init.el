@@ -14,8 +14,17 @@
   (load bootstrap-file nil 'nomessage))
 
 (straight-use-package 'use-package)
-(setq straight-use-package-by-default t
-      straight-check-for-modifications '(watch-files find-when-checking))
+(setq straight-use-package-by-default t)
+
+;; Personal Information
+(setq user-full-name "Shane Segal"
+      user-mail-address "shane@smsegal.ca")
+(setq auth-sources '("~/.authinfo.gpg"))
+
+;; load custom settings from a seperate file instead of polluting this file
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(if (file-exists-p custom-file)
+    (load custom-file))
 
 ;; macos needs a few different tweaks
 (defvar IS-MAC (eq system-type 'darwin))
@@ -40,17 +49,62 @@
   (add-to-list 'recentf-exclude no-littering-etc-directory)
   (run-at-time nil (* 5 60) 'recentf-save-list))
 
-;; Personal Information
-(setq user-full-name "Shane Segal"
-      user-mail-address "shane@smsegal.ca")
-(setq auth-sources '("~/.authinfo.gpg"))
+;; Some general configuration options
+(use-package emacs
+  :custom
+  (enable-recursive-minibuffers t)
+  (auto-mode-case-fold nil)
+  :config
+  ;; Credit: Doom Emacs
+  ;; Contrary to what many Emacs users have in their configs, you really don't
+  ;; need more than this to make UTF-8 the default coding system:
+  (when (fboundp 'set-charset-priority)
+    (set-charset-priority 'unicode))
+  (prefer-coding-system 'utf-8)
+  (setq locale-coding-system 'utf-8)
+  ;; Disable bidirectional text rendering for a modest performance boost. I've set
+  ;; this to `nil' in the past, but the `bidi-display-reordering's docs say that
+  ;; is an undefined state and suggest this to be just as good:
+  (setq-default bidi-display-reordering 'left-to-right
+                bidi-paragraph-direction 'left-to-right)
+  ;; Disabling the BPA makes redisplay faster, but might produce incorrect display
+  ;; reordering of bidirectional text with embedded parentheses and other bracket
+  ;; characters whose 'paired-bracket' Unicode property is non-nil.
+  (setq bidi-inhibit-bpa t)  ; Emacs 27 only
+  ;; Reduce rendering/line scan work for Emacs by not rendering cursors or regions
+  ;; in non-focused windows.
+  (setq-default cursor-in-non-selected-windows nil)
+  (setq highlight-nonselected-windows nil)
+  ;; More performant rapid scrolling over unfontified regions. May cause brief
+  ;; spells of inaccurate syntax highlighting right after scrolling, which should
+  ;; quickly self-correct.
+  (setq fast-but-imprecise-scrolling t)
+  ;; Don't ping things that look like domain names.
+  (setq ffap-machine-p-known 'reject)
 
-;; load custom settings from a seperate file instead of polluting this file
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-(if (file-exists-p custom-file)
-    (load custom-file))
+  ;; security (tls) tweaks
+  (setq gnutls-verify-error (not (getenv-internal "INSECURE"))
+        gnutls-algorithm-priority
+        (when (boundp 'libgnutls-version)
+          (concat "SECURE128:+SECURE192:-VERS-ALL"
+                  (if (and (not (version< emacs-version "26.3"))
+                           (>= libgnutls-version 30605))
+                      ":+VERS-TLS1.3")
+                  ":+VERS-TLS1.2"))
+        ;; `gnutls-min-prime-bits' is set based on recommendations from
+        ;; https://www.keylength.com/en/4/
+        gnutls-min-prime-bits 3072
+        tls-checktrust gnutls-verify-error
+        ;; Emacs is built with `gnutls' by default, so `tls-program' would not be
+        ;; used in that case. Otherwise, people have reasons to not go with
+        ;; `gnutls', we use `openssl' instead. For more details, see
+        ;; https://redd.it/8sykl1
+        tls-program '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
+                      "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
+--strict-tofu --priority='SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2:+VERS-TLS1.3' %h"
+                      ;; compatibility fallbacks
+                      "gnutls-cli -p %p %h")))
 
-(setq enable-recursive-minibuffers t)
 
 ;; start the emacs server unless one is already running
 (use-package server
@@ -85,7 +139,7 @@
   (evil-move-cursor-back t)
   :config
   (evil-select-search-module 'evil-search-module 'evil-search)
-  (evil-mode 1))
+  (evil-mode +1))
 
 (use-package undo-tree
   :disabled
@@ -111,9 +165,6 @@
   (add-to-list 'evil-escape-excluded-major-modes 'vterm-mode)
   (evil-escape-mode +1))
 
-;; (use-package smartparens
-;;   :hook (after-init . smartparens-global-mode))
-;; (use-package smartparens-config :straight nil)
 (use-package electric-pair
   :straight (:type built-in)
   :hook (emacs-startup . electric-pair-mode))
@@ -126,6 +177,10 @@
    '(insert emacs hybrid normal visual motion operator replace))
   :config
   (general-evil-setup)
+
+  ;; text indentation stuff
+  (general-add-hook (list 'prog-mode-hook 'text-mode-hook)
+                    (lambda () (setq-local indent-tabs-mode nil)))
 
   ;; (general-add-advice #'evil-force-normal-state :after #'evil-escape)
   ;; leader key setup
@@ -254,11 +309,6 @@
   (evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
   :hook (after-init . global-evil-vimish-fold-mode))
 
-;; text indentation stuff
-(with-eval-after-load 'general
-  (general-add-hook (list 'prog-mode-hook 'text-mode-hook)
-                    (lambda () (setq-local indent-tabs-mode nil))))
-
 ;; incremental narrowing a la ivy
 (use-package selectrum
   :commands selectrum-next-candidate selectrum-previous-candidate
@@ -306,9 +356,16 @@
   (:prefix-map '+search-map
                "i" #'+selectrum-imenu))
 
+(use-package deadgrep
+  :general
+  (:prefix-map '+search-map
+               "d" #'deadgrep))
+
 ;; narrow-to-region etc is defined in builtin package page
 (use-package page
   :straight (:type built-in)
+  :init
+  (put 'narrow-to-page 'disabled nil)
   :general
   (:prefix-map '+narrow/notes-map
                "n" #'narrow-to-region
@@ -316,68 +373,7 @@
                "d" #'narrow-to-defun
                "w" #'widen))
 
-(use-package embark
-  :disabled ;; until i figure out how to use this
-  :straight (:host github :repo "oantolin/embark")
-  :general
-  (:keymaps 'minibuffer-local-completion-map
-            "C-o" #'embark-act)
-  (:keymaps 'completion-list-mode-map
-            "C-o" #'embark-act)
-  :config
-  (add-hook 'embark-target-finders 'selectrum-get-current-candidate)
-
-  (add-hook 'embark-candidate-collectors
-            (defun embark-selectrum-candidates+ ()
-              (when selectrum-active-p
-                (selectrum-get-current-candidates
-                 ;; Pass relative file names for dired.
-                 minibuffer-completing-file-name))))
-
-  ;; No unnecessary computation delay after injection.
-  (add-hook 'embark-setup-hook 'selectrum-set-selected-candidate)
-
-  (add-hook 'embark-input-getters
-            (defun embark-selectrum-input-getter+ ()
-              (when selectrum-active-p
-                (let ((input (selectrum-get-current-input)))
-                  (if minibuffer-completing-file-name
-                      ;; Only get the input used for matching.
-                      (file-name-nondirectory input)
-                    input)))))
-
-  ;; The following is not selectrum specific but included here for convenience.
-  ;; If you don't want to use which-key as a key prompter skip the following code.
-
-  (setq embark-action-indicator
-        (defun embark-which-key-setup+ ()
-          (let ((help-char nil)
-                (which-key-show-transient-maps t)
-                (which-key-replacement-alist
-                 (cons '(("^[0-9-]\\|kp-[0-9]\\|kp-subtract\\|C-u$" . nil) . ignore)
-                       which-key-replacement-alist)))
-            (setq-local which-key-show-prefix nil)
-            (setq-local which-key-persistent-popup t)
-            (which-key--update)))
-        embark-become-indicator embark-action-indicator)
-
-  (add-hook 'embark-pre-action-hook
-            (defun embark-which-key-tear-down+ ()
-              (kill-local-variable 'which-key-persistent-popup)
-              (kill-local-variable 'which-key-show-prefix)
-              (unless which-key-persistent-popup
-                (which-key--hide-popup-ignore-command)))))
-
-(use-package flimenu
-  :disabled
-  :config
-  (flimenu-global-mode))
-
-(use-package deadgrep
-  :general
-  (:prefix-map '+search-map
-               "d" #'deadgrep))
-
+;;; spellcheck
 (use-package flyspell
   :straight nil
   :defer t
@@ -444,7 +440,6 @@ session. Otherwise, the addition is permanent."
   :general (:keymaps 'popup-menu-keymap [escape] #'keyboard-quit))
 
 (use-package flyspell-lazy
-  ;; :disabled
   :after flyspell
   :config
   (setq flyspell-lazy-idle-seconds 1
@@ -484,12 +479,15 @@ session. Otherwise, the addition is permanent."
 
 (use-package ranger :disabled)
 
-(defun +find-init-file-here ()
-  (interactive)
-  (find-file user-init-file))
-
-(general-def :prefix-map '+file-map
-  "P" #'+find-init-file-here)
+(use-package +find-init-file-here
+  :straight nil
+  :preface
+  (defun +find-init-file-here ()
+    (interactive)
+    (find-file user-init-file))
+  :general
+  (:prefix-map '+file-map
+               "P" #'+find-init-file-here))
 
 (use-package super-save
   :custom (super-save-auto-save-when-idle t)
@@ -522,7 +520,10 @@ session. Otherwise, the addition is permanent."
     "[r" #'rotate-text-backward))
 
 (use-package subword
-  :hook (prog-mode . subword-mode))
+  :hook (prog-mode . subword-mode)
+  :general
+  (:prefix-map '+toggle-map
+               "s" #'subword-mode))
 
 (use-package ws-butler
   :hook (prog-mode . ws-butler-mode))
@@ -533,8 +534,8 @@ session. Otherwise, the addition is permanent."
   :custom
   (vc-command-messages t)
   (vc-follow-symlinks t)
-  ;; don't make an extra frame for the ediff control panel (doesn't
-  ;; work well in tiling wms)
+  ;; don't make an extra frame for the ediff control panel
+  ;; (doesn't work well in tiling wms)
   (ediff-window-setup-function 'ediff-setup-windows-plain))
 
 (use-package magit
@@ -614,20 +615,10 @@ session. Otherwise, the addition is permanent."
                "F" 'burly-bookmark-frames))
 
 ;; code formatting
-(use-package apheleia
-  :disabled
-  :straight (:host github :repo "raxod502/apheleia")
-  :general
-  (:prefix-map '+code-map
-               "f" 'apheleia-format-buffer))
-
 (use-package format-all
   :general
   (:prefix-map '+code-map
                "f" 'format-all-buffer))
-
-;; buffers
-(put 'narrow-to-region 'disabled nil)
 
 ;;; UI Tweaks
 
@@ -643,24 +634,32 @@ session. Otherwise, the addition is permanent."
             "b" #'which-key-show-major-mode
             "B" #'which-key-show-top-level))
 
-;; set this for all prompts
-(defalias 'yes-or-no-p 'y-or-n-p)
+;; UI builtins
+(use-package emacs
+  :custom
+  (confirm-nonexistent-file-or-buffer nil)
+  (mouse-yank-at-point t)
 
-(setq confirm-nonexistent-file-or-buffer nil
-      mouse-yank-at-point t
+  ;; make underlines look a little better
+  (x-underline-at-descent-line t)
 
-      ;; make underlines look a little better
-      x-underline-at-descent-line t
+  ;; window resizing
+  (window-resize-pixelwise t)
+  (frame-resize-pixelwise t)
 
-      ;; window resizing
-      window-resize-pixelwise t
-      frame-resize-pixelwise t)
+  ;; bars
+  (menu-bar-mode   nil)
+  (tool-bar-mode   nil)
+  (scroll-bar-mode nil)
+  :config
+  ;; set this for all prompts
+  (defalias 'yes-or-no-p 'y-or-n-p)
 
-;; ui cruft
-(unless (assq 'menu-bar-lines default-frame-alist)
-  (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
-  (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
-  (add-to-list 'default-frame-alist '(vertical-scroll-bars)))
+  ;; ui cruft
+  (unless (assq 'menu-bar-lines default-frame-alist)
+    (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
+    (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
+    (add-to-list 'default-frame-alist '(vertical-scroll-bars))))
 
 ;; pulse current line on window switch
 (use-package beacon
@@ -675,7 +674,7 @@ session. Otherwise, the addition is permanent."
   :config
   ;; doesn't seem to do any animating, at least on wayland should
   ;; check it out on X (but I never use X soooo)
-  (mouse-avoidance-mode 'animate))
+  (mouse-avoidance-mode 'exile))
 
 ;;window dividers
 (use-package window-divider
@@ -687,7 +686,7 @@ session. Otherwise, the addition is permanent."
   :hook (after-init . window-divider-mode))
 
 (use-package fringe
-  :straight nil
+  :straight (:type built-in)
   :init (set-fringe-style 0)
   :custom
   ;; fringes
@@ -698,9 +697,6 @@ session. Otherwise, the addition is permanent."
   (indicate-empty-lines         nil)
   (overflow-newline-into-fringe t))
 
-(setq menu-bar-mode   nil
-      tool-bar-mode   nil
-      scroll-bar-mode nil)
 
 (use-package hl-todo
   :hook (prog-mode . hl-todo-mode))
@@ -730,27 +726,12 @@ session. Otherwise, the addition is permanent."
   :config (minions-mode 1))
 (use-package moody
   :after smart-mode-line
-  ;; :preface
-  ;; (defvar moody-evil-state-indicator
-  ;;   '(:eval (moody-tab (format-mode-line (cond ((eq evil-state 'normal)
-  ;;                                            "Normal")
-  ;;                                           ((eq evil-state 'insert)
-  ;;                                            "Vis")))
-  ;;                   20 'up)))
-  ;; ;; (put 'moody-evil-state-indicator 'risky-local-variable t)
-  ;; (make-variable-buffer-local 'moody-evil-state-indicator)
-  ;; (defun +moody-replace-mode-line-evil-state (&optional reverse)
-  ;;   (interactive "P")
-  ;;   (moody-replace-element 'evil-mode-line-tag
-  ;;                       '+moody-replace-mode-line-evil-state
-  ;;                       reverse))
   :config
-  ;; (+moody-replace-mode-line-evil-state)
   (moody-replace-sml/mode-line-buffer-identification)
   (moody-replace-vc-mode))
 
 (use-package highlight-parentheses
-  :hook ((prog-mode LaTex-mode) . highlight-parentheses-mode))
+  :hook ((prog-mode LaTeX-mode) . highlight-parentheses-mode))
 
 (use-package hl-line
   :straight (:type built-in)
@@ -794,20 +775,13 @@ session. Otherwise, the addition is permanent."
 (use-package zoom
   :custom
   (zoom-size '(0.7 . 0.7))
-  (zoom-ignored-major-modes '(dired-mode vterm-mode help-mode helpful-mode rxt-help-mode help-mode-menu org-mode))
+  (zoom-ignored-major-modes '(dired-mode vterm-mode
+                              help-mode helpful-mode
+                              rxt-help-mode help-mode-menu
+                              org-mode))
   (zoom-ignored-buffer-names '("*scratch*" "*info*" "*helpful variable: argv*"))
   (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
   (zoom-ignore-predicates (list (lambda () (< (count-lines (point-min) (point-max)) 20))))
-  ;; (zoom-size '(0.618 . 0.618))
-  ;; (zoom-ignored-major-modes '(vterm-mode
-  ;;                             help-mode
-  ;;                             helpful-mode
-  ;;                             rxt-help-mode
-  ;;                             help-mode-menu))
-  ;; (zoom-ignored-buffer-names '("*info*"
-  ;;                              "*helpful variable: argv*"
-  ;;                              "*compilation*"))
-  ;; (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
   :general
   (:prefix-map '+toggle-map
                "z" #'zoom-mode))
@@ -868,17 +842,6 @@ session. Otherwise, the addition is permanent."
   (modus-vivendi-theme-mode-line 'moody)
   (modus-vivendi-theme-syntax 'faint))
 
-(use-package load-theme
-  :disabled
-  :straight (:type built-in)
-  :after
-  (doom-themes modus-operandi-theme modus-vivendi-theme)
-  :init
-  (defvar +active-theme (if (display-graphic-p)
-                            'modus-operandi
-                          'doom-old-hope))
-  (load-theme +active-theme t))
-
 (use-package circadian
   ;; :disabled
   :after (doom-themes modus-operandi-theme modus-vivendi-theme)
@@ -904,7 +867,6 @@ session. Otherwise, the addition is permanent."
 
 ;; Note: Doesn't work on emacs28+
 (use-package ligature
-  ;;    :unless IS-MAC
   :straight (:host github :repo "mickeynp/ligature.el")
   :ghook ('after-init-hook #'global-ligature-mode)
   :init
@@ -928,32 +890,34 @@ session. Otherwise, the addition is permanent."
                "/=" "//=" "/==" "@_" "__")))))
 
 ;; scrolling
-(setq hscroll-margin 2
-      hscroll-step 1
-      ;; Emacs spends too much effort recentering the screen if you scroll the
-      ;; cursor more than N lines past window edges (where N is the settings of
-      ;; `scroll-conservatively'). This is especially slow in larger files
-      ;; during large-scale scrolling commands. If kept over 100, the window is
-      ;; never automatically recentered.
-      scroll-conservatively 101
-      scroll-margin 0
-      scroll-preserve-screen-position t
-      ;; Reduce cursor lag by a tiny bit by not auto-adjusting `window-vscroll'
-      ;; for tall lines.
-      auto-window-vscroll nil
-      ;; mouse
+(use-package emacs
+  :custom
+  (hscroll-margin 2)
+  (hscroll-step 1)
+  ;; Emacs spends too much effort recentering the screen if you scroll the
+  ;; cursor more than N lines past window edges (where N is the settings of
+  ;; `scroll-conservatively'). This is especially slow in larger files
+  ;; during large-scale scrolling commands. If kept over 100, the window is
+  ;; never automatically recentered.
+  (scroll-conservatively 101)
+  (scroll-margin 0)
+  (scroll-preserve-screen-position t)
+  ;; Reduce cursor lag by a tiny bit by not auto-adjusting `window-vscroll'
+  ;; for tall lines.
+  (auto-window-vscroll nil)
+  ;; mouse
 
-      mouse-wheel-scroll-amount '(2 ((shift) . hscroll) ((meta)) ((control) . text-scale))
-      mouse-wheel-progressive-speed nil)  ; don't accelerate scrolling
+  (mouse-wheel-scroll-amount '(2 ((shift) . hscroll) ((meta)) ((control) . text-scale)))
+  (mouse-wheel-progressive-speed nil))  ; don't accelerate scrolling
 
 ;; visual fill column
 (use-package visual-fill-column
   :config
   (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
   ;; (setq-default split-window-preferred-function 'visual-fill-column-split-window-sensibly)
-  :ghook ('visual-fill-column-mode #'visual-line-mode))
+  :ghook ('visual-fill-column-mode-hook #'visual-line-mode))
 
-;;autocomplete
+;;; autocomplete
 (use-package company
   :custom
   (company-minimum-prefix-length 1)
@@ -968,7 +932,7 @@ session. Otherwise, the addition is permanent."
 (use-package company-quickhelp
   :hook (company-mode . company-quickhelp-mode))
 
-;; syntax highlighting
+;; syntax checking
 (use-package flycheck
   :custom
   (flycheck-disabled-checkers '(emacs-lisp-checkdoc))
@@ -977,7 +941,7 @@ session. Otherwise, the addition is permanent."
   (:prefix-map '+code-map
                "x" '(flycheck-list-errors :which-key "show errors")))
 
-;; lsp-mode
+;;; lsp-mode
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
   :custom
@@ -1027,34 +991,6 @@ session. Otherwise, the addition is permanent."
     (lsp-deferred))
   :hook (python-mode . +pyright__enable-lsp))
 
-(use-package eglot
-  :disabled
-  :after (company yasnippet)
-  :ghook
-  ('(python-mode-hook js-mode-hook)  #'eglot-ensure)
-  :config
-  (add-to-list 'eglot-server-programs
-               '((js-mode typescript-mode) . ("typescript-language-server" "--stdio")))
-  :general
-  (general-def
-    :prefix-map '+code-map
-    :predicate '(eglot-managed-p)
-    "r" #'eglot-rename))
-;; "f" #'eglot-format))
-;; (:keymaps 'eglot-mode-map
-;;           [remap format-all-buffer] #'eglot-format))
-
-(use-package +flycheck-eglot
-  :disabled
-  :straight nil
-  :after (eglot flycheck)
-  :commands +lsp-eglot-prefer-flycheck-h +add-flycheck-eglot-checker
-  :load-path "modules/"
-  :init
-  (+add-flycheck-eglot-checker)
-  :ghook
-  ('eglot--managed-mode-hook #'+lsp-eglot-prefer-flycheck-h))
-
 ;; python tweaks
 (use-package python
   :straight (:type built-in)
@@ -1076,13 +1012,14 @@ session. Otherwise, the addition is permanent."
   ;; :straight (:no-native-compile t)
   :commands jupyter-connect-repl jupyter-run-repl)
 
+;; support has really improved on this one
 (use-package emacs-ipython-notebook
   :straight ein
   :hook (ein:notebook-mode . evil-normalize-keymaps)
   :custom
   (ein:output-area-inlined-images t)
   (ein:polymode t)
-  :commands ein:run ein:login
+  :commands (ein:run ein:login)
   :init
   (evil-define-minor-mode-key '(normal visual) 'ein:notebook-mode
     (kbd "<C-return>") 'ein:worksheet-execute-cell-km
@@ -1093,273 +1030,11 @@ session. Otherwise, the addition is permanent."
             "C-j" #'ein:worksheet-goto-next-input-km
             "C-k" #'ein:worksheet-goto-prev-input-km))
 
-(use-package js2-mode
-  :interpreter "node"
-  :commands js2-line-break
-  :hook (js-mode . js2-minor-mode)
-  :custom
-  (js-chain-indent t)
-  ;; Don't mishighlight shebang lines
-  (js2-skip-preprocessor-directives t)
-  ;; let flycheck handle this
-  (js2-mode-show-parse-errors nil)
-  (js2-mode-show-strict-warnings nil)
-  ;; Flycheck provides these features, so disable them: conflicting with
-  ;; the eslint settings.
-  (js2-strict-trailing-comma-warning nil)
-  (js2-strict-missing-semi-warning nil)
-  ;; maximum fontification
-  (js2-highlight-level 3)
-  (js2-highlight-external-variables t)
-  (js2-idle-timer-delay 0.1))
-
-(use-package js2-refactor
-  :hook (js2-minor-mode . js2-refactor-mode)
-  :general
-  (general-nvmap
-    :keymaps 'js2-mode
-    "," '(:keymap js2-refactor-mode-map)))
-
-(use-package rjsx-mode
-  :mode "/.*\\.js\\'")
-
-(use-package json-mode)
-(use-package yaml-mode)
-(use-package typescript-mode)
-(use-package tide
-  :disabled
-  :after (typescript-mode company flycheck)
-  :hook ((typescript-mode . tide-setup)
-         (typescript-mode . tide-hl-identifier-mode)))
 
 ;;; utilities
 (use-package restart-emacs
   :general
   (:prefix-map '+quit-map "r" 'restart-emacs))
-
-(defun recentf-open-files+ ()
-  "Use `completing-read' to open a recent file."
-  (interactive)
-  (let ((files (mapcar 'abbreviate-file-name recentf-list)))
-    (find-file (completing-read "Find recent file: " files nil t))))
-
-;;; Snippets
-(use-package yasnippet
-  :hook ((prog-mode text-mode) . yas-global-mode)
-  :general (:prefix-map '+insert-map
-                        "s" 'yas-insert-snippet))
-(use-package yasnippet-snippets
-  :after yasnippet)
-(use-package doom-snippets
-  :straight (:host github :repo "hlissner/doom-snippets")
-  :after yasnippet)
-
-(use-package auto-activating-snippets
-  :straight (:host github :repo "ymarco/auto-activating-snippets")
-  :ghook ('LaTeX-mode-hook #'auto-activating-snippets-mode)
-  :config
-  (aas-set-snippets 'latex-mode
-                    "On" "O(n)"
-                    "$" (lambda () (interactive)
-                          (yas-expand-snippet "\\($0\\)"))))
-
-;; better help buffers
-(use-package helpful
-  :general
-  (:prefix-map 'help-map
-               "f" #'helpful-callable
-               "v" #'helpful-variable
-               "k" #'helpful-key
-               "h" #'helpful-at-point))
-
-(use-package adaptive-wrap
-  :general
-  (:prefix-map '+toggle-map
-               "w" #'adaptive-wrap-prefix-mode))
-
-;;; latex
-(use-package company-auctex)
-(use-package company-reftex)
-(use-package company-math)
-(use-package company-bibtex)
-
-(use-package auctex
-  :custom
-  (TeX-master t)
-  (TeX-parse-self t) ;; parse on load
-  (TeX-auto-save t)  ;; parse on save
-  ;; automatically insert braces after sub/superscript in math mode
-  (TeX-electric-sub-and-superscript t)
-  (bibtex-dialect 'biblatex)
-  (bibtex-align-at-equal-sign t)
-  (bibtex-text-indentation 20)
-  (TeX-auto-fold t)
-  (TeX-electric-math (cons "\\(" "\\)"))
-  :hook ((TeX-mode . +latex-setup)
-         ;; (TeX-mode . +latex-smartparens)
-         (TeX-mode . TeX-fold-mode))
-  :mode ("\\.tex\\'" . LaTeX-mode)
-  :general
-  (:keymaps 'TeX-mode-map
-            [remap compile] #'TeX-command-master
-            [remap recompile] (lambda () (TeX-command-master +1)))
-  :preface
-  (defun +latex-setup ()
-    (turn-on-visual-line-mode)
-    (visual-fill-column-mode +1)
-    (unless word-wrap
-      (toggle-word-wrap))
-    (TeX-fold-buffer)
-    (setq-local visual-fill-column-center-text t
-                visual-fill-column-width 100
-
-                ;; important that reftex comes before auctex otherwise
-                ;; citation autocomplete doesn't work
-                company-backends (append '(company-reftex-citations
-                                           company-reftex-labels
-                                           company-auctex-labels
-                                           company-auctex-bibs
-                                           company-auctex-macros
-                                           company-auctex-symbols
-                                           company-auctex-environments
-                                           company-math-symbols-latex
-                                           company-math-symbols-unicode
-                                           company-latex-commands)
-                                         company-backends)))
-  (defun +latex-smartparens ()
-    (setq-local  TeX-electric-math (cons "\\(" "\\)")
-                 ;; Smartparens for whatever reason treats the
-                 ;; insertion of dollar signs and quotes as single characters.
-                 sp--special-self-insert-commands (delete `TeX-insert-dollar sp--special-self-insert-commands)
-                 sp--special-self-insert-commands (delete `TeX-insert-quote sp--special-self-insert-commands)
-                 ;; After selecting a region, we can wrap it in parenthesis or quotes.
-                 sp-autowrap-region t)))
-
-(use-package evil-tex
-  :hook (LaTeX-mode . evil-tex-mode))
-
-(use-package bibtex
-  :straight (:type built-in)
-  :gfhook #'+bibtex-setup
-  :preface
-  (defun +bibtex-setup ()
-    (turn-on-visual-line-mode)
-    (setq-local visual-fill-column-center-text t
-                visual-fill-column-width 100)))
-
-(use-package auctex-latexmk
-  :custom
-  (auctex-latexmk-inherit-TeX-PDF-mode t)
-  :hook
-  (TeX-mode . auctex-latexmk-setup))
-
-(use-package reftex
-  :straight (:type built-in)
-  :hook ((TeX-mode . reftex-mode)
-         (LaTeX-mode . reftex-mode))
-  :custom
-  (reftex-cite-format
-   '((?a . "\\autocite[]{%l}")
-     (?b . "\\blockcquote[]{%l}{}")
-     (?c . "\\cite[]{%l}")
-     (?f . "\\footcite[]{%l}")
-     (?n . "\\nocite{%l}")
-     (?p . "\\parencite[]{%l}")
-     (?s . "\\smartcite[]{%l}")
-     (?t . "\\textcite[]{%l}"))
-   (reftex-plug-into-AUCTeX t)
-   (reftex-toc-split-windows-fraction 0.3)))
-
-(use-package pdf-tools
-  :mode ("\\.[pP][dD][fF]\\'" . pdf-view-mode)
-  :magic ("%PDF" . pdf-view-mode)
-  :hook (pdf-view-mode . auto-revert-mode)
-  :config
-  (pdf-tools-install :no-query)
-  (setq-default pdf-view-display-size 'fit-page)
-  ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
-  (setq pdf-view-use-scaling t
-        pdf-view-use-imagemagick nil)
-  :general
-  (+local-leader-def :keymaps 'pdf-view-mode-map
-    "s" 'pdf-view-auto-slice-minor-mode)
-  (:keymaps 'pdf-view-mode-map
-            "q" #'kill-current-buffer))
-
-;; projectile
-(use-package projectile
-  :custom
-  (projectile-completion-system 'default)
-  (projectile-auto-discovery t)
-  :hook (after-init . projectile-mode)
-  :general
-  (+leader-def
-    "p" '(:keymap projectile-command-map
-          :package projectile
-          :which-key "projects")))
-
-;; Org Mode
-(use-package org
-  :custom
-  (org-startup-indented t)
-  (org-directory "~/Documents/org")
-  (org-default-notes-file (concat org-directory "/notes.org"))
-  :ghook
-  ('org-mode-hook '(visual-line-mode visual-fill-column-mode))
-  :general
-  (:prefix-map '+open-map
-               "c" #'org-capture)
-  (+local-leader-def :keymaps 'org-mode-map
-    "," #'org-ctrl-c-ctrl-c
-    "t" #'org-todo
-    "o" #'org-open-at-point))
-
-(use-package org-superstar
-  :ghook ('org-mode-hook #'org-superstar-mode)
-  :custom (org-superstar-special-todo-items t))
-
-;; languages + highlighting
-
-(use-package editorconfig
-  :custom (editorconfig-trim-whitespaces-mode 'ws-butler-mode)
-  :hook (after-init . editorconfig-mode))
-
-(use-package julia-mode
-  :mode "\.*\.jl")
-
-(use-package markdown-mode
-  :commands (markdown-mode gfm-mode)
-  :custom (markdown-commnd "multimarkdown")
-  :ghook
-  ('(markdown-mode-hook gfm-mode-hook)
-   #'visual-fill-column-mode)
-  :mode (("README\\.md\\'" . gfm-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode)))
-
-(use-package systemd)
-
-(use-package tree-sitter
-  :init (global-tree-sitter-mode))
-(use-package tree-sitter-langs)
-(use-package tree-sitter-hl
-  :straight nil
-  :after tree-sitter tree-sitter-langs
-  :ghook (#'tree-sitter-after-on-hook  #'tree-sitter-hl-mode))
-
-(use-package emacs-lisp
-  :straight (:type built-in)
-  :general
-  (+local-leader-def :keymaps 'emacs-lisp-mode-map
-    "e" #'eval-last-sexp))
-
-(use-package +lisp-indent
-  :straight nil
-  :load-path "modules/"
-  :init
-  (general-add-advice
-   #'calculate-lisp-indent
-   :override #'void~calculate-lisp-indent))
 
 (use-package calc
   :straight (:type built-in)
@@ -1423,6 +1098,251 @@ session. Otherwise, the addition is permanent."
                  (dedicated . t) ;dedicated is supported in emacs27
                  (reusable-frames . visible)
                  (window-height . 0.3))))
+
+;;; Snippets
+(use-package yasnippet
+  :hook ((prog-mode text-mode) . yas-global-mode)
+  :general (:prefix-map '+insert-map
+                        "s" 'yas-insert-snippet))
+(use-package yasnippet-snippets
+  :after yasnippet)
+(use-package doom-snippets
+  :straight (:host github :repo "hlissner/doom-snippets")
+  :after yasnippet)
+
+(use-package auto-activating-snippets
+  :straight (:host github :repo "ymarco/auto-activating-snippets")
+  :ghook ('LaTeX-mode-hook #'auto-activating-snippets-mode)
+  :config
+  (aas-set-snippets 'latex-mode
+                    "On" "O(n)"))
+
+;; better help buffers
+(use-package helpful
+  :general
+  (:prefix-map 'help-map
+               "f" #'helpful-callable
+               "v" #'helpful-variable
+               "k" #'helpful-key
+               "h" #'helpful-at-point))
+
+(use-package help
+  :straight (:type built-in)
+  :custom
+  (apropos-do-all t))
+
+(use-package adaptive-wrap
+  :general
+  (:prefix-map '+toggle-map
+               "w" #'adaptive-wrap-prefix-mode))
+
+;;; latex
+(use-package company-auctex)
+(use-package company-reftex)
+(use-package company-math)
+(use-package company-bibtex)
+
+(use-package auctex
+  :custom
+  (TeX-master t)
+  (TeX-parse-self t) ;; parse on load
+  (TeX-auto-save t)  ;; parse on save
+  ;; automatically insert braces after sub/superscript in math mode
+  (TeX-electric-sub-and-superscript t)
+  (bibtex-dialect 'biblatex)
+  (bibtex-align-at-equal-sign t)
+  (bibtex-text-indentation 20)
+  (TeX-auto-fold t)
+  ;; insert \(\) instead of $$
+  (TeX-electric-math (cons "\\(" "\\)"))
+  :hook ((TeX-mode . +latex-setup)
+         (TeX-mode . TeX-fold-mode))
+  :mode ("\\.tex\\'" . LaTeX-mode)
+  :general
+  (:keymaps 'TeX-mode-map
+            [remap compile] #'TeX-command-master
+            [remap recompile] (lambda () (TeX-command-master +1)))
+  :preface
+  (defun +latex-setup ()
+    (turn-on-visual-line-mode)
+    (visual-fill-column-mode +1)
+    (unless word-wrap
+      (toggle-word-wrap))
+    (TeX-fold-buffer)
+    (setq-local visual-fill-column-center-text t
+                visual-fill-column-width 100
+
+                ;; important that reftex comes before auctex otherwise
+                ;; citation autocomplete doesn't work
+                company-backends (append '(company-reftex-citations
+                                           company-reftex-labels
+                                           company-auctex-labels
+                                           company-auctex-bibs
+                                           company-auctex-macros
+                                           company-auctex-symbols
+                                           company-auctex-environments
+                                           company-math-symbols-latex
+                                           company-math-symbols-unicode
+                                           company-latex-commands)
+                                         company-backends))))
+(use-package evil-tex
+  :hook (LaTeX-mode . evil-tex-mode))
+
+(use-package bibtex
+  :straight (:type built-in)
+  :gfhook #'+bibtex-setup
+  :preface
+  (defun +bibtex-setup ()
+    (turn-on-visual-line-mode)
+    (setq-local visual-fill-column-center-text t
+                visual-fill-column-width 100)))
+
+(use-package auctex-latexmk
+  :custom
+  (auctex-latexmk-inherit-TeX-PDF-mode t)
+  :hook
+  (TeX-mode . auctex-latexmk-setup))
+
+(use-package reftex
+  :straight (:type built-in)
+  :hook ((TeX-mode . reftex-mode)
+         (LaTeX-mode . reftex-mode))
+  :custom
+  (reftex-cite-format
+   '((?a . "\\autocite[]{%l}")
+     (?b . "\\blockcquote[]{%l}{}")
+     (?c . "\\cite[]{%l}")
+     (?f . "\\footcite[]{%l}")
+     (?n . "\\nocite{%l}")
+     (?p . "\\parencite[]{%l}")
+     (?s . "\\smartcite[]{%l}")
+     (?t . "\\textcite[]{%l}"))
+   (reftex-plug-into-AUCTeX t)
+   (reftex-toc-split-windows-fraction 0.3)))
+
+(use-package pdf-tools
+  :mode ("\\.pdf\\'" . pdf-view-mode)
+  :magic ("%PDF" . pdf-view-mode)
+  :hook (pdf-view-mode . auto-revert-mode)
+  :config
+  (pdf-tools-install :no-query)
+  (setq-default pdf-view-display-size 'fit-page)
+  ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
+  (setq pdf-view-use-scaling t
+        pdf-view-use-imagemagick nil)
+  :general
+  (+local-leader-def :keymaps 'pdf-view-mode-map
+    "s" 'pdf-view-auto-slice-minor-mode)
+  (:keymaps 'pdf-view-mode-map
+            "q" #'kill-current-buffer))
+
+;; projectile
+(use-package projectile
+  :custom
+  (projectile-completion-system 'default)
+  (projectile-auto-discovery t)
+  :hook (after-init . projectile-mode)
+  :general
+  (+leader-def
+    "p" '(:keymap projectile-command-map
+          :package projectile
+          :which-key "projects")))
+
+;; Org Mode
+(use-package org
+  :custom
+  (org-startup-indented t)
+  (org-directory "~/Documents/org")
+  (org-default-notes-file (concat org-directory "/notes.org"))
+  :ghook
+  ('org-mode-hook 'visual-fill-column-mode)
+  :general
+  (:prefix-map '+open-map
+               "c" #'org-capture)
+  (+local-leader-def :keymaps 'org-mode-map
+    "," #'org-ctrl-c-ctrl-c
+    "t" #'org-todo
+    "o" #'org-open-at-point))
+
+(use-package org-superstar
+  :ghook ('org-mode-hook #'org-superstar-mode)
+  :custom (org-superstar-special-todo-items t))
+
+;;; languages + highlighting
+
+(use-package editorconfig
+  :custom (editorconfig-trim-whitespaces-mode 'ws-butler-mode)
+  :hook (after-init . editorconfig-mode))
+
+(use-package julia-mode
+  :mode "\.*\.jl")
+
+(use-package markdown-mode
+  :commands (markdown-mode gfm-mode)
+  :custom (markdown-command "multimarkdown")
+  :ghook
+  ('(markdown-mode-hook gfm-mode-hook)
+   #'visual-fill-column-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode)))
+
+(use-package systemd)
+
+(use-package tree-sitter
+  :init (global-tree-sitter-mode))
+(use-package tree-sitter-langs)
+(use-package tree-sitter-hl
+  :straight nil
+  :after tree-sitter tree-sitter-langs
+  :ghook (#'tree-sitter-after-on-hook  #'tree-sitter-hl-mode))
+
+(use-package emacs-lisp
+  :straight (:type built-in)
+  :general
+  (+local-leader-def :keymaps 'emacs-lisp-mode-map
+    "e" #'eval-last-sexp))
+
+(use-package +lisp-indent
+  :straight nil
+  :load-path "modules/"
+  :init
+  (general-add-advice
+   #'calculate-lisp-indent :override #'void~calculate-lisp-indent))
+
+(use-package js2-mode
+  :interpreter "node"
+  :commands js2-line-break
+  :hook (js-mode . js2-minor-mode)
+  :custom
+  (js-chain-indent t)
+  ;; Don't mishighlight shebang lines
+  (js2-skip-preprocessor-directives t)
+  ;; let flycheck handle this
+  (js2-mode-show-parse-errors nil)
+  (js2-mode-show-strict-warnings nil)
+  ;; Flycheck provides these features, so disable them: conflicting with
+  ;; the eslint settings.
+  (js2-strict-trailing-comma-warning nil)
+  (js2-strict-missing-semi-warning nil)
+  ;; maximum fontification
+  (js2-highlight-level 3)
+  (js2-highlight-external-variables t)
+  (js2-idle-timer-delay 0.1))
+
+(use-package js2-refactor
+  :hook (js2-minor-mode . js2-refactor-mode)
+  :general
+  (general-nvmap
+    :keymaps 'js2-mode
+    "," '(:keymap js2-refactor-mode-map)))
+
+(use-package rjsx-mode
+  :mode "/.*\\.js\\'")
+
+(use-package json-mode)
+(use-package yaml-mode)
+(use-package typescript-mode)
 
 ;; direnv support
 ;; This should be at/near the bottom since you want this hook to be

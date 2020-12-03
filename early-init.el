@@ -25,6 +25,8 @@ during normal emacs operations.")
 ;; larger than the system default.
 (setq frame-inhibit-implied-resize t)
 
+;; set before straight loads
+(setq straight-check-for-modifications '(watch-files find-when-checking))
 ;; needs to be set before straight.el is loaded in order to fix
 ;; flycheck temp file creation
 (setq straight-fix-flycheck t)
