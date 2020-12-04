@@ -115,7 +115,7 @@
 
 ;; gnome handles this fine
 (use-package exec-path-from-shell
-  :when (memq window-system '(mac ns))
+  :when (memq window-system '(mac ns x))
   ;; :custom (exec-path-from-shell-arguments '("-l"))
   :config
   (setq exec-path-from-shell-variables '("PATH"))
@@ -548,7 +548,8 @@ session. Otherwise, the addition is permanent."
     ;; somehow, so fix it here
     (transient-append-suffix 'magit-dispatch "\""
       '("'" "Submodules" magit-submodule)))
-  :gfhook ('magit-mode-hook #'+magit/fix-submodule-binding)
+  :gfhook ('magit-mode-hook #'(+magit/fix-submodule-binding
+                               visual-line-mode))
   :config
   (transient-bind-q-to-quit)
   (define-advice magit-list-refs (:around (orig &optional namespaces format sortby)
@@ -573,6 +574,9 @@ session. Otherwise, the addition is permanent."
     :keymaps 'with-editor-mode-map
     "," 'with-editor-finish
     "k" 'with-editor-cancel))
+
+;; C dynamic module bindings for speeding up magit
+(use-package libgit)
 
 (use-package forge
   :after magit)
