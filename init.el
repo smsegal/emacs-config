@@ -582,6 +582,7 @@ session. Otherwise, the addition is permanent."
 
 ;; C dynamic module bindings for speeding up magit
 (use-package libgit
+  :disabled
   :straight (:host github :repo "magit/libegit2"))
 
 (use-package forge
@@ -845,7 +846,7 @@ session. Otherwise, the addition is permanent."
   :custom
   (modus-themes-bold-constructs t)
   (modus-themes-slanted-constructs t)
-  (modus-themes-syntax 'alt-syntax)
+  (modus-themes-syntax 'faint)
   (modus-themes-completions 'opinionated)
   (modus-themes-paren-match 'intense-bold)
   (modus-themes-org-blocks 'rainbow)
@@ -868,9 +869,9 @@ session. Otherwise, the addition is permanent."
   :config
   ;; macos needs a larger font due to hidpi
   (set-face-attribute 'default nil
-                      :family "JetBrains Mono"
-                      :height (if IS-MAC 140 105))
-  (add-to-list 'default-frame-alist '(line-spacing . 0.2))
+                      :family "Victor Mono"
+                      :height (if IS-MAC 140 110))
+  ;; (add-to-list 'default-frame-alist '(line-spacing . 0.2))
   ;; italic comments
   (set-face-attribute 'font-lock-comment-face nil :slant 'italic))
 
@@ -898,7 +899,17 @@ session. Otherwise, the addition is permanent."
                "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||"
                "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
                "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
-               "/=" "//=" "/==" "@_" "__")))))
+               "/=" "//=" "/==" "@_" "__")))
+        ((string= (face-attribute 'default :family) "Victor Mono")
+         (ligature-set-ligatures
+          't '("</" "</>" "/>" "~-" "-~" "~@" "<~" "<~>" "<~~" "~>" "~~"
+               "~~>" ">=" "<=" "<!--" "##" "###" "####" "|-" "-|" "|->"
+               "<-|" ">-|" "|-<" "|=" "|=>" ">-" "<-" "<--" "-->" "->" "-<"
+               ">->" ">>-" "<<-" "<->" "->>" "-<<" "<-<" "==>" "=>" "=/="
+               "!==" "!=" "<==" ">>=" "=>>" ">=>" "<=>" "<=<" "<<=" "=<<"
+               ".-" ".=" "=:=" "=!=" "==" "===" "::" ":=" ":>" ":<" ">:"
+               ";;" "<|" "<|>" "|>" "<>" "<$" "<$>" "$>" "<+" "<+>" "+>"
+               "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))))
 
 ;; scrolling
 (use-package emacs
@@ -921,12 +932,33 @@ session. Otherwise, the addition is permanent."
   (mouse-wheel-scroll-amount '(2 ((shift) . hscroll) ((meta)) ((control) . text-scale)))
   (mouse-wheel-progressive-speed nil))  ; don't accelerate scrolling
 
+(use-package scroll-on-jump
+  :after (evil goto-chg)
+  :straight (:host gitlab :repo "ideasman42/emacs-scroll-on-jump")
+  :custom
+  (scroll-on-jump-duration 0.4)
+  (scroll-on-jump-use-curve t)
+  :config
+    (scroll-on-jump-advice-add evil-undo)
+    (scroll-on-jump-advice-add evil-redo)
+    (scroll-on-jump-advice-add evil-jump-item)
+    (scroll-on-jump-advice-add evil-jump-forward)
+    (scroll-on-jump-advice-add evil-jump-backward)
+    (scroll-on-jump-advice-add evil-ex-search-next)
+    (scroll-on-jump-advice-add evil-ex-search-previous)
+    (scroll-on-jump-advice-add evil-forward-paragraph)
+    (scroll-on-jump-advice-add evil-backward-paragraph)
+
+    (scroll-on-jump-advice-add goto-last-change)
+    (scroll-on-jump-advice-add goto-last-change-reverse))
+
 ;; visual fill column
 (use-package visual-fill-column
   :config
   (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
   ;; (setq-default split-window-preferred-function 'visual-fill-column-split-window-sensibly)
   :ghook ('visual-fill-column-mode-hook #'visual-line-mode))
+
 
 ;;; autocomplete
 (use-package company
@@ -1317,6 +1349,15 @@ session. Otherwise, the addition is permanent."
   (+leader-def
     "TAB" '(:keymap +workspaces-map
             :which-key "workspaces")))
+
+;; buffer display
+(use-package emacs
+  :straight (:type built-in)
+  :custom
+  (display-buffer-alist
+   '((".*" (display-buffer-reuse-window display-buffer-same-window))))
+  (display-buffer-reuse-frames t)         ; reuse windows in other frames
+  (even-window-sizes nil))                 ; display-buffer: avoid resizing
 
 ;; Org Mode
 (use-package org
