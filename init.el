@@ -1,5 +1,6 @@
 ;;; init.el -*- lexical-binding: t; -*-
 (defvar bootstrap-version)
+;; (setq straight-repository-branch "develop")
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (bootstrap-version 5))
@@ -53,7 +54,7 @@
 (use-package emacs
   :custom
   (enable-recursive-minibuffers t)
-  (auto-mode-case-fold nil)
+  ;; (auto-mode-case-fold nil)
   :config
   ;; Credit: Doom Emacs
   ;; Contrary to what many Emacs users have in their configs, you really don't
@@ -105,7 +106,6 @@
                       ;; compatibility fallbacks
                       "gnutls-cli -p %p %h")))
 
-
 ;; start the emacs server unless one is already running
 (use-package server
   :straight (:type built-in)
@@ -129,6 +129,7 @@
   :custom
   (evil-want-integration t)
   (evil-want-keybinding nil)
+  (evil-ex-substitute-global t)
   (evil-respect-visual-line-mode t)
   (evil-want-Y-yank-to-eol t)
   (evil-cross-lines nil)
@@ -148,21 +149,19 @@
 
 (use-package evil-collection
   :after evil
-  :demand t
   :custom
   (evil-collection-setup-minibuffer t)
   :config
   (evil-collection-init))
 
 (use-package evil-escape
-  :demand t
   :custom
   (evil-escape-delay 0.1)
   (evil-escape-key-sequence "fd")
   :init
   (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
   :config
-  (add-to-list 'evil-escape-excluded-major-modes 'vterm-mode)
+  ;; (add-to-list 'evil-escape-excluded-major-modes 'vterm-mode)
   (evil-escape-mode +1))
 
 (use-package electric-pair
@@ -171,7 +170,6 @@
 
 ;; general keybindings
 (use-package general
-  :demand t
   :custom
   (general-override-states
    '(insert emacs hybrid normal visual motion operator replace))
@@ -330,14 +328,12 @@
   :init
   ;; Replace functions (consult-multi-occur is a drop-in replacement)
   (fset 'multi-occur #'consult-multi-occur)
-  (consult-preview-mode)
-  (consult-annotate-mode)
-  :config
-  (setf (alist-get 'execute-extended-command consult-annotate-alist)
-        #'consult-annotate-command-full)
+  :hook (after-init . consult-preview-mode)
   :general
   (:prefix-map 'help-map
-               "a" #'consult-apropos)
+               "a" #'consult-apropos
+               ;; t is usually the tutorial, but this emacs is so customized it's useless
+               "t" 'consult-theme)
   (:prefix-map '+insert-map
                "y" #'consult-yank)
   (:prefix-map '+file-map
@@ -347,6 +343,14 @@
   (:prefix-map '+search-map
                "s" #'consult-line
                "o" #'consult-outline))
+(use-package marginalia
+  :straight (:host github :repo "minad/marginalia" :branch "main")
+  :hook (after-init . marginalia-mode)
+  :config
+  (setf (alist-get 'projectile-find-file marginalia-command-categories) #'marginalia-annotate-file)
+  (setf (alist-get 'command marginalia-annotators) #'marginalia-annotate-command-full)
+  (setf (alist-get 'file marginalia-annotators) #'marginalia-annotate-file))
+
 (use-package +selectrum-contrib
   :straight nil
   :load-path "modules/"
@@ -464,6 +468,7 @@ session. Otherwise, the addition is permanent."
   :custom
   (dired-listing-switches "-agho --group-directories-first")
   (dired-dwim-target t)
+  (dired-delete-by-moving-to-trash t)
   :ghook
   ('dired-mode-hook #'(dired-async-mode))
   :general
@@ -576,7 +581,8 @@ session. Otherwise, the addition is permanent."
     "k" 'with-editor-cancel))
 
 ;; C dynamic module bindings for speeding up magit
-(use-package libgit)
+(use-package libgit
+  :straight (:host github :repo "magit/libegit2"))
 
 (use-package forge
   :after magit)
@@ -738,6 +744,7 @@ session. Otherwise, the addition is permanent."
   :hook ((prog-mode LaTeX-mode) . highlight-parentheses-mode))
 
 (use-package hl-line
+  :disabled
   :straight (:type built-in)
   :preface
   (defun +highlight-visual-line ()
@@ -832,23 +839,21 @@ session. Otherwise, the addition is permanent."
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
-(use-package modus-operandi-theme
+(use-package modus-themes
+  :straight
+  (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
   :custom
-  (modus-operandi-theme-bold-constructs t)
-  (modus-operandi-theme-slanted-constructs t)
-  (modus-operandi-theme-syntax 'alt-syntax)
-  (modus-operandi-theme-mode-line 'moody))
-
-(use-package modus-vivendi-theme
-  :custom
-  (modus-vivendi-theme-bold-constructs t)
-  (modus-vivendi-theme-slanted-constructs t)
-  (modus-vivendi-theme-mode-line 'moody)
-  (modus-vivendi-theme-syntax 'faint))
+  (modus-themes-bold-constructs t)
+  (modus-themes-slanted-constructs t)
+  (modus-themes-syntax 'alt-syntax)
+  (modus-themes-completions 'opinionated)
+  (modus-themes-paren-match 'intense-bold)
+  (modus-themes-org-blocks 'rainbow)
+  (modus-themes-mode-line 'moody))
 
 (use-package circadian
   ;; :disabled
-  :after (doom-themes modus-operandi-theme modus-vivendi-theme)
+  :after (doom-themes modus-themes)
   :custom
   (calendar-latitude 43.6)
   (calendar-longitude -79.4)
@@ -872,7 +877,9 @@ session. Otherwise, the addition is permanent."
 ;; Note: Doesn't work on emacs28+
 (use-package ligature
   :straight (:host github :repo "mickeynp/ligature.el")
-  :ghook ('after-init-hook #'global-ligature-mode)
+  :ghook ('(prog-mode-hook
+            LaTeX-mode-hook
+            org-mode-hook) #'ligature-mode)
   :init
   ;; JetBrains Mono Ligatures
   (cond ((string= (face-attribute 'default :family) "JetBrains Mono")
@@ -1024,10 +1031,18 @@ session. Otherwise, the addition is permanent."
   (ein:output-area-inlined-images t)
   (ein:polymode t)
   :commands (ein:run ein:login)
+  :preface
+  ;; (defun +myein/exec-and-recenter-next ()
+  ;;   (interactive)
+  ;;   (call-interactively 'ein:worksheet-execute-cell-and-goto-next-km)
+  ;;   (evil-scroll-line-to-center))
+  (general-add-advice 'ein:worksheet-execute-cell-and-goto-next-km
+                      :after (lambda () (interactive)
+                               (evil-scroll-line-to-center)))
   :init
   (evil-define-minor-mode-key '(normal visual) 'ein:notebook-mode
-    (kbd "<C-return>") 'ein:worksheet-execute-cell-km
-    (kbd "<S-return>") 'ein:worksheet-execute-cell-and-goto-next-km)
+    (kbd "<C-return>") #'ein:worksheet-execute-cell-km
+    (kbd "<S-return>") #'ein:worksheet-execute-cell-and-goto-next-km)
   :general
   (:keymaps 'ein:notebook-mode-map
             [remap save-buffer] #'ein:notebook-save-notebook-command-km
@@ -1038,7 +1053,7 @@ session. Otherwise, the addition is permanent."
 ;;; utilities
 (use-package restart-emacs
   :general
-  (:prefix-map '+quit-map "r" 'restart-emacs))
+  (:prefix-map '+quit-restart-map "r" 'restart-emacs))
 
 (use-package calc
   :straight (:type built-in)
@@ -1065,24 +1080,60 @@ session. Otherwise, the addition is permanent."
   ('compilation-filter-hook #'(+compile/apply-ansi-color-to-compilation-buffer-h
                                +compile/fix-compilation-size)))
 
+;; inline eval a la cider
+;; (use-package eros
+;;   :hook (prog-mode . eros-mode))
+
 ;; vterm
 (use-package vterm
   :preface
-  (defun +vterm/evil-collection-vterm-escape-stay ()
-    "Go back to normal state but don't move cursor backwards. Moving
-    cursor backwards is the default vim behaviour but it is not appropriate
-    in some cases like terminals."
-    (setq-local evil-move-cursor-back nil))
-  (defun +vterm/set-cursor-shape ()
-    (setq-local cursor-type 'bar))
+  ;; (defun +vterm/evil-collection-vterm-escape-stay ()
+  ;;   "Go back to normal state but don't move cursor backwards. Moving
+  ;;   cursor backwards is the default vim behaviour but it is not appropriate
+  ;;   in some cases like terminals."
+  ;;   (setq-local evil-move-cursor-back nil))
+  ;; (defun +vterm/set-cursor-shape ()
+  ;;   (setq-local cursor-type 'bar))
+
+  ;; Add evil specific bindings that work with vterm mode
+  (defun vterm-evil-insert ()
+    (interactive)
+    (vterm-goto-char (point))
+    (call-interactively #'evil-insert))
+  (defun vterm-evil-append ()
+    (interactive)
+    (vterm-goto-char (1+ (point)))
+    (call-interactively #'evil-append))
+  (defun vterm-evil-delete ()
+    "Provide similar behavior as `evil-delete'."
+    (interactive)
+    (let ((inhibit-read-only t))
+      (cl-letf (((symbol-function #'delete-region) #'vterm-delete-region))
+        (call-interactively 'evil-delete))))
+  (defun vterm-evil-change ()
+    "Provide similar behavior as `evil-change'."
+    (interactive)
+    (let ((inhibit-read-only t))
+      (cl-letf (((symbol-function #'delete-region) #'vterm-delete-region))
+        (call-interactively 'evil-change))))
+  ;; (defun +evil-vterm-hook ()
+  ;;   (evil-local-mode 1)
+  ;;   (evil-define-key 'normal 'local "a" 'vterm-evil-append)
+  ;;   (evil-define-key 'normal 'local "x" 'vterm-evil-delete)
+  ;;   (evil-define-key 'normal 'local "i" 'vterm-evil-insert)
+  ;;   (evil-define-key 'normal 'local "c" 'vterm-evil-change))
+  ;; :ghook ('vterm-mode-hook #'+evil-vterm-hook)
   :custom
   (vterm-buffer-name-string "vterm: %s")
-  :ghook
-  ('vterm-mode-hook #'(+vterm/evil-collection-vterm-escape-stay
-                       +vterm/set-cursor-shape))
   :general
+  (general-nmap :keymaps 'vterm-mode-map
+    "a" 'vterm-evil-append
+    "d" 'vterm-evil-delete
+    "i" 'vterm-evil-insert
+    "c" 'vterm-evil-change)
   (general-imap :keymaps 'vterm-mode-map
     "C-i" #'vterm-send-escape))
+
 (use-package vterm-toggle
   :commands (vterm-toggle)
   :general
@@ -1252,6 +1303,21 @@ session. Otherwise, the addition is permanent."
           :package projectile
           :which-key "projects")))
 
+(use-package perspective
+  :hook (projectile-mode . persp-mode)
+  :general
+  (:prefix-map '+workspaces-map
+               "n" #'persp-next
+               "p" #'perp-prev
+               "r" #'persp-rename
+               "a" #'persp-add-buffer
+               "s" #'persp-switch
+               "S" #'persp-save
+               "b" #'persp-switch-to-buffer)
+  (+leader-def
+    "TAB" '(:keymap +workspaces-map
+            :which-key "workspaces")))
+
 ;; Org Mode
 (use-package org
   :custom
@@ -1260,6 +1326,11 @@ session. Otherwise, the addition is permanent."
   (org-default-notes-file (concat org-directory "/notes.org"))
   :ghook
   ('org-mode-hook 'visual-fill-column-mode)
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (python . t)))
   :general
   (:prefix-map '+open-map
                "c" #'org-capture)
@@ -1281,6 +1352,9 @@ session. Otherwise, the addition is permanent."
 (use-package julia-mode
   :mode "\.*\.jl")
 
+(use-package nix-mode
+  :mode "\\.nix\\'")
+
 (use-package markdown-mode
   :commands (markdown-mode gfm-mode)
   :custom (markdown-command "multimarkdown")
@@ -1294,12 +1368,12 @@ session. Otherwise, the addition is permanent."
 (use-package systemd)
 
 (use-package tree-sitter
-  :init (global-tree-sitter-mode))
-(use-package tree-sitter-langs)
-(use-package tree-sitter-hl
-  :straight nil
-  :after tree-sitter tree-sitter-langs
+  :init (global-tree-sitter-mode)
   :ghook (#'tree-sitter-after-on-hook  #'tree-sitter-hl-mode))
+(use-package tree-sitter-langs)
+;; (use-package tree-sitter-hl
+;;   :straight nil
+;;   :after tree-sitter tree-sitter-langs
 
 (use-package emacs-lisp
   :straight (:type built-in)
