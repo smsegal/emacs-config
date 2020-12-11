@@ -1,7 +1,11 @@
 #+title: Emacs Configuration
 #+author: Shane Segal
 #+options: toc:nil num:nil
-
+* Lexical Binding
+We want lexical binding enabled in this whole file.
+#+begin_src emacs-lisp
+;;; config.el -*- lexical-binding: t; -*-
+#+end_src
 * Use-Package Setup
 Using straight.el (loaded in ~init.el~) to load use-package and setup integration. Also set up some personal information
 #+begin_src emacs-lisp
@@ -34,7 +38,7 @@ This package changes the behaviour of the garbage collector to act during idle t
   :hook (after-init . gcmh-mode))
 #+end_src
 
-Set up the path properly on gui emacs
+Set up the path properly on GUI Emacs.
 #+begin_src emacs-lisp
 (use-package exec-path-from-shell
   :when (memq window-system '(mac ns x))
@@ -120,6 +124,7 @@ These tweaks (mainly taken from doom emacs) enhance performance and provide (the
       (set-charset-priority 'unicode)))
   (prefer-coding-system 'utf-8)
 #+end_src
+
 ** Server
 Start the server unless it's already running.
 #+begin_src emacs-lisp
@@ -370,6 +375,66 @@ Code Folding
     :straight (:type built-in)
     :hook (emacs-startup . electric-pair-mode))
 #+end_src
+* Font
+I like a font with ligatures and I like my comments italic.
+#+begin_src emacs-lisp
+  (use-package emacs
+    :preface
+    (defvar FONT-NAME "Victor Mono")
+    :init
+    ;; macos needs a larger font due to hidpi
+    (set-face-attribute 'default nil
+                        :family FONT-NAME
+                        :height (if IS-MAC 140 110))
+    (set-frame-font FONT-NAME nil t)
+    ;; (add-to-list 'default-frame-alist '(line-spacing . 0.2))
+    ;; italic comments
+    (message "font config loaded")
+    (set-face-attribute 'font-lock-comment-face nil :family FONT-NAME :slant 'italic))
+#+end_src
+
+Here is where we set up the ligatures. There's configuration for the
+fonts I use most often: "Victor Mono" and "JetBrains Mono".
+#+begin_src emacs-lisp
+  ;; Note: Doesn't work on emacs28+
+  (use-package ligature
+    :straight (:host github :repo "mickeynp/ligature.el")
+    :ghook ('(prog-mode-hook
+              LaTeX-mode-hook
+              org-mode-hook) #'ligature-mode)
+    :init
+    (cond
+     ;; JetBrains Mono Ligatures
+     ((string= (face-attribute 'default :family) "JetBrains Mono")
+      (ligature-set-ligatures
+       't '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/="
+            "<=" ">=" "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!"
+            "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<"
+            ">>>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||="
+            "##" "###" "####" "#{" "#[" "]#" "#(" "#?"  "#_" "#_("
+            "#:" "#!"  "#=" "^=" "<$>" "<$" "$>" "<+>" "<+" "+>"
+            "<*>" "<*" "*>" "</" "</>" "/>" "<!--" "<#--" "-->"
+            "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>"
+            "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" ">--"
+            "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<->"
+            "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]"
+            "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||"
+            "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
+            "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
+            "/=" "//=" "/==" "@_" "__")))
+     ;; Victor Mono Ligatures
+     ((string= (face-attribute 'default :family) "Victor Mono")
+      (ligature-set-ligatures
+       't '("</" "</>" "/>" "~-" "-~" "~@" "<~" "<~>" "<~~" "~>" "~~"
+            "~~>" ">=" "<=" "<!--" "##" "###" "####" "|-" "-|" "|->"
+            "<-|" ">-|" "|-<" "|=" "|=>" ">-" "<-" "<--" "-->" "->" "-<"
+            ">->" ">>-" "<<-" "<->" "->>" "-<<" "<-<" "==>" "=>" "=/="
+            "!==" "!=" "<==" ">>=" "=>>" ">=>" "<=>" "<=<" "<<=" "=<<"
+            ".-" ".=" "=:=" "=!=" "==" "===" "::" ":=" ":>" ":<" ">:"
+            ";;" "<|" "<|>" "|>" "<>" "<$" "<$>" "$>" "<+" "<+>" "+>"
+            "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))))
+#+end_src
+
 * Incremental Completion
 We're using Selectrum and the associated ecosystem. They have a bigger
 focus on creating and extending basic APIs vs alternative like Ivy.
@@ -859,7 +924,7 @@ Highlight todo keywords when they appear in comments
     :hook (prog-mode . hl-todo-mode))
 #+end_src
 
-This is a great one. Dim the background colour of the buffers you're not currently editting in.
+This is a great one. Dim the background colour of the buffers you're not currently editing in.
 #+begin_src emacs-lisp
   (use-package auto-dim-other-buffers
     :hook (after-init . auto-dim-other-buffers-mode)
@@ -899,7 +964,7 @@ Change the shape of the cursor when running in the tty. Also enable the mouse.
     :straight (:type built-in)
     :hook (tty-setup . xterm-mouse-mode))
 #+end_src
-** Modeline
+* Modeline
 I use the moody modeline (by the author of magit). I also use minions
 to hide all the other modes active instead of diminishing them.
 I also depend on smart-mode-line for the buffer-naming.
@@ -970,12 +1035,16 @@ Window Enlargement
                           "o" #'+window-enlargen
                           "O" #'delete-other-windows))
 
+#+end_src
 
+* Dashboard
+A nice start page for emacs. I set a custom logo for the buffer, and
+enable ~all-the-icons~ support.
+#+begin_src emacs-lisp
   ;; dashboard
   (use-package dashboard
     :custom
     (dashboard-set-footer nil)
-    ;; (initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
     (dashboard-center-content t)
     (dashboard-set-file-icons t)
     (dashboard-set-heading-icons t)
@@ -984,88 +1053,44 @@ Window Enlargement
     (dashboard-startup-banner (concat user-emacs-directory "emacs-bigsur_small.png"))
     :init
     (dashboard-setup-startup-hook))
+#+end_src
 
-  ;; themes
+* Themes
+I use the great ~doom-themes~ package from Doom. It provides a whole
+ton of great light and dark themes.
+#+begin_src emacs-lisp
   (use-package doom-themes
     :custom
     (doom-themes-enable-bold t)
     (doom-themes-enable-italic t)
-    :config
-    (doom-themes-visual-bell-config))
-  ;; (doom-themes-org-config))
-
-  (use-package modus-themes
-    :disabled
-    :straight
-    (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
-    :custom
-    (modus-themes-bold-constructs t)
-    (modus-themes-slanted-constructs t)
-    (modus-themes-syntax 'faint)
-    (modus-themes-completions 'opinionated)
-    (modus-themes-paren-match 'intense-bold)
-    (modus-themes-org-blocks 'rainbow)
-    (modus-themes-mode-line 'moody))
-
-  (use-package circadian
-    ;; :after (doom-themes modus-themes)
-    :custom
-    (calendar-latitude 43.6)
-    (calendar-longitude -79.4)
-    (circadian-themes '((:sunrise . doom-acario-light)
-                        (:sunset  . doom-spacegrey)))
-    :hook
-    (after-init . circadian-setup))
-
-  ;;; font
-  (use-package emacs
-    :straight (:type built-in)
-    :config
-    (defvar FONT-NAME "Victor Mono")
-    ;; macos needs a larger font due to hidpi
-    (set-face-attribute 'default nil
-                        :family FONT-NAME
-                        :height (if IS-MAC 140 110))
-    (set-frame-font FONT-NAME nil t)
-    ;; (add-to-list 'default-frame-alist '(line-spacing . 0.2))
-    ;; italic comments
-    (set-face-attribute 'font-lock-comment-face nil :slant 'italic))
-
-  ;; Note: Doesn't work on emacs28+
-  (use-package ligature
-    :straight (:host github :repo "mickeynp/ligature.el")
-    :ghook ('(prog-mode-hook
-              LaTeX-mode-hook
-              org-mode-hook) #'ligature-mode)
     :init
-    ;; JetBrains Mono Ligatures
-    (cond ((string= (face-attribute 'default :family) "JetBrains Mono")
-           (ligature-set-ligatures
-            't '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/="
-                 "<=" ">=" "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!"
-                 "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<"
-                 ">>>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||="
-                 "##" "###" "####" "#{" "#[" "]#" "#(" "#?"  "#_" "#_("
-                 "#:" "#!"  "#=" "^=" "<$>" "<$" "$>" "<+>" "<+" "+>"
-                 "<*>" "<*" "*>" "</" "</>" "/>" "<!--" "<#--" "-->"
-                 "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>"
-                 "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" ">--"
-                 "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<->"
-                 "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]"
-                 "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||"
-                 "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
-                 "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
-                 "/=" "//=" "/==" "@_" "__")))
-          ((string= (face-attribute 'default :family) "Victor Mono")
-           (ligature-set-ligatures
-            't '("</" "</>" "/>" "~-" "-~" "~@" "<~" "<~>" "<~~" "~>" "~~"
-                 "~~>" ">=" "<=" "<!--" "##" "###" "####" "|-" "-|" "|->"
-                 "<-|" ">-|" "|-<" "|=" "|=>" ">-" "<-" "<--" "-->" "->" "-<"
-                 ">->" ">>-" "<<-" "<->" "->>" "-<<" "<-<" "==>" "=>" "=/="
-                 "!==" "!=" "<==" ">>=" "=>>" ">=>" "<=>" "<=<" "<<=" "=<<"
-                 ".-" ".=" "=:=" "=!=" "==" "===" "::" ":=" ":>" ":<" ">:"
-                 ";;" "<|" "<|>" "|>" "<>" "<$" "<$>" "$>" "<+" "<+>" "+>"
-                 "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))))
+    (load-theme 'doom-acario-light t)
+    :config
+    (doom-themes-visual-bell-config)
+    (doom-themes-org-config))
+
+  ;; (use-package modus-themes
+  ;;   :disabled
+  ;;   :straight
+  ;;   (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
+  ;;   :custom
+  ;;   (modus-themes-bold-constructs t)
+  ;;   (modus-themes-slanted-constructs t)
+  ;;   (modus-themes-syntax 'faint)
+  ;;   (modus-themes-completions 'opinionated)
+  ;;   (modus-themes-paren-match 'intense-bold)
+  ;;   (modus-themes-org-blocks 'rainbow)
+  ;;   (modus-themes-mode-line 'moody))
+
+  ;; (use-package circadian
+  ;;   ;; :after (doom-themes modus-themes)
+  ;;   :custom
+  ;;   (calendar-latitude 43.6)
+  ;;   (calendar-longitude -79.4)
+  ;;   (circadian-themes '((:sunrise . doom-acario-light)
+  ;;                       (:sunset  . doom-spacegrey)))
+  ;;   :hook
+  ;;   (after-init . circadian-setup))
 
   ;; scrolling
   (use-package emacs
@@ -1116,7 +1141,7 @@ Window Enlargement
     :ghook ('visual-fill-column-mode-hook #'visual-line-mode))
 
 
-  ;;; autocomplete
+           ;;; autocomplete
   (use-package company
     :custom
     (company-minimum-prefix-length 1)
@@ -1152,7 +1177,7 @@ Window Enlargement
   (use-package dumb-jump
     :hook (xref-backend-functions . dumb-jump-xreg-activate))
 
-  ;;; lsp-mode
+         ;;; lsp-mode
   (use-package lsp-mode
     :commands (lsp lsp-deferred)
     :custom
@@ -1250,7 +1275,7 @@ Window Enlargement
               "C-k" #'ein:worksheet-goto-prev-input-km))
 
 
-  ;;; utilities
+         ;;; utilities
   (use-package restart-emacs
     :general
     (:prefix-map '+quit-restart-map "r" 'restart-emacs))
@@ -1267,7 +1292,7 @@ Window Enlargement
     :preface
     (defun +compile/apply-ansi-color-to-compilation-buffer-h ()
       "Applies ansi codes to the compilation buffers. Meant for
-       `compilation-filter-hook'."
+              `compilation-filter-hook'."
       (with-silent-modifications
         (ansi-color-apply-on-region compilation-filter-start (point))))
     (defun +compile/fix-compilation-size ()
@@ -1354,7 +1379,7 @@ Window Enlargement
                    (reusable-frames . visible)
                    (window-height . 0.3))))
 
-  ;;; Snippets
+         ;;; Snippets
   (use-package yasnippet
     :hook ((prog-mode text-mode) . yas-global-mode)
     :general (:prefix-map '+insert-map
@@ -1392,7 +1417,7 @@ Window Enlargement
     (:prefix-map '+toggle-map
                  "w" #'adaptive-wrap-prefix-mode))
 
-  ;;; latex
+         ;;; latex
   (use-package company-auctex)
   (use-package company-reftex)
   (use-package company-math)
@@ -1554,7 +1579,7 @@ Window Enlargement
     :ghook ('org-mode-hook #'org-superstar-mode)
     :custom (org-superstar-special-todo-items t))
 
-  ;;; languages + highlighting
+         ;;; languages + highlighting
 
   (use-package editorconfig
     :custom (editorconfig-trim-whitespaces-mode 'ws-butler-mode)
