@@ -992,9 +992,10 @@ Window Enlargement
     (doom-themes-enable-italic t)
     :config
     (doom-themes-visual-bell-config))
-    ;; (doom-themes-org-config))
+  ;; (doom-themes-org-config))
 
   (use-package modus-themes
+    :disabled
     :straight
     (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
     :custom
@@ -1007,7 +1008,7 @@ Window Enlargement
     (modus-themes-mode-line 'moody))
 
   (use-package circadian
-    :after (doom-themes modus-themes)
+    ;; :after (doom-themes modus-themes)
     :custom
     (calendar-latitude 43.6)
     (calendar-longitude -79.4)
@@ -1131,7 +1132,7 @@ Window Enlargement
     :hook (company-mode . company-quickhelp-mode))
   (use-package company-posframe
     :unless IS-MAC
-    :hook (company-mode . company-posframe-mode))
+    :hook (company-box-mode . company-posframe-mode))
 
   ;; syntax checking
   (use-package flycheck
@@ -1563,7 +1564,7 @@ Window Enlargement
     :mode "\.*\.jl")
 
   (use-package nix-mode
-    :mode "\\.nix\\'") 
+    :mode "\\.nix\\'")
 
   (use-package markdown-mode
     :commands (markdown-mode gfm-mode)
