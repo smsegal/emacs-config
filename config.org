@@ -1,6 +1,9 @@
 #+title: Emacs Configuration
 #+author: Shane Segal
+#+startup: overview
+#+property: header-args :results silent :comments org :tangle yes
 #+options: toc:nil num:nil
+
 * Lexical Binding
 We want lexical binding enabled in this whole file.
 #+begin_src emacs-lisp
@@ -369,16 +372,64 @@ Code Folding
 #+end_src
 
 ** Basic Text Editing
-*** Set up automatic pairing of ({[]})
+* Look and Feel
+** Dashboard
+A nice start page for emacs. I set a custom logo for the buffer, and
+enable ~all-the-icons~ support.
 #+begin_src emacs-lisp
-  (use-package electric-pair
-    :straight (:type built-in)
-    :hook (emacs-startup . electric-pair-mode))
+;; dashboard
+(use-package dashboard
+    :custom
+    (dashboard-set-footer nil)
+    (dashboard-center-content t)
+    (dashboard-set-file-icons t)
+    (dashboard-set-heading-icons t)
+    (dashboard-set-init-info t)
+    (dashboard-projects-switch-function 'projectile-persp-switch-project)
+    (dashboard-startup-banner (concat user-emacs-directory "emacs-bigsur_small.png"))
+    :init
+    (dashboard-setup-startup-hook))
 #+end_src
-* Font
+
+** Themes
+I use the great ~doom-themes~ package from Doom. It provides a whole
+ton of great light and dark themes.
+#+begin_src emacs-lisp
+  (use-package doom-themes
+    :custom
+    (doom-themes-enable-bold t)
+    (doom-themes-enable-italic t)
+    :config
+    (doom-themes-visual-bell-config)
+    (doom-themes-org-config))
+
+  (use-package modus-themes
+    :disabled
+    :straight
+    (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
+    :custom
+    (modus-themes-bold-constructs t)
+    (modus-themes-slanted-constructs t)
+    (modus-themes-syntax 'faint)
+    (modus-themes-completions 'opinionated)
+    (modus-themes-paren-match 'intense-bold)
+    (modus-themes-org-blocks 'rainbow)
+    (modus-themes-mode-line 'moody))
+
+  (use-package circadian
+    :custom
+    (calendar-latitude 43.6)
+    (calendar-longitude -79.4)
+    (circadian-themes '((:sunrise . doom-acario-light)
+                        (:sunset  . doom-spacegrey)))
+    :hook
+    (after-init . circadian-setup))
+#+end_src
+** Font
 I like a font with ligatures and I like my comments italic.
 #+begin_src emacs-lisp
   (use-package emacs
+    :after (doom-themes org)
     :preface
     (defvar FONT-NAME "Victor Mono")
     :init
@@ -388,8 +439,10 @@ I like a font with ligatures and I like my comments italic.
                         :height (if IS-MAC 140 110))
     (set-frame-font FONT-NAME nil t)
     ;; (add-to-list 'default-frame-alist '(line-spacing . 0.2))
+
+    ;; this is a fix for doom-acario-theme setting a weird font
+    (set-face-attribute 'fixed-pitch-serif nil :family FONT-NAME)
     ;; italic comments
-    (message "font config loaded")
     (set-face-attribute 'font-lock-comment-face nil :family FONT-NAME :slant 'italic))
 #+end_src
 
@@ -433,6 +486,311 @@ fonts I use most often: "Victor Mono" and "JetBrains Mono".
             ".-" ".=" "=:=" "=!=" "==" "===" "::" ":=" ":>" ":<" ">:"
             ";;" "<|" "<|>" "|>" "<>" "<$" "<$>" "$>" "<+" "<+>" "+>"
             "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))))
+#+end_src
+
+** UI Tweaks
+What the hell do I press next? Which-key answers that question.
+#+begin_src emacs-lisp
+  (use-package which-key
+    :demand t
+    :custom
+    (which-key-popup-type 'side-window)
+    (which-key-enable-extended-define-key t)
+    :hook (after-init . which-key-mode)
+    :general
+    (:keymaps 'help-map
+              "b" #'which-key-show-major-mode
+              "B" #'which-key-show-top-level))
+#+end_src
+
+A lot of the built-in UI needs some tweaks. We disable menu bars, the toolbar and the scrollbar.
+We also want to confirm things with a single y/n instead of the whole word.
+#+begin_src emacs-lisp
+  (use-package emacs
+    :custom
+    (confirm-nonexistent-file-or-buffer nil)
+    (mouse-yank-at-point t)
+
+    ;; make underlines look a little better
+    (x-underline-at-descent-line t)
+
+    ;; window resizing
+    (window-resize-pixelwise t)
+    (frame-resize-pixelwise t)
+
+    ;; bars
+    (menu-bar-mode   nil)
+    (tool-bar-mode   nil)
+    (scroll-bar-mode nil)
+    :config
+    ;; set this for all prompts
+    (defalias 'yes-or-no-p 'y-or-n-p)
+
+    ;; ui cruft
+    (unless (assq 'menu-bar-lines default-frame-alist)
+      (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
+      (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
+      (add-to-list 'default-frame-alist '(vertical-scroll-bars))))
+#+end_src
+** Visual Fill Column
+Sometimes we want text to wrap before the window border.
+#+begin_src  emacs-lisp
+  (use-package visual-fill-column
+    :config
+    (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
+    ;; (setq-default split-window-preferred-function 'visual-fill-column-split-window-sensibly)
+    :ghook ('visual-fill-column-mode-hook #'visual-line-mode))
+#+end_src
+*** Misc Tweaks
+Pulse current line on window switch
+#+begin_src emacs-lisp
+  (use-package beacon
+    :hook (after-init . beacon-mode)
+    :config
+    (add-to-list 'beacon-dont-blink-commands 'vterm-send-return)
+    (add-to-list 'beacon-dont-blink-commands 'mwheel-scroll))
+#+end_src
+
+Hide the mouse when we type near it.
+#+begin_src emacs-lisp
+  (use-package avoid
+    :straight (:type built-in)
+    :config
+    ;; doesn't seem to do any animating, at least on wayland should
+    ;; check it out on X (but I never use X soooo)
+    (mouse-avoidance-mode 'exile))
+#+end_src
+
+Window dividers and the fringe. We want them to show up very thin between windows. 
+#+begin_src emacs-lisp
+  (use-package window-divider
+    :straight (:type built-in)
+    :custom
+    (window-divider-default-right-width 1)
+    (window-divider-default-bottom-width 1)
+    (window-divider-default-places 'right-only)
+    :hook (after-init . window-divider-mode))
+
+  (use-package fringe
+    :straight (:type built-in)
+    :init (set-fringe-style 0)
+    :custom
+    ;; fringes
+    (indicate-buffer-boundaries   nil)
+    (indicate-empty-lines         nil)
+    (fringes-outside-margins      nil)
+    (indicate-buffer-boundaries   nil)
+    (indicate-empty-lines         nil)
+    (overflow-newline-into-fringe t))
+#+end_src
+
+Highlight todo keywords when they appear in comments
+#+begin_src emacs-lisp
+  (use-package hl-todo
+    :hook (prog-mode . hl-todo-mode))
+#+end_src
+
+This is a great one. Dim the background colour of the buffers you're not currently editing in.
+#+begin_src emacs-lisp
+  (use-package auto-dim-other-buffers
+    :hook (after-init . auto-dim-other-buffers-mode)
+    :custom
+    (auto-dim-other-buffers-dim-on-switch-to-minibuffer nil)
+    (auto-dim-other-buffers-dim-on-focus-out nil))
+#+end_src
+
+Highlight different things. The parentheses surround the point get
+highlighted which is great.
+#+begin_src emacs-lisp
+  (use-package highlight-parentheses
+    :hook ((prog-mode LaTeX-mode) . highlight-parentheses-mode))
+
+  (use-package hl-line
+    :disabled
+    :straight (:type built-in)
+    :preface
+    (defun +highlight-visual-line ()
+      (save-excursion
+        (cons (progn (beginning-of-visual-line) (+ 1 (point)))
+              (progn (beginning-of-visual-line 2) (point)))))
+    :hook ((prog-mode text-mode conf-mode special-mode) . hl-line-mode)
+    :custom
+    (hl-line-range-function '+highlight-visual-line)
+    (hl-line-sticky-flag nil)
+    (global-hl-line-sticky-flag nil))
+#+end_src
+
+Change the shape of the cursor when running in the tty. Also enable the mouse.
+#+begin_src emacs-lisp
+  (use-package evil-terminal-cursor-changer
+    :straight (:host github :repo "kisaragi-hiu/evil-terminal-cursor-changer")
+    :hook (tty-setup . evil-terminal-cursor-changer-activate))
+
+  (use-package xterm-mouse-mode
+    :straight (:type built-in)
+    :hook (tty-setup . xterm-mouse-mode))
+#+end_src
+** Scrolling
+#+begin_src emacs-lisp
+  ;; scrolling
+  (use-package emacs
+    :custom
+    (hscroll-margin 2)
+    (hscroll-step 1)
+    ;; Emacs spends too much effort recentering the screen if you scroll the
+    ;; cursor more than N lines past window edges (where N is the settings of
+    ;; `scroll-conservatively'). This is especially slow in larger files
+    ;; during large-scale scrolling commands. If kept over 100, the window is
+    ;; never automatically recentered.
+    (scroll-conservatively 101)
+    (scroll-margin 0)
+    (scroll-preserve-screen-position t)
+    ;; Reduce cursor lag by a tiny bit by not auto-adjusting `window-vscroll'
+    ;; for tall lines.
+    (auto-window-vscroll nil)
+    ;; mouse
+
+    (mouse-wheel-scroll-amount '(2 ((shift) . hscroll) ((meta)) ((control) . text-scale)))
+    (mouse-wheel-progressive-speed nil))  ; don't accelerate scrolling
+
+  (use-package scroll-on-jump
+    :after (evil goto-chg)
+    :straight (:host gitlab :repo "ideasman42/emacs-scroll-on-jump")
+    :custom
+    (scroll-on-jump-duration 0.4)
+    (scroll-on-jump-use-curve t)
+    :config
+    (scroll-on-jump-advice-add evil-undo)
+    (scroll-on-jump-advice-add evil-redo)
+    (scroll-on-jump-advice-add evil-jump-item)
+    (scroll-on-jump-advice-add evil-jump-forward)
+    (scroll-on-jump-advice-add evil-jump-backward)
+    (scroll-on-jump-advice-add evil-ex-search-next)
+    (scroll-on-jump-advice-add evil-ex-search-previous)
+    (scroll-on-jump-advice-add evil-forward-paragraph)
+    (scroll-on-jump-advice-add evil-backward-paragraph)
+
+    (scroll-on-jump-advice-add goto-last-change)
+    (scroll-on-jump-advice-add goto-last-change-reverse))
+#+end_src
+* Buffers
+** Bufler and Burly
+These are both packages written by alphapapa, a prolific emacs package
+dev. Bufler organizes buffers by mode and project and provides a good
+UI for switching among them.
+
+Burly is a lightweight workspace manager that builds on top of emacs
+bookmark system.
+#+begin_src emacs-lisp
+  (use-package bufler
+    :hook (after-init . bufler-mode)
+    :commands bufler-ex
+    :general
+    (general-nvmap
+      :keymaps 'bufler-list-mode-map
+      "RET" #'bufler-list-buffer-switch
+      ;; "TAB" #'bufler-ex
+      (kbd "<escape>") #'quit-window
+      "q" #'quit-window)
+    (:prefix-map '+buffer-map
+                 "b" '(bufler-switch-buffer :which-key "switch buffer")
+                 "B" '(bufler-list :which-key "buffer list")))
+
+  (use-package burly
+    :straight (:host github :repo "alphapapa/burly.el")
+    :general
+    (:prefix-map '+bookmark-map
+                 "l" 'list-bookmarks
+                 "w" 'burly-bookmark-windows
+                 "F" 'burly-bookmark-frames))
+#+end_src
+
+ Switch to the scratch buffer
+ #+begin_src emacs-lisp
+  (use-package switch-to-buffer
+    :straight (:type built-in)
+    :preface
+    (defun +switch-to-scratch ()
+      (interactive)
+      (switch-to-buffer "*scratch*"))
+    :general
+    (:keymaps 'global-map
+              (kbd "<mouse-9>") 'next-buffer
+              (kbd "<mouse-8>") 'previous-buffer)
+    (:prefix-map '+buffer-map
+                 "s" #'+switch-to-scratch))
+    #+end_src
+* Window Management
+Undo and redo window configurations.
+
+#+begin_src emacs-lisp
+  (use-package winner
+    :straight (:type built-in)
+    :hook (after-init . winner-mode)
+    :general
+    (:prefix-map 'evil-window-map
+                 "u" 'winner-undo
+                 "r" 'winner-redo))
+#+end_src
+
+Switch to a window with the keyboard like avy.
+ #+begin_src emacs-lisp
+  (use-package ace-window
+    :custom
+    (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+    :config
+    (set-face-attribute 'aw-leading-char-face nil :height 3.0)
+    :general (:prefix-map 'evil-window-map
+                          "w" #'ace-window
+                          "W" #'ace-swap-window))
+
+#+end_src
+
+Window Enlargement
+#+begin_src emacs-lisp
+  (use-package zoom
+    :custom
+    (zoom-size '(0.7 . 0.7))
+    (zoom-ignored-major-modes '(dired-mode vterm-mode
+                                help-mode helpful-mode
+                                rxt-help-mode help-mode-menu
+                                org-mode))
+    (zoom-ignored-buffer-names '("*scratch*" "*info*" "*helpful variable: argv*"))
+    (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
+    (zoom-ignore-predicates (list (lambda () (< (count-lines (point-min) (point-max)) 20))))
+    :general
+    (:prefix-map '+toggle-map
+                 "z" #'zoom-mode))
+
+  (use-package +enlarge-window
+    :straight nil
+    :load-path "modules/"
+    :general (:prefix-map 'evil-window-map
+                          "o" #'+window-enlargen
+                          "O" #'delete-other-windows))
+
+#+end_src
+
+* Modeline
+I use the moody modeline (by the author of magit). I also use minions
+to hide all the other modes active instead of diminishing them.
+I also depend on smart-mode-line for the buffer-naming.
+#+begin_src emacs-lisp
+  ;; used for buffer identification in moody modeline
+  (use-package smart-mode-line)
+  (use-package minions
+    :config (minions-mode 1))
+  (use-package moody
+    :after smart-mode-line
+    :config
+    (moody-replace-sml/mode-line-buffer-identification)
+    (moody-replace-vc-mode))
+#+end_src
+ Anzu highlights current search results in the modeline.
+ #+begin_src emacs-lisp
+  (use-package anzu
+    :hook (after-init . global-anzu-mode))
+  (use-package evil-anzu)
 #+end_src
 
 * Incremental Completion
@@ -682,6 +1040,9 @@ Crux is a selection of useful functions.
                  "C" '(+copy-file-name-to-clipboard :which-key "copy filename")))
 #+end_src
 * Text Manipulations
+Rotating text lets you toggle things under point where that makes sense.
+Subword mode lets you navigate camelCase words etc.
+We also want to clean up whitespace in prog-mode.
 #+begin_src emacs-lisp
   (use-package rotate-text
     :straight (:host github :repo "debug-ito/rotate-text.el")
@@ -702,7 +1063,44 @@ Crux is a selection of useful functions.
   (use-package ws-butler
     :hook (prog-mode . ws-butler-mode))
 #+end_src
-* VC / Git
+** Set up automatic pairing of ({[]})
+#+begin_src emacs-lisp
+  (use-package electric-pair
+    :straight (:type built-in)
+    :hook (emacs-startup . electric-pair-mode))
+#+end_src
+* Code Tools
+** Autocomplete and Syntax Checking
+Using company for auto completion and flycheck. 
+#+begin_src emacs-lisp
+;;; autocomplete
+(use-package company
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0)
+  :hook (emacs-startup . global-company-mode)
+  :general
+  (general-imap "C-SPC" 'company-complete)
+  (:keymaps 'company-search-map
+            "C-s" #'company-filter-candidates))
+(use-package company-box
+  :hook (company-mode . company-box-mode))
+(use-package company-quickhelp
+  :hook (company-mode . company-quickhelp-mode))
+(use-package company-posframe
+  :unless IS-MAC
+  :hook (company-box-mode . company-posframe-mode))
+
+;; syntax checking
+(use-package flycheck
+  :custom
+  (flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+  :hook (after-init . global-flycheck-mode)
+  :general
+  (:prefix-map '+code-map
+               "x" '(flycheck-list-errors :which-key "show errors")))
+#+end_src
+** VC / Git
 Magit is probably the single best emacs package.
 We also use the build-int VC mode for some things like ediff.
 #+begin_src emacs-lisp
@@ -784,400 +1182,25 @@ now.
   (use-package git-timemachine
     :commands git-timemachine)
 #+end_src
-* Buffers
-** Bufler and Burly
-These are both packages written by alphapapa, a prolific emacs package
-dev. Bufler organizes buffers by mode and project and provides a good
-UI for switching among them.
-
-Burly is a lightweight workspace manager that builds on top of emacs
-bookmark system.
+** Formatting
+Format all code with one keybinding. 
 #+begin_src emacs-lisp
-  (use-package bufler
-    :hook (after-init . bufler-mode)
-    :commands bufler-ex
-    :general
-    (general-nvmap
-      :keymaps 'bufler-list-mode-map
-      "RET" #'bufler-list-buffer-switch
-      ;; "TAB" #'bufler-ex
-      (kbd "<escape>") #'quit-window
-      "q" #'quit-window)
-    (:prefix-map '+buffer-map
-                 "b" '(bufler-switch-buffer :which-key "switch buffer")
-                 "B" '(bufler-list :which-key "buffer list")))
-
-  (use-package burly
-    :straight (:host github :repo "alphapapa/burly.el")
-    :general
-    (:prefix-map '+bookmark-map
-                 "l" 'list-bookmarks
-                 "w" 'burly-bookmark-windows
-                 "F" 'burly-bookmark-frames))
+(use-package format-all
+  :general
+  (:prefix-map '+code-map
+               "f" 'format-all-buffer))
 #+end_src
-
- Switch to the scratch buffer
- #+begin_src emacs-lisp
-  (use-package switch-to-buffer
-    :straight (:type built-in)
-    :preface
-    (defun +switch-to-scratch ()
-      (interactive)
-      (switch-to-buffer "*scratch*"))
-    :general
-    (:keymaps 'global-map
-              (kbd "<mouse-9>") 'next-buffer
-              (kbd "<mouse-8>") 'previous-buffer)
-    (:prefix-map '+buffer-map
-                 "s" #'+switch-to-scratch))
-    #+end_src
-* UI Tweaks
-What the hell do I press next? Which-key answers that question.
+** Code Search
+Automatically jump to definitions in different languages.
 #+begin_src emacs-lisp
-  (use-package which-key
-    :demand t
-    :custom
-    (which-key-popup-type 'side-window)
-    (which-key-enable-extended-define-key t)
-    :hook (after-init . which-key-mode)
-    :general
-    (:keymaps 'help-map
-              "b" #'which-key-show-major-mode
-              "B" #'which-key-show-top-level))
-#+end_src
-** UI Builtins
-A lot of the built-in UI needs some tweaks. We disable menu bars, the toolbar and the scrollbar.
-We also want to confirm things with a single y/n instead of the whole word.
-#+begin_src emacs-lisp
-  (use-package emacs
-    :custom
-    (confirm-nonexistent-file-or-buffer nil)
-    (mouse-yank-at-point t)
-
-    ;; make underlines look a little better
-    (x-underline-at-descent-line t)
-
-    ;; window resizing
-    (window-resize-pixelwise t)
-    (frame-resize-pixelwise t)
-
-    ;; bars
-    (menu-bar-mode   nil)
-    (tool-bar-mode   nil)
-    (scroll-bar-mode nil)
-    :config
-    ;; set this for all prompts
-    (defalias 'yes-or-no-p 'y-or-n-p)
-
-    ;; ui cruft
-    (unless (assq 'menu-bar-lines default-frame-alist)
-      (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
-      (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
-      (add-to-list 'default-frame-alist '(vertical-scroll-bars))))
-#+end_src
-*** Misc Tweaks
-Pulse current line on window switch
-#+begin_src emacs-lisp
-  (use-package beacon
-    :hook (after-init . beacon-mode)
-    :config
-    (add-to-list 'beacon-dont-blink-commands 'vterm-send-return)
-    (add-to-list 'beacon-dont-blink-commands 'mwheel-scroll))
-#+end_src
-
-Hide the mouse when we type near it.
-#+begin_src emacs-lisp
-  (use-package avoid
-    :straight (:type built-in)
-    :config
-    ;; doesn't seem to do any animating, at least on wayland should
-    ;; check it out on X (but I never use X soooo)
-    (mouse-avoidance-mode 'exile))
-#+end_src
-
-Window dividers and the fringe. We want them to show up very thin between windows. 
-#+begin_src emacs-lisp
-  (use-package window-divider
-    :straight (:type built-in)
-    :custom
-    (window-divider-default-right-width 1)
-    (window-divider-default-bottom-width 1)
-    (window-divider-default-places 'right-only)
-    :hook (after-init . window-divider-mode))
-
-  (use-package fringe
-    :straight (:type built-in)
-    :init (set-fringe-style 0)
-    :custom
-    ;; fringes
-    (indicate-buffer-boundaries   nil)
-    (indicate-empty-lines         nil)
-    (fringes-outside-margins      nil)
-    (indicate-buffer-boundaries   nil)
-    (indicate-empty-lines         nil)
-    (overflow-newline-into-fringe t))
-#+end_src
-
-Highlight todo keywords when they appear in comments
-#+begin_src emacs-lisp
-  (use-package hl-todo
-    :hook (prog-mode . hl-todo-mode))
-#+end_src
-
-This is a great one. Dim the background colour of the buffers you're not currently editing in.
-#+begin_src emacs-lisp
-  (use-package auto-dim-other-buffers
-    :hook (after-init . auto-dim-other-buffers-mode)
-    :custom
-    (auto-dim-other-buffers-dim-on-switch-to-minibuffer nil)
-    (auto-dim-other-buffers-dim-on-focus-out nil))
-#+end_src
-
-Highlight different things. The parentheses surround the point get
-highlighted which is great.
-#+begin_src emacs-lisp
-  (use-package highlight-parentheses
-    :hook ((prog-mode LaTeX-mode) . highlight-parentheses-mode))
-
-  (use-package hl-line
-    :disabled
-    :straight (:type built-in)
-    :preface
-    (defun +highlight-visual-line ()
-      (save-excursion
-        (cons (progn (beginning-of-visual-line) (+ 1 (point)))
-              (progn (beginning-of-visual-line 2) (point)))))
-    :hook ((prog-mode text-mode conf-mode special-mode) . hl-line-mode)
-    :custom
-    (hl-line-range-function '+highlight-visual-line)
-    (hl-line-sticky-flag nil)
-    (global-hl-line-sticky-flag nil))
-#+end_src
-
-Change the shape of the cursor when running in the tty. Also enable the mouse.
-#+begin_src emacs-lisp
-  (use-package evil-terminal-cursor-changer
-    :straight (:host github :repo "kisaragi-hiu/evil-terminal-cursor-changer")
-    :hook (tty-setup . evil-terminal-cursor-changer-activate))
-
-  (use-package xterm-mouse-mode
-    :straight (:type built-in)
-    :hook (tty-setup . xterm-mouse-mode))
-#+end_src
-* Modeline
-I use the moody modeline (by the author of magit). I also use minions
-to hide all the other modes active instead of diminishing them.
-I also depend on smart-mode-line for the buffer-naming.
-#+begin_src emacs-lisp
-  ;; used for buffer identification in moody modeline
-  (use-package smart-mode-line)
-  (use-package minions
-    :config (minions-mode 1))
-  (use-package moody
-    :after smart-mode-line
-    :config
-    (moody-replace-sml/mode-line-buffer-identification)
-    (moody-replace-vc-mode))
-#+end_src
- Anzu highlights current search results in the modeline.
- #+begin_src emacs-lisp
-  (use-package anzu
-    :hook (after-init . global-anzu-mode))
-  (use-package evil-anzu)
-#+end_src
-
-* Window Management
-Undo and redo window configurations.
-
-#+begin_src emacs-lisp
-  (use-package winner
-    :straight (:type built-in)
-    :hook (after-init . winner-mode)
-    :general
-    (:prefix-map 'evil-window-map
-                 "u" 'winner-undo
-                 "r" 'winner-redo))
-#+end_src
-
-Switch to a window with the keyboard like avy.
- #+begin_src emacs-lisp
-  (use-package ace-window
-    :custom
-    (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-    :config
-    (set-face-attribute 'aw-leading-char-face nil :height 3.0)
-    :general (:prefix-map 'evil-window-map
-                          "w" #'ace-window
-                          "W" #'ace-swap-window))
-
-#+end_src
-
-Window Enlargement
-#+begin_src emacs-lisp
-  (use-package zoom
-    :custom
-    (zoom-size '(0.7 . 0.7))
-    (zoom-ignored-major-modes '(dired-mode vterm-mode
-                                help-mode helpful-mode
-                                rxt-help-mode help-mode-menu
-                                org-mode))
-    (zoom-ignored-buffer-names '("*scratch*" "*info*" "*helpful variable: argv*"))
-    (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
-    (zoom-ignore-predicates (list (lambda () (< (count-lines (point-min) (point-max)) 20))))
-    :general
-    (:prefix-map '+toggle-map
-                 "z" #'zoom-mode))
-
-  (use-package +enlarge-window
-    :straight nil
-    :load-path "modules/"
-    :general (:prefix-map 'evil-window-map
-                          "o" #'+window-enlargen
-                          "O" #'delete-other-windows))
-
-#+end_src
-
-* Dashboard
-A nice start page for emacs. I set a custom logo for the buffer, and
-enable ~all-the-icons~ support.
-#+begin_src emacs-lisp
-  ;; dashboard
-  (use-package dashboard
-    :custom
-    (dashboard-set-footer nil)
-    (dashboard-center-content t)
-    (dashboard-set-file-icons t)
-    (dashboard-set-heading-icons t)
-    (dashboard-set-init-info t)
-    (dashboard-projects-switch-function 'projectile-persp-switch-project)
-    (dashboard-startup-banner (concat user-emacs-directory "emacs-bigsur_small.png"))
-    :init
-    (dashboard-setup-startup-hook))
-#+end_src
-
-* Themes
-I use the great ~doom-themes~ package from Doom. It provides a whole
-ton of great light and dark themes.
-#+begin_src emacs-lisp
-  (use-package doom-themes
-    :custom
-    (doom-themes-enable-bold t)
-    (doom-themes-enable-italic t)
-    :init
-    (load-theme 'doom-acario-light t)
-    :config
-    (doom-themes-visual-bell-config)
-    (doom-themes-org-config))
-
-  ;; (use-package modus-themes
-  ;;   :disabled
-  ;;   :straight
-  ;;   (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
-  ;;   :custom
-  ;;   (modus-themes-bold-constructs t)
-  ;;   (modus-themes-slanted-constructs t)
-  ;;   (modus-themes-syntax 'faint)
-  ;;   (modus-themes-completions 'opinionated)
-  ;;   (modus-themes-paren-match 'intense-bold)
-  ;;   (modus-themes-org-blocks 'rainbow)
-  ;;   (modus-themes-mode-line 'moody))
-
-  ;; (use-package circadian
-  ;;   ;; :after (doom-themes modus-themes)
-  ;;   :custom
-  ;;   (calendar-latitude 43.6)
-  ;;   (calendar-longitude -79.4)
-  ;;   (circadian-themes '((:sunrise . doom-acario-light)
-  ;;                       (:sunset  . doom-spacegrey)))
-  ;;   :hook
-  ;;   (after-init . circadian-setup))
-
-  ;; scrolling
-  (use-package emacs
-    :custom
-    (hscroll-margin 2)
-    (hscroll-step 1)
-    ;; Emacs spends too much effort recentering the screen if you scroll the
-    ;; cursor more than N lines past window edges (where N is the settings of
-    ;; `scroll-conservatively'). This is especially slow in larger files
-    ;; during large-scale scrolling commands. If kept over 100, the window is
-    ;; never automatically recentered.
-    (scroll-conservatively 101)
-    (scroll-margin 0)
-    (scroll-preserve-screen-position t)
-    ;; Reduce cursor lag by a tiny bit by not auto-adjusting `window-vscroll'
-    ;; for tall lines.
-    (auto-window-vscroll nil)
-    ;; mouse
-
-    (mouse-wheel-scroll-amount '(2 ((shift) . hscroll) ((meta)) ((control) . text-scale)))
-    (mouse-wheel-progressive-speed nil))  ; don't accelerate scrolling
-
-  (use-package scroll-on-jump
-    :after (evil goto-chg)
-    :straight (:host gitlab :repo "ideasman42/emacs-scroll-on-jump")
-    :custom
-    (scroll-on-jump-duration 0.4)
-    (scroll-on-jump-use-curve t)
-    :config
-    (scroll-on-jump-advice-add evil-undo)
-    (scroll-on-jump-advice-add evil-redo)
-    (scroll-on-jump-advice-add evil-jump-item)
-    (scroll-on-jump-advice-add evil-jump-forward)
-    (scroll-on-jump-advice-add evil-jump-backward)
-    (scroll-on-jump-advice-add evil-ex-search-next)
-    (scroll-on-jump-advice-add evil-ex-search-previous)
-    (scroll-on-jump-advice-add evil-forward-paragraph)
-    (scroll-on-jump-advice-add evil-backward-paragraph)
-
-    (scroll-on-jump-advice-add goto-last-change)
-    (scroll-on-jump-advice-add goto-last-change-reverse))
-
-  ;; visual fill column
-  (use-package visual-fill-column
-    :config
-    (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
-    ;; (setq-default split-window-preferred-function 'visual-fill-column-split-window-sensibly)
-    :ghook ('visual-fill-column-mode-hook #'visual-line-mode))
-
-
-           ;;; autocomplete
-  (use-package company
-    :custom
-    (company-minimum-prefix-length 1)
-    (company-idle-delay 0.0)
-    :hook (emacs-startup . global-company-mode)
-    :general
-    (general-imap "C-SPC" 'company-complete)
-    (:keymaps 'company-search-map
-              "C-s" #'company-filter-candidates))
-  (use-package company-box
-    :hook (company-mode . company-box-mode))
-  (use-package company-quickhelp
-    :hook (company-mode . company-quickhelp-mode))
-  (use-package company-posframe
-    :unless IS-MAC
-    :hook (company-box-mode . company-posframe-mode))
-
-  ;; syntax checking
-  (use-package flycheck
-    :custom
-    (flycheck-disabled-checkers '(emacs-lisp-checkdoc))
-    :hook (after-init . global-flycheck-mode)
-    :general
-    (:prefix-map '+code-map
-                 "x" '(flycheck-list-errors :which-key "show errors")))
-
-  ;; code formatting
-  (use-package format-all
-    :general
-    (:prefix-map '+code-map
-                 "f" 'format-all-buffer))
-
   (use-package dumb-jump
     :hook (xref-backend-functions . dumb-jump-xreg-activate))
-
-         ;;; lsp-mode
+#+end_src
+** LSP-Mode
+We use LSP mode for pretty much everything we use a lot.
+We set some of the more intrusive UI elements to nil.
+Enable support for pyright language server.
+#+begin_src emacs-lisp
   (use-package lsp-mode
     :commands (lsp lsp-deferred)
     :custom
@@ -1226,14 +1249,21 @@ ton of great light and dark themes.
       (require 'lsp-pyright)
       (lsp-deferred))
     :hook (python-mode . +pyright__enable-lsp))
-
+#+end_src
+** Language Specific
+*** Python
+The builtin package needs some simple tweaks to use ipython as the REPL.
+#+begin_src emacs-lisp
   ;; python tweaks
   (use-package python
     :straight (:type built-in)
     :custom
     (python-shell-interpreter "ipython")
     (python-shell-interpreter-args "--simple-prompt -i"))
-
+#+end_src
+**** Pyimport
+We can sort and remove imports from files with this.
+#+begin_src emacs-lisp
   (use-package pyimport
     :general
     (general-nvmap
@@ -1242,13 +1272,15 @@ ton of great light and dark themes.
       "i" '(nil :which-key "imports")
       "iu" 'pyimport-remove-unused
       "ii" 'pyimport-insert-missing))
-
-  ;; this is great for org etc, but for existing notebooks is lacking
+#+end_src
+**** Jupyter Kernal and Notebook support
+The ein package has really improved lately. In addition, the jupyter
+kernel provides a pretty good experience for using it inside org-mode.
+#+begin_src emacs-lisp
   (use-package jupyter
-    ;; :straight (:no-native-compile t)
+    :straight (:no-native-compile t)
     :commands jupyter-connect-repl jupyter-run-repl)
 
-  ;; support has really improved on this one
   (use-package emacs-ipython-notebook
     :straight ein
     :hook (ein:notebook-mode . evil-normalize-keymaps)
@@ -1257,10 +1289,6 @@ ton of great light and dark themes.
     (ein:polymode t)
     :commands (ein:run ein:login)
     :preface
-    ;; (defun +myein/exec-and-recenter-next ()
-    ;;   (interactive)
-    ;;   (call-interactively 'ein:worksheet-execute-cell-and-goto-next-km)
-    ;;   (evil-scroll-line-to-center))
     (general-add-advice 'ein:worksheet-execute-cell-and-goto-next-km
                         :after (lambda () (interactive)
                                  (evil-scroll-line-to-center)))
@@ -1273,20 +1301,113 @@ ton of great light and dark themes.
               [remap save-buffer] #'ein:notebook-save-notebook-command-km
               "C-j" #'ein:worksheet-goto-next-input-km
               "C-k" #'ein:worksheet-goto-prev-input-km))
+#+end_src
+*** LaTeX
+Set up company mode for autocompletion of references, citations, etc.
+We also setup inline pdf viewing.
+#+begin_src emacs-lisp
+(use-package company-auctex)
+(use-package company-reftex)
+(use-package company-math)
+(use-package company-bibtex)
 
+(use-package auctex
+  :custom
+  (TeX-master t)
+  (TeX-parse-self t) ;; parse on load
+  (TeX-auto-save t)  ;; parse on save
+  ;; automatically insert braces after sub/superscript in math mode
+  (TeX-electric-sub-and-superscript t)
+  (bibtex-dialect 'biblatex)
+  (bibtex-align-at-equal-sign t)
+  (bibtex-text-indentation 20)
+  (TeX-auto-fold t)
+  ;; insert \(\) instead of $$
+  (TeX-electric-math (cons "\\(" "\\)"))
+  :hook ((TeX-mode . +latex-setup)
+         (TeX-mode . TeX-fold-mode))
+  :mode ("\\.tex\\'" . LaTeX-mode)
+  :general
+  (:keymaps 'TeX-mode-map
+            [remap compile] #'TeX-command-master
+            [remap recompile] (lambda () (TeX-command-master +1)))
+  :preface
+  (defun +latex-setup ()
+    (turn-on-visual-line-mode)
+    (visual-fill-column-mode +1)
+    (unless word-wrap
+      (toggle-word-wrap))
+    (TeX-fold-buffer)
+    (setq-local visual-fill-column-center-text t
+                visual-fill-column-width 100
 
-         ;;; utilities
-  (use-package restart-emacs
-    :general
-    (:prefix-map '+quit-restart-map "r" 'restart-emacs))
+                ;; important that reftex comes before auctex otherwise
+                ;; citation autocomplete doesn't work
+                company-backends (append '(company-reftex-citations
+                                           company-reftex-labels
+                                           company-auctex-labels
+                                           company-auctex-bibs
+                                           company-auctex-macros
+                                           company-auctex-symbols
+                                           company-auctex-environments
+                                           company-math-symbols-latex
+                                           company-math-symbols-unicode
+                                           company-latex-commands)
+                                         company-backends))))
+(use-package evil-tex
+  :hook (LaTeX-mode . evil-tex-mode))
 
-  (use-package calc
-    :straight (:type built-in)
-    :hook (calc-mode . calc-algebraic-mode)
-    :general
-    (:prefix-map '+open-map
-                 "c" #'calc-dispatch))
+(use-package bibtex
+  :straight (:type built-in)
+  :gfhook #'+bibtex-setup
+  :preface
+  (defun +bibtex-setup ()
+    (turn-on-visual-line-mode)
+    (setq-local visual-fill-column-center-text t
+                visual-fill-column-width 100)))
 
+(use-package auctex-latexmk
+  :custom
+  (auctex-latexmk-inherit-TeX-PDF-mode t)
+  :hook
+  (TeX-mode . auctex-latexmk-setup))
+
+(use-package reftex
+  :straight (:type built-in)
+  :hook ((TeX-mode . reftex-mode)
+         (LaTeX-mode . reftex-mode))
+  :custom
+  (reftex-cite-format
+   '((?a . "\\autocite[]{%l}")
+     (?b . "\\blockcquote[]{%l}{}")
+     (?c . "\\cite[]{%l}")
+     (?f . "\\footcite[]{%l}")
+     (?n . "\\nocite{%l}")
+     (?p . "\\parencite[]{%l}")
+     (?s . "\\smartcite[]{%l}")
+     (?t . "\\textcite[]{%l}"))
+   (reftex-plug-into-AUCTeX t)
+   (reftex-toc-split-windows-fraction 0.3)))
+
+(use-package pdf-tools
+  :mode ("\\.pdf\\'" . pdf-view-mode)
+  :magic ("%PDF" . pdf-view-mode)
+  :hook (pdf-view-mode . auto-revert-mode)
+  :config
+  (pdf-tools-install :no-query)
+  (setq-default pdf-view-display-size 'fit-page)
+  ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
+  (setq pdf-view-use-scaling t
+        pdf-view-use-imagemagick nil)
+  :general
+  (+local-leader-def :keymaps 'pdf-view-mode-map
+    "s" 'pdf-view-auto-slice-minor-mode)
+  (:keymaps 'pdf-view-mode-map
+            "q" #'kill-current-buffer))
+#+end_src
+** Compilation
+Make compilation buffers process escape codes for colours etc.
+#+begin_src emacs-lisp
   (use-package compile
     :straight (:type built-in)
     :preface
@@ -1304,22 +1425,14 @@ ton of great light and dark themes.
     :ghook
     ('compilation-filter-hook #'(+compile/apply-ansi-color-to-compilation-buffer-h
                                  +compile/fix-compilation-size)))
-
-  ;; inline eval a la cider
-  ;; (use-package eros
-  ;;   :hook (prog-mode . eros-mode))
-
-  ;; vterm
+#+end_src
+>
+* Integrated Terminal
+Vterm is by far the best terminal emulator. It now has support for
+evil-mode motions and such.
+#+begin_src emacs-lisp
   (use-package vterm
     :preface
-    ;; (defun +vterm/evil-collection-vterm-escape-stay ()
-    ;;   "Go back to normal state but don't move cursor backwards. Moving
-    ;;   cursor backwards is the default vim behaviour but it is not appropriate
-    ;;   in some cases like terminals."
-    ;;   (setq-local evil-move-cursor-back nil))
-    ;; (defun +vterm/set-cursor-shape ()
-    ;;   (setq-local cursor-type 'bar))
-
     ;; Add evil specific bindings that work with vterm mode
     (defun vterm-evil-insert ()
       (interactive)
@@ -1379,6 +1492,26 @@ ton of great light and dark themes.
                    (reusable-frames . visible)
                    (window-height . 0.3))))
 
+#+end_src
+* The rest.
+#+begin_src emacs-lisp
+         ;;; utilities
+  (use-package restart-emacs
+    :general
+    (:prefix-map '+quit-restart-map "r" 'restart-emacs))
+
+  (use-package calc
+    :straight (:type built-in)
+    :hook (calc-mode . calc-algebraic-mode)
+    :general
+    (:prefix-map '+open-map
+                 "c" #'calc-dispatch))
+
+
+  ;; inline eval a la cider
+  ;; (use-package eros
+  ;;   :hook (prog-mode . eros-mode))
+
          ;;; Snippets
   (use-package yasnippet
     :hook ((prog-mode text-mode) . yas-global-mode)
@@ -1417,105 +1550,6 @@ ton of great light and dark themes.
     (:prefix-map '+toggle-map
                  "w" #'adaptive-wrap-prefix-mode))
 
-         ;;; latex
-  (use-package company-auctex)
-  (use-package company-reftex)
-  (use-package company-math)
-  (use-package company-bibtex)
-
-  (use-package auctex
-    :custom
-    (TeX-master t)
-    (TeX-parse-self t) ;; parse on load
-    (TeX-auto-save t)  ;; parse on save
-    ;; automatically insert braces after sub/superscript in math mode
-    (TeX-electric-sub-and-superscript t)
-    (bibtex-dialect 'biblatex)
-    (bibtex-align-at-equal-sign t)
-    (bibtex-text-indentation 20)
-    (TeX-auto-fold t)
-    ;; insert \(\) instead of $$
-    (TeX-electric-math (cons "\\(" "\\)"))
-    :hook ((TeX-mode . +latex-setup)
-           (TeX-mode . TeX-fold-mode))
-    :mode ("\\.tex\\'" . LaTeX-mode)
-    :general
-    (:keymaps 'TeX-mode-map
-              [remap compile] #'TeX-command-master
-              [remap recompile] (lambda () (TeX-command-master +1)))
-    :preface
-    (defun +latex-setup ()
-      (turn-on-visual-line-mode)
-      (visual-fill-column-mode +1)
-      (unless word-wrap
-        (toggle-word-wrap))
-      (TeX-fold-buffer)
-      (setq-local visual-fill-column-center-text t
-                  visual-fill-column-width 100
-
-                  ;; important that reftex comes before auctex otherwise
-                  ;; citation autocomplete doesn't work
-                  company-backends (append '(company-reftex-citations
-                                             company-reftex-labels
-                                             company-auctex-labels
-                                             company-auctex-bibs
-                                             company-auctex-macros
-                                             company-auctex-symbols
-                                             company-auctex-environments
-                                             company-math-symbols-latex
-                                             company-math-symbols-unicode
-                                             company-latex-commands)
-                                           company-backends))))
-  (use-package evil-tex
-    :hook (LaTeX-mode . evil-tex-mode))
-
-  (use-package bibtex
-    :straight (:type built-in)
-    :gfhook #'+bibtex-setup
-    :preface
-    (defun +bibtex-setup ()
-      (turn-on-visual-line-mode)
-      (setq-local visual-fill-column-center-text t
-                  visual-fill-column-width 100)))
-
-  (use-package auctex-latexmk
-    :custom
-    (auctex-latexmk-inherit-TeX-PDF-mode t)
-    :hook
-    (TeX-mode . auctex-latexmk-setup))
-
-  (use-package reftex
-    :straight (:type built-in)
-    :hook ((TeX-mode . reftex-mode)
-           (LaTeX-mode . reftex-mode))
-    :custom
-    (reftex-cite-format
-     '((?a . "\\autocite[]{%l}")
-       (?b . "\\blockcquote[]{%l}{}")
-       (?c . "\\cite[]{%l}")
-       (?f . "\\footcite[]{%l}")
-       (?n . "\\nocite{%l}")
-       (?p . "\\parencite[]{%l}")
-       (?s . "\\smartcite[]{%l}")
-       (?t . "\\textcite[]{%l}"))
-     (reftex-plug-into-AUCTeX t)
-     (reftex-toc-split-windows-fraction 0.3)))
-
-  (use-package pdf-tools
-    :mode ("\\.pdf\\'" . pdf-view-mode)
-    :magic ("%PDF" . pdf-view-mode)
-    :hook (pdf-view-mode . auto-revert-mode)
-    :config
-    (pdf-tools-install :no-query)
-    (setq-default pdf-view-display-size 'fit-page)
-    ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
-    (setq pdf-view-use-scaling t
-          pdf-view-use-imagemagick nil)
-    :general
-    (+local-leader-def :keymaps 'pdf-view-mode-map
-      "s" 'pdf-view-auto-slice-minor-mode)
-    (:keymaps 'pdf-view-mode-map
-              "q" #'kill-current-buffer))
 
   ;; projectile
   (use-package projectile
