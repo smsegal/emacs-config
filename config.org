@@ -2,7 +2,7 @@
 #+author: Shane Segal
 #+startup: overview
 #+property: header-args :results silent :comments org :tangle yes
-#+options: toc:nil num:nil
+#+options: num:nil
 
 * Lexical Binding
 We want lexical binding enabled in this whole file.
