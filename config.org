@@ -705,7 +705,7 @@ bookmark system.
                  "F" 'burly-bookmark-frames))
 #+end_src
 
- Switch to the scratch buffer
+** Switch to the scratch buffer
  #+begin_src emacs-lisp
   (use-package switch-to-buffer
     :straight (:type built-in)
@@ -719,7 +719,21 @@ bookmark system.
               (kbd "<mouse-8>") 'previous-buffer)
     (:prefix-map '+buffer-map
                  "s" #'+switch-to-scratch))
-    #+end_src
+#+end_src
+** Update how buffers get displayed
+Emacs generally opens up a bunch of windows all over the
+place. Sometimes this is what I want, but it feels excessive. This
+helps reuse more existing windows.
+It still needs some work.
+#+begin_src emacs-lisp
+  (use-package emacs
+    :straight (:type built-in)
+    :custom
+    (display-buffer-alist
+     '((".*" (display-buffer-reuse-window display-buffer-same-window))))
+    (display-buffer-reuse-frames t)         ; reuse windows in other frames
+    (even-window-sizes nil))                 ; display-buffer: avoid resizing
+#+end_src
 * Window Management
 Undo and redo window configurations.
 
@@ -1069,6 +1083,14 @@ We also want to clean up whitespace in prog-mode.
     :straight (:type built-in)
     :hook (emacs-startup . electric-pair-mode))
 #+end_src
+** Match the indentation of wrapped lines
+#+begin_src emacs-lisp
+  (use-package adaptive-wrap
+    :hook ((prog-mode text-mode) . adaptive-wrap-prefix-mode)
+    :general
+    (:prefix-map '+toggle-map
+                 "w" #'adaptive-wrap-prefix-mode))
+#+end_src
 * Code Tools
 ** Autocomplete and Syntax Checking
 Using company for auto completion and flycheck. 
@@ -1182,6 +1204,16 @@ now.
   (use-package git-timemachine
     :commands git-timemachine)
 #+end_src
+** Tree-sitter
+Now, apparently this package is useful for a ton of different
+things. I use it for the nicer syntax highlighting in supported
+languages.
+#+begin_src emacs-lisp
+  (use-package tree-sitter
+    :init (global-tree-sitter-mode)
+    :ghook (#'tree-sitter-after-on-hook  #'tree-sitter-hl-mode))
+  (use-package tree-sitter-langs)
+#+end_src
 ** Formatting
 Format all code with one keybinding. 
 #+begin_src emacs-lisp
@@ -1196,6 +1228,36 @@ Automatically jump to definitions in different languages.
   (use-package dumb-jump
     :hook (xref-backend-functions . dumb-jump-xreg-activate))
 #+end_src
+** Editorconfig
+Per directory spaces/tabs indentation.
+#+begin_src emacs-lisp
+  (use-package editorconfig
+    :custom (editorconfig-trim-whitespaces-mode 'ws-butler-mode)
+    :hook (after-init . editorconfig-mode))
+#+end_src
+** Compilation
+Make compilation buffers process escape codes for colours etc.
+#+begin_src emacs-lisp
+  (use-package compile
+    :straight (:type built-in)
+    :preface
+    (defun +compile/apply-ansi-color-to-compilation-buffer-h ()
+      "Applies ansi codes to the compilation buffers. Meant for
+              `compilation-filter-hook'."
+      (with-silent-modifications
+        (ansi-color-apply-on-region compilation-filter-start (point))))
+    (defun +compile/fix-compilation-size ()
+      (with-selected-window (get-buffer-window "*compilation*")
+        (setq window-size-fixed t)
+        (window-resize (selected-window) (- 30 (window-total-width)) t t)))
+    :custom
+    (compilation-scroll-output 'first-error)
+    :ghook
+    ('compilation-filter-hook #'(+compile/apply-ansi-color-to-compilation-buffer-h
+                                 +compile/fix-compilation-size)))
+#+end_src
+>
+* Language Support
 ** LSP-Mode
 We use LSP mode for pretty much everything we use a lot.
 We set some of the more intrusive UI elements to nil.
@@ -1250,8 +1312,7 @@ Enable support for pyright language server.
       (lsp-deferred))
     :hook (python-mode . +pyright__enable-lsp))
 #+end_src
-** Language Specific
-*** Python
+** Python
 The builtin package needs some simple tweaks to use ipython as the REPL.
 #+begin_src emacs-lisp
   ;; python tweaks
@@ -1302,7 +1363,7 @@ kernel provides a pretty good experience for using it inside org-mode.
               "C-j" #'ein:worksheet-goto-next-input-km
               "C-k" #'ein:worksheet-goto-prev-input-km))
 #+end_src
-*** LaTeX
+** LaTeX
 Set up company mode for autocompletion of references, citations, etc.
 We also setup inline pdf viewing.
 #+begin_src emacs-lisp
@@ -1405,28 +1466,91 @@ We also setup inline pdf viewing.
   (:keymaps 'pdf-view-mode-map
             "q" #'kill-current-buffer))
 #+end_src
-** Compilation
-Make compilation buffers process escape codes for colours etc.
+** {Java,Type}Script
+The different web languages. I've also enabled LSP-mode for them above.
 #+begin_src emacs-lisp
-  (use-package compile
-    :straight (:type built-in)
-    :preface
-    (defun +compile/apply-ansi-color-to-compilation-buffer-h ()
-      "Applies ansi codes to the compilation buffers. Meant for
-              `compilation-filter-hook'."
-      (with-silent-modifications
-        (ansi-color-apply-on-region compilation-filter-start (point))))
-    (defun +compile/fix-compilation-size ()
-      (with-selected-window (get-buffer-window "*compilation*")
-        (setq window-size-fixed t)
-        (window-resize (selected-window) (- 30 (window-total-width)) t t)))
+  (use-package js2-mode
+    :interpreter "node"
+    :commands js2-line-break
+    :hook (js-mode . js2-minor-mode)
     :custom
-    (compilation-scroll-output 'first-error)
-    :ghook
-    ('compilation-filter-hook #'(+compile/apply-ansi-color-to-compilation-buffer-h
-                                 +compile/fix-compilation-size)))
+    (js-chain-indent t)
+    ;; Don't mishighlight shebang lines
+    (js2-skip-preprocessor-directives t)
+    ;; let flycheck handle this
+    (js2-mode-show-parse-errors nil)
+    (js2-mode-show-strict-warnings nil)
+    ;; Flycheck provides these features, so disable them: conflicting with
+    ;; the eslint settings.
+    (js2-strict-trailing-comma-warning nil)
+    (js2-strict-missing-semi-warning nil)
+    ;; maximum fontification
+    (js2-highlight-level 3)
+    (js2-highlight-external-variables t)
+    (js2-idle-timer-delay 0.1))
+
+  (use-package js2-refactor
+    :hook (js2-minor-mode . js2-refactor-mode)
+    :general
+    (general-nvmap
+      :keymaps 'js2-mode
+      "," '(:keymap js2-refactor-mode-map)))
+
+  (use-package rjsx-mode
+    :mode "/.*\\.js\\'")
+
+  (use-package json-mode)
+  (use-package yaml-mode)
+  (use-package typescript-mode)
 #+end_src
->
+
+** Emacs-Lisp
+Custom indentation for lisp code. Small keybindings for evaling sexps.
+#+begin_src emacs-lisp
+  (use-package emacs-lisp
+    :straight (:type built-in)
+    :general
+    (+local-leader-def :keymaps 'emacs-lisp-mode-map
+      "e" #'eval-last-sexp))
+
+  (use-package +lisp-indent
+    :straight nil
+    :load-path "modules/"
+    :init
+    (general-add-advice
+     #'calculate-lisp-indent :override #'void~calculate-lisp-indent))
+#+end_src
+** Small Language modes
+These packages are pretty much just for the syntax highlighting. Don't
+use these enough for any more sophisticated configuration.
+#+begin_src emacs-lisp
+  (use-package julia-mode
+    :mode "\.*\.jl")
+
+  (use-package nix-mode
+    :mode "\\.nix\\'")
+
+  (use-package markdown-mode
+    :commands (markdown-mode gfm-mode)
+    :custom (markdown-command "multimarkdown")
+    :ghook
+    ('(markdown-mode-hook gfm-mode-hook)
+     #'visual-fill-column-mode)
+    :mode (("README\\.md\\'" . gfm-mode)
+           ("\\.md\\'" . markdown-mode)
+           ("\\.markdown\\'" . markdown-mode)))
+
+  (use-package systemd)
+
+
+  ;; arch PKGBUILDS
+  (use-package pkgbuild-mode
+    :mode ("PKGBUILD" . pkgbuild-mode))
+
+  ;; different git file modes
+  (use-package git-modes
+    :mode ("/.dockerignore\\'" . gitignore-mode))
+#+end_src
 * Integrated Terminal
 Vterm is by far the best terminal emulator. It now has support for
 evil-mode motions and such.
@@ -1493,27 +1617,30 @@ evil-mode motions and such.
                    (window-height . 0.3))))
 
 #+end_src
-* The rest.
+* Utilities
+** Restart emacs
 #+begin_src emacs-lisp
-         ;;; utilities
   (use-package restart-emacs
     :general
     (:prefix-map '+quit-restart-map "r" 'restart-emacs))
-
+#+end_src
+** Calc mode
+set calc mode to start in algebraic (ie normal) mode
+#+begin_src emacs-lisp
   (use-package calc
     :straight (:type built-in)
     :hook (calc-mode . calc-algebraic-mode)
     :general
     (:prefix-map '+open-map
                  "c" #'calc-dispatch))
+#+end_src
+* Snippets
+We use yasnippet, as well as the snippets from doom.
 
-
-  ;; inline eval a la cider
-  ;; (use-package eros
-  ;;   :hook (prog-mode . eros-mode))
-
-         ;;; Snippets
-  (use-package yasnippet
+We also have auto activating snippets, which will insert the specified
+string /b/ when the string /a/ is written in the enabled mode.
+#+begin_src emacs-lisp
+(use-package yasnippet
     :hook ((prog-mode text-mode) . yas-global-mode)
     :general (:prefix-map '+insert-map
                           "s" 'yas-insert-snippet))
@@ -1529,8 +1656,10 @@ evil-mode motions and such.
     :config
     (aas-set-snippets 'latex-mode
                       "On" "O(n)"))
-
-  ;; better help buffers
+#+end_src
+* A Better Help Buffer
+We also set apropos to search as much as possible.
+#+begin_src emacs-lisp
   (use-package helpful
     :general
     (:prefix-map 'help-map
@@ -1543,15 +1672,10 @@ evil-mode motions and such.
     :straight (:type built-in)
     :custom
     (apropos-do-all t))
-
-  (use-package adaptive-wrap
-    :hook ((prog-mode text-mode) . adaptive-wrap-prefix-mode)
-    :general
-    (:prefix-map '+toggle-map
-                 "w" #'adaptive-wrap-prefix-mode))
-
-
-  ;; projectile
+#+end_src
+* Project Management
+Let Projectile handle the hard stuff, like remembering what belongs to what project.
+#+begin_src emacs-lisp
   (use-package projectile
     :custom
     (projectile-completion-system 'default)
@@ -1562,41 +1686,22 @@ evil-mode motions and such.
       "p" '(:keymap projectile-command-map
             :package projectile
             :which-key "projects")))
+#+end_src
+* Org Mode
+We don't do much to customize Org. Set the notes directory for
+~org-capture~, enable some languages to be evaled in ~src~ blocks.
+I also set up fancy heading symbols with org bullets.
 
-  (use-package perspective
-    :hook (projectile-mode . persp-mode)
-    :general
-    (:prefix-map '+workspaces-map
-                 "n" #'persp-next
-                 "p" #'perp-prev
-                 "r" #'persp-rename
-                 "a" #'persp-add-buffer
-                 "s" #'persp-switch
-                 "S" #'persp-save
-                 "b" #'persp-switch-to-buffer)
-    (+leader-def
-      "TAB" '(:keymap +workspaces-map
-              :which-key "workspaces")))
-
-  ;; buffer display
-  (use-package emacs
-    :straight (:type built-in)
-    :custom
-    (display-buffer-alist
-     '((".*" (display-buffer-reuse-window display-buffer-same-window))))
-    (display-buffer-reuse-frames t)         ; reuse windows in other frames
-    (even-window-sizes nil))                 ; display-buffer: avoid resizing
-
-  ;; Org Mode
+I'm aiming to translate a lot of keys to vim-like equivalents, using
+leader keys to replace the special ~C-c~ bindings.
+#+begin_src emacs-lisp
   (use-package org
     :custom
     (org-startup-indented t)
     (org-directory "~/Documents/org")
     (org-default-notes-file (concat org-directory "/notes.org"))
-    ;; :ghook
-    ;; ('org-mode-hook 'visual-fill-column-mode)
     :config
-    ;; (set-face-attribute 'org-block nil :family FONT-NAME)
+    (set-face-attribute 'org-block nil :family FONT-NAME)
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((emacs-lisp . t)
@@ -1606,118 +1711,26 @@ evil-mode motions and such.
                  "c" #'org-capture)
     (+local-leader-def :keymaps 'org-mode-map
       "," #'org-ctrl-c-ctrl-c
+      "'" #'org-edit-special
       "t" #'org-todo
-      "o" #'org-open-at-point))
+      "o" #'org-open-at-point)
+    (+local-leader-def :keymaps 'org-src-mode-map
+      "," #'org-edit-src-exit
+      "k" #'org-edit-src-abort))
 
   (use-package org-superstar
     :ghook ('org-mode-hook #'org-superstar-mode)
     :custom (org-superstar-special-todo-items t))
-
-         ;;; languages + highlighting
-
-  (use-package editorconfig
-    :custom (editorconfig-trim-whitespaces-mode 'ws-butler-mode)
-    :hook (after-init . editorconfig-mode))
-
-  (use-package julia-mode
-    :mode "\.*\.jl")
-
-  (use-package nix-mode
-    :mode "\\.nix\\'")
-
-  (use-package markdown-mode
-    :commands (markdown-mode gfm-mode)
-    :custom (markdown-command "multimarkdown")
-    :ghook
-    ('(markdown-mode-hook gfm-mode-hook)
-     #'visual-fill-column-mode)
-    :mode (("README\\.md\\'" . gfm-mode)
-           ("\\.md\\'" . markdown-mode)
-           ("\\.markdown\\'" . markdown-mode)))
-
-  (use-package systemd)
-
-  (use-package tree-sitter
-    :init (global-tree-sitter-mode)
-    :ghook (#'tree-sitter-after-on-hook  #'tree-sitter-hl-mode))
-  (use-package tree-sitter-langs)
-
-  (use-package emacs-lisp
-    :straight (:type built-in)
-    :general
-    (+local-leader-def :keymaps 'emacs-lisp-mode-map
-      "e" #'eval-last-sexp))
-
-  (use-package +lisp-indent
-    :straight nil
-    :load-path "modules/"
-    :init
-    (general-add-advice
-     #'calculate-lisp-indent :override #'void~calculate-lisp-indent))
-
-  (use-package js2-mode
-    :interpreter "node"
-    :commands js2-line-break
-    :hook (js-mode . js2-minor-mode)
-    :custom
-    (js-chain-indent t)
-    ;; Don't mishighlight shebang lines
-    (js2-skip-preprocessor-directives t)
-    ;; let flycheck handle this
-    (js2-mode-show-parse-errors nil)
-    (js2-mode-show-strict-warnings nil)
-    ;; Flycheck provides these features, so disable them: conflicting with
-    ;; the eslint settings.
-    (js2-strict-trailing-comma-warning nil)
-    (js2-strict-missing-semi-warning nil)
-    ;; maximum fontification
-    (js2-highlight-level 3)
-    (js2-highlight-external-variables t)
-    (js2-idle-timer-delay 0.1))
-
-  (use-package js2-refactor
-    :hook (js2-minor-mode . js2-refactor-mode)
-    :general
-    (general-nvmap
-      :keymaps 'js2-mode
-      "," '(:keymap js2-refactor-mode-map)))
-
-  (use-package rjsx-mode
-    :mode "/.*\\.js\\'")
-
-  (use-package json-mode)
-  (use-package yaml-mode)
-  (use-package typescript-mode)
-
-  ;; direnv support
-  ;; This should be at/near the bottom since you want this hook to be
-  ;; run before others. Hooks are apparently a stack
-  (use-package envrc
-    :hook (after-init . envrc-global-mode))
-
-  ;; arch PKGBUILDS
-  (use-package pkgbuild-mode
-    :mode ("PKGBUILD" . pkgbuild-mode))
-
-  ;; different git file modes
-  (use-package git-modes
-    :mode ("/.dockerignore\\'" . gitignore-mode))
-
-  ;; eshell fish completion
-  (use-package eshell
-    :straight (:type built-in)
-    :ghook 'visual-line-mode
-    :general
-    (:prefix-map '+open-map
-                 "e" 'eshell))
-
-  (use-package fish-completion
-    :hook (eshell-mode . fish-completion-mode)
-    :custom (fish-completion-fallback-on-bash-p t))
 #+end_src
 
-#+RESULTS:
-| fish-completion-mode |
-
+* Direnv
+Direnv automatically adjusts the environment for you when entering a
+directory with a ~.envrc~ file that contains the apropriate commands.
+This should be at/near the bottom since you want this hook to be run
+before others. Hooks are apparently a stack. 
+#+begin_src emacs-lisp
+  (use-package envrc
+    :hook (after-init . envrc-global-mode))
+#+end_src
 
 
