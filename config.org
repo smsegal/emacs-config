@@ -372,6 +372,213 @@ Code Folding
 #+end_src
 
 ** Basic Text Editing
+* Buffers
+** Bufler and Burly
+These are both packages written by alphapapa, a prolific emacs package
+dev. Bufler organizes buffers by mode and project and provides a good
+UI for switching among them.
+
+Burly is a lightweight workspace manager that builds on top of emacs
+bookmark system.
+#+begin_src emacs-lisp
+  (use-package bufler
+    :hook (after-init . bufler-mode)
+    :commands bufler-ex
+    :general
+    (general-nvmap
+      :keymaps 'bufler-list-mode-map
+      "RET" #'bufler-list-buffer-switch
+      ;; "TAB" #'bufler-ex
+      (kbd "<escape>") #'quit-window
+      "q" #'quit-window)
+    (:prefix-map '+buffer-map
+                 "b" '(bufler-switch-buffer :which-key "switch buffer")
+                 "B" '(bufler-list :which-key "buffer list")))
+
+  (use-package burly
+    :straight (:host github :repo "alphapapa/burly.el")
+    :general
+    (:prefix-map '+buffer-map
+                 "o" 'burly-open-bookmark
+                 "w" 'burly-bookmark-windows
+                 "F" 'burly-bookmark-frames))
+#+end_src
+
+** Switch to the scratch buffer
+ #+begin_src emacs-lisp
+  (use-package switch-to-buffer
+    :straight (:type built-in)
+    :preface
+    (defun +switch-to-scratch ()
+      (interactive)
+      (switch-to-buffer "*scratch*"))
+    :general
+    (:keymaps 'global-map
+              (kbd "<mouse-9>") 'next-buffer
+              (kbd "<mouse-8>") 'previous-buffer)
+    (:prefix-map '+buffer-map
+                 "s" #'+switch-to-scratch))
+#+end_src
+** Update how buffers get displayed
+Emacs generally opens up a bunch of windows all over the
+place. Sometimes this is what I want, but it feels excessive. This
+helps reuse more existing windows.
+It still needs some work.
+#+begin_src emacs-lisp
+  (use-package emacs
+    :straight (:type built-in)
+    :custom
+    (display-buffer-alist
+     '((".*" (display-buffer-reuse-window display-buffer-same-window))))
+    (display-buffer-reuse-frames t)         ; reuse windows in other frames
+    (even-window-sizes nil))                 ; display-buffer: avoid resizing
+#+end_src
+* Window Management
+Undo and redo window configurations.
+
+#+begin_src emacs-lisp
+  (use-package winner
+    :straight (:type built-in)
+    :hook (after-init . winner-mode)
+    :general
+    (:prefix-map 'evil-window-map
+                 "u" 'winner-undo
+                 "r" 'winner-redo))
+#+end_src
+
+Switch to a window with the keyboard like avy.
+ #+begin_src emacs-lisp
+  (use-package ace-window
+    :custom
+    (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+    :config
+    (set-face-attribute 'aw-leading-char-face nil :height 3.0)
+    :general (:prefix-map 'evil-window-map
+                          "w" #'ace-window
+                          "W" #'ace-swap-window))
+
+#+end_src
+
+Window Enlargement
+#+begin_src emacs-lisp
+  (use-package zoom
+    :custom
+    (zoom-size '(0.7 . 0.7))
+    (zoom-ignored-major-modes '(dired-mode vterm-mode
+                                help-mode helpful-mode
+                                rxt-help-mode help-mode-menu
+                                org-mode))
+    (zoom-ignored-buffer-names '("*scratch*" "*info*" "*helpful variable: argv*"))
+    (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
+    (zoom-ignore-predicates (list (lambda () (< (count-lines (point-min) (point-max)) 20))))
+    :general
+    (:prefix-map '+toggle-map
+                 "z" #'zoom-mode))
+
+  (use-package +enlarge-window
+    :straight nil
+    :load-path "modules/"
+    :general (:prefix-map 'evil-window-map
+                          "o" #'+window-enlargen
+                          "O" #'delete-other-windows))
+
+#+end_src
+
+* Modeline
+I use the moody modeline (by the author of magit). I also use minions
+to hide all the other modes active instead of diminishing them.
+I also depend on smart-mode-line for the buffer-naming.
+#+begin_src emacs-lisp
+  ;; used for buffer identification in moody modeline
+  (use-package smart-mode-line)
+  (use-package minions
+    :config (minions-mode 1))
+  (use-package moody
+    :after smart-mode-line
+    :config
+    (moody-replace-sml/mode-line-buffer-identification)
+    (moody-replace-vc-mode))
+#+end_src
+ Anzu highlights current search results in the modeline.
+ #+begin_src emacs-lisp
+  (use-package anzu
+    :hook (after-init . global-anzu-mode))
+  (use-package evil-anzu)
+#+end_src
+
+* Incremental Completion
+We're using Selectrum and the associated ecosystem. They have a bigger
+focus on creating and extending basic APIs vs alternative like Ivy.
+#+begin_src emacs-lisp
+  (use-package selectrum
+    :commands selectrum-next-candidate selectrum-previous-candidate
+    :hook
+    (after-init . selectrum-mode)
+    :general
+    (general-imap "C-k" nil)
+    (:keymaps 'selectrum-minibuffer-map
+              "C-j" 'selectrum-next-candidate
+              "C-k" 'selectrum-previous-candidate))
+#+end_src
+
+Prescient is a sorting/filtering package that orders results by "frecency".
+#+begin_src emacs-lisp
+  (use-package prescient
+    :hook (selectrum-mode . prescient-persist-mode))
+  (use-package selectrum-prescient
+    :hook (selectrum-mode . selectrum-prescient-mode))
+  (use-package company-prescient
+    :hook (company-mode . company-prescient-mode))
+#+end_src
+
+Consult is to selectrum as counsel is to Ivy.
+Marginalia is a bit of extra eye-candy on top of Consult.
+#+begin_src emacs-lisp
+  (use-package consult
+    :straight (:host github :repo "minad/consult")
+    :init
+    ;; Replace functions (consult-multi-occur is a drop-in replacement)
+    (fset 'multi-occur #'consult-multi-occur)
+    :hook (after-init . consult-preview-mode)
+    :general
+    (:prefix-map 'help-map
+                 "a" #'consult-apropos
+                 ;; t is usually the tutorial, but this emacs is so customized it's useless
+                 "t" 'consult-theme)
+    (:prefix-map '+insert-map
+                 "y" #'consult-yank)
+    (:prefix-map '+file-map
+                 "w" #'consult-file-externally
+                 "r" #'consult-recent-file)
+    ;; Disabled this keybinding as bufler seems to do a better job
+    ;; (:prefix-map '+buffer-map
+    ;;              "b" #'consult-buffer)
+    (:prefix-map '+search-map
+                 "i" #'consult-imenu
+                 "s" #'consult-line
+                 "o" #'consult-outline))
+  (use-package consult-selectrum)
+  (use-package consult-flycheck
+    :general
+    (:prefix-map '+code-map
+                 "x" #'consult-flycheck))
+  (use-package marginalia
+    :straight (:host github :repo "minad/marginalia" :branch "main")
+    :hook (consult-preview-mode . marginalia-mode)
+    :custom
+    (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light)))
+#+end_src
+
+Finally, some random snippets relating to selectrum et. al.
+#+begin_src emacs-lisp
+  (use-package +selectrum-contrib
+    :straight nil
+    :load-path "modules/"
+    :general
+    (:keymaps 'selectrum-minibuffer-map
+              "C-s" #'selectrum-restrict-to-matches))
+#+end_src
+
 * Look and Feel
 ** Dashboard
 A nice start page for emacs. I set a custom logo for the buffer, and
@@ -439,7 +646,7 @@ I like a font with ligatures and I like my comments italic.
     (set-face-attribute 'default nil
                         :family FONT-NAME
                         :height (if IS-MAC 180 110))
-    (set-frame-font FONT-NAME nil t)
+    ;; (set-frame-font FONT-NAME nil t)
     ;; (add-to-list 'default-frame-alist '(line-spacing . 0.2))
 
     ;; this is a fix for doom-acario-theme setting a weird font
@@ -675,210 +882,6 @@ Change the shape of the cursor when running in the tty. Also enable the mouse.
     (scroll-on-jump-advice-add goto-last-change)
     (scroll-on-jump-advice-add goto-last-change-reverse))
 #+end_src
-* Buffers
-** Bufler and Burly
-These are both packages written by alphapapa, a prolific emacs package
-dev. Bufler organizes buffers by mode and project and provides a good
-UI for switching among them.
-
-Burly is a lightweight workspace manager that builds on top of emacs
-bookmark system.
-#+begin_src emacs-lisp
-  (use-package bufler
-    :hook (after-init . bufler-mode)
-    :commands bufler-ex
-    :general
-    (general-nvmap
-      :keymaps 'bufler-list-mode-map
-      "RET" #'bufler-list-buffer-switch
-      ;; "TAB" #'bufler-ex
-      (kbd "<escape>") #'quit-window
-      "q" #'quit-window)
-    (:prefix-map '+buffer-map
-                 "b" '(bufler-switch-buffer :which-key "switch buffer")
-                 "B" '(bufler-list :which-key "buffer list")))
-
-  (use-package burly
-    :straight (:host github :repo "alphapapa/burly.el")
-    :general
-    (:prefix-map '+bookmark-map
-                 "l" 'list-bookmarks
-                 "w" 'burly-bookmark-windows
-                 "F" 'burly-bookmark-frames))
-#+end_src
-
-** Switch to the scratch buffer
- #+begin_src emacs-lisp
-  (use-package switch-to-buffer
-    :straight (:type built-in)
-    :preface
-    (defun +switch-to-scratch ()
-      (interactive)
-      (switch-to-buffer "*scratch*"))
-    :general
-    (:keymaps 'global-map
-              (kbd "<mouse-9>") 'next-buffer
-              (kbd "<mouse-8>") 'previous-buffer)
-    (:prefix-map '+buffer-map
-                 "s" #'+switch-to-scratch))
-#+end_src
-** Update how buffers get displayed
-Emacs generally opens up a bunch of windows all over the
-place. Sometimes this is what I want, but it feels excessive. This
-helps reuse more existing windows.
-It still needs some work.
-#+begin_src emacs-lisp
-  (use-package emacs
-    :straight (:type built-in)
-    :custom
-    (display-buffer-alist
-     '((".*" (display-buffer-reuse-window display-buffer-same-window))))
-    (display-buffer-reuse-frames t)         ; reuse windows in other frames
-    (even-window-sizes nil))                 ; display-buffer: avoid resizing
-#+end_src
-* Window Management
-Undo and redo window configurations.
-
-#+begin_src emacs-lisp
-  (use-package winner
-    :straight (:type built-in)
-    :hook (after-init . winner-mode)
-    :general
-    (:prefix-map 'evil-window-map
-                 "u" 'winner-undo
-                 "r" 'winner-redo))
-#+end_src
-
-Switch to a window with the keyboard like avy.
- #+begin_src emacs-lisp
-  (use-package ace-window
-    :custom
-    (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-    :config
-    (set-face-attribute 'aw-leading-char-face nil :height 3.0)
-    :general (:prefix-map 'evil-window-map
-                          "w" #'ace-window
-                          "W" #'ace-swap-window))
-
-#+end_src
-
-Window Enlargement
-#+begin_src emacs-lisp
-  (use-package zoom
-    :custom
-    (zoom-size '(0.7 . 0.7))
-    (zoom-ignored-major-modes '(dired-mode vterm-mode
-                                help-mode helpful-mode
-                                rxt-help-mode help-mode-menu
-                                org-mode))
-    (zoom-ignored-buffer-names '("*scratch*" "*info*" "*helpful variable: argv*"))
-    (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
-    (zoom-ignore-predicates (list (lambda () (< (count-lines (point-min) (point-max)) 20))))
-    :general
-    (:prefix-map '+toggle-map
-                 "z" #'zoom-mode))
-
-  (use-package +enlarge-window
-    :straight nil
-    :load-path "modules/"
-    :general (:prefix-map 'evil-window-map
-                          "o" #'+window-enlargen
-                          "O" #'delete-other-windows))
-
-#+end_src
-
-* Modeline
-I use the moody modeline (by the author of magit). I also use minions
-to hide all the other modes active instead of diminishing them.
-I also depend on smart-mode-line for the buffer-naming.
-#+begin_src emacs-lisp
-  ;; used for buffer identification in moody modeline
-  (use-package smart-mode-line)
-  (use-package minions
-    :config (minions-mode 1))
-  (use-package moody
-    :after smart-mode-line
-    :config
-    (moody-replace-sml/mode-line-buffer-identification)
-    (moody-replace-vc-mode))
-#+end_src
- Anzu highlights current search results in the modeline.
- #+begin_src emacs-lisp
-  (use-package anzu
-    :hook (after-init . global-anzu-mode))
-  (use-package evil-anzu)
-#+end_src
-
-* Incremental Completion
-We're using Selectrum and the associated ecosystem. They have a bigger
-focus on creating and extending basic APIs vs alternative like Ivy.
-#+begin_src emacs-lisp
-  (use-package selectrum
-    :commands selectrum-next-candidate selectrum-previous-candidate
-    :hook
-    (after-init . selectrum-mode)
-    :general
-    (general-imap "C-k" nil)
-    (:keymaps 'selectrum-minibuffer-map
-              "C-j" 'selectrum-next-candidate
-              "C-k" 'selectrum-previous-candidate))
-#+end_src
-
-Prescient is a sorting/filtering package that orders results by "frecency".
-#+begin_src emacs-lisp
-  (use-package prescient
-    :hook (selectrum-mode . prescient-persist-mode))
-  (use-package selectrum-prescient
-    :hook (selectrum-mode . selectrum-prescient-mode))
-  (use-package company-prescient
-    :hook (company-mode . company-prescient-mode))
-#+end_src
-
-Consult is to selectrum as counsel is to Ivy.
-Marginalia is a bit of extra eye-candy on top of Consult.
-#+begin_src emacs-lisp
-  (use-package consult
-    :straight (:host github :repo "minad/consult")
-    :init
-    ;; Replace functions (consult-multi-occur is a drop-in replacement)
-    (fset 'multi-occur #'consult-multi-occur)
-    :hook (after-init . consult-preview-mode)
-    :general
-    (:prefix-map 'help-map
-                 "a" #'consult-apropos
-                 ;; t is usually the tutorial, but this emacs is so customized it's useless
-                 "t" 'consult-theme)
-    (:prefix-map '+insert-map
-                 "y" #'consult-yank)
-    (:prefix-map '+file-map
-                 "w" #'consult-file-externally
-                 "r" #'consult-recent-file)
-    ;; Disabled this keybinding as bufler seems to do a better job
-    ;; (:prefix-map '+buffer-map
-    ;;              "b" #'consult-buffer)
-    (:prefix-map '+code-map
-                 "x" #'consult-flycheck)
-    (:prefix-map '+search-map
-                 "i" #'consult-imenu
-                 "s" #'consult-line
-                 "o" #'consult-outline))
-  (use-package marginalia
-    :straight (:host github :repo "minad/marginalia" :branch "main")
-    :hook (consult-preview-mode . marginalia-mode)
-    :custom
-    (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light)))
-#+end_src
-
-Finally, some random snippets relating to selectrum et. al.
-#+begin_src emacs-lisp
-  (use-package +selectrum-contrib
-    :straight nil
-    :load-path "modules/"
-    :general
-    (:keymaps 'selectrum-minibuffer-map
-              "C-s" #'selectrum-restrict-to-matches))
-#+end_src
-
 * Searching / Narrowing
 deadgrep lets us search the specified director with ripgrep. Provides a good UI
 #+begin_src emacs-lisp
@@ -991,7 +994,7 @@ Crux is a selection of useful functions.
     (:prefix-map '+file-map
                  "E" #'crux-sudo-edit
                  "D" #'crux-delete-file-and-buffer
-                 "p" #'crux-find-user-init-file
+                 ;; "p" #'crux-find-user-init-file
                  "R" #'crux-rename-file-and-buffer)
     (:prefix-map '+open-map
                  "w" #'crux-open-with))
@@ -1019,7 +1022,6 @@ Crux is a selection of useful functions.
   (use-package dired-collapse
     :hook (dired-mode . dired-collapse-mode))
 
-  ;; (use-package all-the-icons)
   (use-package all-the-icons-dired
     :hook (dired-mode . all-the-icons-dired-mode))
 
@@ -1030,10 +1032,10 @@ Crux is a selection of useful functions.
     :preface
     (defun +find-init-file-here ()
       (interactive)
-      (find-file user-init-file))
+      (find-file (expand-file-name "config.org" user-emacs-directory)))
     :general
     (:prefix-map '+file-map
-                 "P" #'+find-init-file-here))
+                 "p" #'+find-init-file-here))
 
   (use-package super-save
     :custom (super-save-auto-save-when-idle t)
@@ -1265,55 +1267,53 @@ We use LSP mode for pretty much everything we use a lot.
 We set some of the more intrusive UI elements to nil.
 Enable support for pyright language server.
 #+begin_src emacs-lisp
-    (use-package lsp-mode
-      :commands (lsp lsp-deferred)
-      :custom
-      (read-process-output-max (* 1024 1024)) ;; 1mb
-      (lsp-completion-provider :capf)
-      (lsp-enable-folding nil)
-      (lsp-enable-on-type-formatting nil)
-      (lsp-enable-snippet t)
-      (lsp-eldoc-enable-hover nil)
-      (lsp-headerline-breadcrumb-enable t)
-      :ghook
-      ('(
-  ;;TeX-mode-hook
-         yaml-mode-hook
-         sh-mode-hook
-         js2-mode-hook)
-       #'lsp-deferred)
-      ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
-                        lsp-modeline-diagnostics-mode
-                        lsp-enable-which-key-integration))
-      :general
-      (general-nvmap :keymaps 'lsp-mode-map
-        "," '(:keymap lsp-command-map))
-      (general-def
-        :prefix-map '+code-map
-        :predicate 'lsp-mode
-        "r" #'lsp-rename
-        "a" #'lsp-execute-code-action)
-      (:keymaps 'lsp-mode-map
-                ;; [remap format-all-buffer] #'lsp-format-buffer
-                [remap evil-goto-definition] #'lsp-find-definition))
-    (use-package lsp-ui
-      :commands lsp-ui-mode
-      :general
-      (:keymaps 'lsp-mode-map
-                [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
-                [remap xref-find-references] #'lsp-ui-peek-find-references)
-      (:keymaps 'lsp-ui-peek-mode-map
-                "j"   #'lsp-ui-peek--select-next
-                "k"   #'lsp-ui-peek--select-prev
-                "C-j" #'lsp-ui-peek--select-next
-                "C-k" #'lsp-ui-peek--select-prev))
+  (use-package lsp-mode
+    :commands (lsp lsp-deferred)
+    :custom
+    (read-process-output-max (* 1024 1024)) ;; 1mb
+    (lsp-completion-provider :capf)
+    (lsp-enable-folding nil)
+    (lsp-enable-on-type-formatting nil)
+    (lsp-enable-snippet t)
+    (lsp-eldoc-enable-hover nil)
+    (lsp-headerline-breadcrumb-enable t)
+    :ghook
+    ('(TeX-mode-hook
+       yaml-mode-hook
+       sh-mode-hook
+       js2-mode-hook) #'lsp-deferred)
+    ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
+                      lsp-modeline-diagnostics-mode
+                      lsp-enable-which-key-integration))
+    :general
+    (general-nvmap :keymaps 'lsp-mode-map
+      "," '(:keymap lsp-command-map))
+    (general-def
+      :prefix-map '+code-map
+      :predicate 'lsp-mode
+      "r" #'lsp-rename
+      "a" #'lsp-execute-code-action)
+    (:keymaps 'lsp-mode-map
+              ;; [remap format-all-buffer] #'lsp-format-buffer
+              [remap evil-goto-definition] #'lsp-find-definition))
+  (use-package lsp-ui
+    :commands lsp-ui-mode
+    :general
+    (:keymaps 'lsp-mode-map
+              [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
+              [remap xref-find-references] #'lsp-ui-peek-find-references)
+    (:keymaps 'lsp-ui-peek-mode-map
+              "j"   #'lsp-ui-peek--select-next
+              "k"   #'lsp-ui-peek--select-prev
+              "C-j" #'lsp-ui-peek--select-next
+              "C-k" #'lsp-ui-peek--select-prev))
 
-    (use-package lsp-pyright
-      :preface
-      (defun +pyright__enable-lsp ()
-        (require 'lsp-pyright)
-        (lsp-deferred))
-      :hook (python-mode . +pyright__enable-lsp))
+  (use-package lsp-pyright
+    :preface
+    (defun +pyright__enable-lsp ()
+      (require 'lsp-pyright)
+      (lsp-deferred))
+    :hook (python-mode . +pyright__enable-lsp))
 #+end_src
 ** Python
 The builtin package needs some simple tweaks to use ipython as the REPL.
@@ -1704,7 +1704,7 @@ leader keys to replace the special ~C-c~ bindings.
     (org-directory "~/Documents/org")
     (org-default-notes-file (concat org-directory "/notes.org"))
     :config
-    (set-face-attribute 'org-block nil :family FONT-NAME)
+    ;; (set-face-attribute 'org-block nil :family FONT-NAME)
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((emacs-lisp . t)
