@@ -428,10 +428,10 @@ It still needs some work.
   (use-package emacs
     :straight (:type built-in)
     :custom
-    (display-buffer-alist
-     '((".*" (display-buffer-reuse-window display-buffer-same-window))))
-    (display-buffer-reuse-frames t)         ; reuse windows in other frames
-    (even-window-sizes nil))                 ; display-buffer: avoid resizing
+    ;; (display-buffer-alist
+    ;;  '((".*" (display-buffer-reuse-window display-buffer-same-window))))
+    (display-buffer-reuse-frames t) ; reuse windows in other frames
+    (even-window-sizes nil))        ; display-buffer: avoid resizing
 #+end_src
 * Window Management
 Undo and redo window configurations.
@@ -750,7 +750,7 @@ Sometimes we want text to wrap before the window border.
     ;; (setq-default split-window-preferred-function 'visual-fill-column-split-window-sensibly)
     :ghook ('visual-fill-column-mode-hook #'visual-line-mode))
 #+end_src
-*** Misc Tweaks
+** Misc Tweaks
 Pulse current line on window switch
 #+begin_src emacs-lisp
   (use-package beacon
@@ -773,6 +773,7 @@ Hide the mouse when we type near it.
 Window dividers and the fringe. We want them to show up very thin between windows. 
 #+begin_src emacs-lisp
   (use-package window-divider
+    :disabled 
     :straight (:type built-in)
     :custom
     (window-divider-default-right-width 1)
@@ -1701,6 +1702,7 @@ leader keys to replace the special ~C-c~ bindings.
   (use-package org
     :custom
     (org-startup-indented t)
+    (org-src-fontify-natively t)
     (org-directory "~/Documents/org")
     (org-default-notes-file (concat org-directory "/notes.org"))
     :config
@@ -1733,7 +1735,7 @@ This should be at/near the bottom since you want this hook to be run
 before others. Hooks are apparently a stack. 
 #+begin_src emacs-lisp
   (use-package envrc
-    :hook (after-init . envrc-global-mode))
+    :hook (emacs-startup . envrc-global-mode))
 #+end_src
 
 
