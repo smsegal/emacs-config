@@ -1089,7 +1089,7 @@ We also want to clean up whitespace in prog-mode.
     :hook (emacs-startup . electric-pair-mode))
 #+end_src
 ** Match the indentation of wrapped lines
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package adaptive-wrap
     :hook ((prog-mode text-mode) . adaptive-wrap-prefix-mode)
     :general
