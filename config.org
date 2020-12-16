@@ -556,6 +556,7 @@ Marginalia is a bit of extra eye-candy on top of Consult.
     (:prefix-map '+search-map
                  "i" #'consult-imenu
                  "s" #'consult-line
+                 "S" #'consult-line-symbol-at-point
                  "o" #'consult-outline))
   (use-package consult-selectrum)
   (use-package consult-flycheck
