@@ -1,6 +1,1 @@
-* My Emacs Configuration
-
-This is my Emacs configuration, inspired by [[https://github.com/hlissner/doom-emacs/][Doom Emacs]] and my own preferences. Has configuration for Python and LaTeX, with more to languages/frameworks to come as I work with them.
-
-
-
+config.org
