@@ -537,7 +537,27 @@ Marginalia is a bit of extra eye-candy on top of Consult.
 #+begin_src emacs-lisp
   (use-package consult
     :straight (:host github :repo "minad/consult")
+    :preface
+    ;; Hack from pr 33 on consult. remove this once it's merged upstream
+    (defun consult--outline-show-branch-maybe ()
+      "Reveal the current outline branch.
+    Show all of the current headine's parents and their children. This includes this
+    headline."
+      (when (outline-invisible-p (line-end-position))
+        (let (points)
+          (save-excursion
+            (outline-back-to-heading :invisible-ok)
+            (push (point) points)
+            (while (ignore-errors (outline-up-heading 1 :invisible-ok))
+              (push (point) points))
+            (dolist (point points)
+              (goto-char point)
+              (outline-show-children)
+              (outline-show-entry))))))
     :init
+    ;; remove along with above defun
+    (general-add-advice 'consult-line :after #'consult--outline-show-branch-maybe)
+
     ;; Replace functions (consult-multi-occur is a drop-in replacement)
     (fset 'multi-occur #'consult-multi-occur)
     :hook (after-init . consult-preview-mode)
@@ -558,12 +578,12 @@ Marginalia is a bit of extra eye-candy on top of Consult.
                  "i" #'consult-imenu
                  "s" #'consult-line
                  "S" #'consult-line-symbol-at-point
-                 "o" #'consult-outline))
-  (use-package consult-selectrum)
-  (use-package consult-flycheck
+                 "o" #'consult-outline)
     :general
     (:prefix-map '+code-map
-                 "x" #'consult-flycheck))
+                 "x" #'consult-error))
+  (use-package consult-selectrum)
+  (use-package consult-flycheck)
   (use-package marginalia
     :straight (:host github :repo "minad/marginalia" :branch "main")
     :hook (consult-preview-mode . marginalia-mode)
@@ -1263,7 +1283,13 @@ Make compilation buffers process escape codes for colours etc.
     ('compilation-filter-hook #'(+compile/apply-ansi-color-to-compilation-buffer-h
                                  +compile/fix-compilation-size)))
 #+end_src
->
+** Makefiles
+I disabled indent-tabs-mode above, I need this enabled for makefiles.
+#+begin_src emacs-lisp
+  (general-add-hook
+   'makefile-mode-hook (lambda ()
+                         (setq-local indent-tabs-mode +1)))
+#+end_src
 * Language Support
 ** LSP-Mode
 We use LSP mode for pretty much everything we use a lot.
@@ -1373,104 +1399,103 @@ kernel provides a pretty good experience for using it inside org-mode.
 Set up company mode for autocompletion of references, citations, etc.
 We also setup inline pdf viewing.
 #+begin_src emacs-lisp
-(use-package company-auctex)
-(use-package company-reftex)
-(use-package company-math)
-(use-package company-bibtex)
+  (use-package company-auctex)
+  (use-package company-reftex)
+  (use-package company-math)
+  (use-package company-bibtex)
 
-(use-package auctex
-  :custom
-  (TeX-master t)
-  (TeX-parse-self t) ;; parse on load
-  (TeX-auto-save t)  ;; parse on save
-  ;; automatically insert braces after sub/superscript in math mode
-  (TeX-electric-sub-and-superscript t)
-  (bibtex-dialect 'biblatex)
-  (bibtex-align-at-equal-sign t)
-  (bibtex-text-indentation 20)
-  (TeX-auto-fold t)
-  ;; insert \(\) instead of $$
-  (TeX-electric-math (cons "\\(" "\\)"))
-  :hook ((TeX-mode . +latex-setup)
-         (TeX-mode . TeX-fold-mode))
-  :mode ("\\.tex\\'" . LaTeX-mode)
-  :general
-  (:keymaps 'TeX-mode-map
-            [remap compile] #'TeX-command-master
-            [remap recompile] (lambda () (TeX-command-master +1)))
-  :preface
-  (defun +latex-setup ()
-    (turn-on-visual-line-mode)
-    (visual-fill-column-mode +1)
-    (unless word-wrap
-      (toggle-word-wrap))
-    (TeX-fold-buffer)
-    (setq-local visual-fill-column-center-text t
-                visual-fill-column-width 100
+  (use-package auctex
+    :custom
+    (TeX-master t)
+    (TeX-parse-self t) ;; parse on load
+    (TeX-auto-save t)  ;; parse on save
+    ;; automatically insert braces after sub/superscript in math mode
+    (TeX-electric-sub-and-superscript t)
+    (bibtex-dialect 'biblatex)
+    (bibtex-align-at-equal-sign t)
+    (bibtex-text-indentation 20)
+    (TeX-fold-type-list '(env math))
+    ;; insert \(\) instead of $$
+    (TeX-electric-math (cons "\\(" "\\)"))
+    :hook ((TeX-mode . +latex-setup)
+           (TeX-mode . TeX-fold-mode))
+    :mode ("\\.tex\\'" . LaTeX-mode)
+    :general
+    ;; (:keymaps 'TeX-mode-map
+    ;;           ;; [remap compile] #'TeX-command-master)
+    :preface
+    (defun +latex-setup ()
+      (turn-on-visual-line-mode)
+      (visual-fill-column-mode +1)
+      (unless word-wrap
+        (toggle-word-wrap))
+      (TeX-fold-buffer)
+      (setq-local visual-fill-column-center-text t
+                  visual-fill-column-width 100
 
-                ;; important that reftex comes before auctex otherwise
-                ;; citation autocomplete doesn't work
-                company-backends (append '(company-reftex-citations
-                                           company-reftex-labels
-                                           company-auctex-labels
-                                           company-auctex-bibs
-                                           company-auctex-macros
-                                           company-auctex-symbols
-                                           company-auctex-environments
-                                           company-math-symbols-latex
-                                           company-math-symbols-unicode
-                                           company-latex-commands)
-                                         company-backends))))
-(use-package evil-tex
-  :hook (LaTeX-mode . evil-tex-mode))
+                  ;; important that reftex comes before auctex otherwise
+                  ;; citation autocomplete doesn't work
+                  company-backends (append '(company-reftex-citations
+                                             company-reftex-labels
+                                             company-auctex-labels
+                                             company-auctex-bibs
+                                             company-auctex-macros
+                                             company-auctex-symbols
+                                             company-auctex-environments
+                                             company-math-symbols-latex
+                                             company-math-symbols-unicode
+                                             company-latex-commands)
+                                           company-backends))))
+  (use-package evil-tex
+    :hook (LaTeX-mode . evil-tex-mode))
 
-(use-package bibtex
-  :straight (:type built-in)
-  :gfhook #'+bibtex-setup
-  :preface
-  (defun +bibtex-setup ()
-    (turn-on-visual-line-mode)
-    (setq-local visual-fill-column-center-text t
-                visual-fill-column-width 100)))
+  (use-package bibtex
+    :straight (:type built-in)
+    :gfhook #'+bibtex-setup
+    :preface
+    (defun +bibtex-setup ()
+      (turn-on-visual-line-mode)
+      (setq-local visual-fill-column-center-text t
+                  visual-fill-column-width 100)))
 
-(use-package auctex-latexmk
-  :custom
-  (auctex-latexmk-inherit-TeX-PDF-mode t)
-  :hook
-  (TeX-mode . auctex-latexmk-setup))
+  (use-package auctex-latexmk
+    :custom
+    (auctex-latexmk-inherit-TeX-PDF-mode t)
+    :hook
+    (TeX-mode . auctex-latexmk-setup))
 
-(use-package reftex
-  :straight (:type built-in)
-  :hook ((TeX-mode . reftex-mode)
-         (LaTeX-mode . reftex-mode))
-  :custom
-  (reftex-cite-format
-   '((?a . "\\autocite[]{%l}")
-     (?b . "\\blockcquote[]{%l}{}")
-     (?c . "\\cite[]{%l}")
-     (?f . "\\footcite[]{%l}")
-     (?n . "\\nocite{%l}")
-     (?p . "\\parencite[]{%l}")
-     (?s . "\\smartcite[]{%l}")
-     (?t . "\\textcite[]{%l}"))
-   (reftex-plug-into-AUCTeX t)
-   (reftex-toc-split-windows-fraction 0.3)))
+  (use-package reftex
+    :straight (:type built-in)
+    :hook ((TeX-mode . reftex-mode)
+           (LaTeX-mode . reftex-mode))
+    :custom
+    (reftex-cite-format
+     '((?a . "\\autocite[]{%l}")
+       (?b . "\\blockcquote[]{%l}{}")
+       (?c . "\\cite[]{%l}")
+       (?f . "\\footcite[]{%l}")
+       (?n . "\\nocite{%l}")
+       (?p . "\\parencite[]{%l}")
+       (?s . "\\smartcite[]{%l}")
+       (?t . "\\textcite[]{%l}"))
+     (reftex-plug-into-AUCTeX t)
+     (reftex-toc-split-windows-fraction 0.3)))
 
-(use-package pdf-tools
-  :mode ("\\.pdf\\'" . pdf-view-mode)
-  :magic ("%PDF" . pdf-view-mode)
-  :hook (pdf-view-mode . auto-revert-mode)
-  :config
-  (pdf-tools-install :no-query)
-  (setq-default pdf-view-display-size 'fit-page)
-  ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
-  (setq pdf-view-use-scaling t
-        pdf-view-use-imagemagick nil)
-  :general
-  (+local-leader-def :keymaps 'pdf-view-mode-map
-    "s" 'pdf-view-auto-slice-minor-mode)
-  (:keymaps 'pdf-view-mode-map
-            "q" #'kill-current-buffer))
+  (use-package pdf-tools
+    :mode ("\\.pdf\\'" . pdf-view-mode)
+    :magic ("%PDF" . pdf-view-mode)
+    :hook (pdf-view-mode . auto-revert-mode)
+    :config
+    (pdf-tools-install :no-query)
+    (setq-default pdf-view-display-size 'fit-page)
+    ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
+    (setq pdf-view-use-scaling t
+          pdf-view-use-imagemagick nil)
+    :general
+    (+local-leader-def :keymaps 'pdf-view-mode-map
+      "s" 'pdf-view-auto-slice-minor-mode)
+    (:keymaps 'pdf-view-mode-map
+              "q" #'kill-current-buffer))
 #+end_src
 ** {Java,Type}Script
 The different web languages. I've also enabled LSP-mode for them above.
@@ -1624,6 +1649,14 @@ evil-mode motions and such.
 
 #+end_src
 * Utilities
+** TRAMP Support
+Remote file support.
+#+begin_src emacs-lisp
+  (use-package tramp
+    :straight (:type built-in)
+    :custom
+    (tramp-default-method "sshx"))
+#+end_src
 ** Restart emacs
 #+begin_src emacs-lisp
   (use-package restart-emacs
@@ -1639,6 +1672,12 @@ set calc mode to start in algebraic (ie normal) mode
     :general
     (:prefix-map '+open-map
                  "c" #'calc-dispatch))
+#+end_src
+* Fun Stuff
+** Elcord
+Discord Integration cause why not
+#+begin_src emacs-lisp
+(use-package elcord)
 #+end_src
 * Snippets
 We use yasnippet, as well as the snippets from doom.
