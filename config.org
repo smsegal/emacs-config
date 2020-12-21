@@ -180,9 +180,7 @@ should load after ~evil~ in the ~use-package~ block for organizational purposes.
       "s" #'save-buffer)
 
     (general-def :prefix-map '+code-map
-      "e" #'eval-buffer
-      "c" #'compile
-      "m" #'recompile)
+      "e" #'eval-buffer)
 
     (general-def :prefix-map '+quit-restart-map
       "q" 'save-buffers-kill-emacs
@@ -425,7 +423,7 @@ Emacs generally opens up a bunch of windows all over the
 place. Sometimes this is what I want, but it feels excessive. This
 helps reuse more existing windows.
 It still needs some work.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package emacs
     :straight (:type built-in)
     :custom
@@ -555,8 +553,8 @@ Marginalia is a bit of extra eye-candy on top of Consult.
               (outline-show-children)
               (outline-show-entry))))))
     :init
-    ;; remove along with above defun
     (general-add-advice 'consult-line :after #'consult--outline-show-branch-maybe)
+    (general-add-advice 'consult-outline :after #'consult--outline-show-branch-maybe)
 
     ;; Replace functions (consult-multi-occur is a drop-in replacement)
     (fset 'multi-occur #'consult-multi-occur)
@@ -650,7 +648,7 @@ ton of great light and dark themes.
     (calendar-latitude 43.6)
     (calendar-longitude -79.4)
     (circadian-themes '((:sunrise . doom-acario-light)
-                        (:sunset  . doom-spacegrey)))
+                        (:sunset  . doom-gruvbox)))
     :hook
     (after-init . circadian-setup))
 
@@ -680,12 +678,9 @@ I like a font with ligatures and I like my comments italic.
 Here is where we set up the ligatures. There's configuration for the
 fonts I use most often: "Victor Mono" and "JetBrains Mono".
 #+begin_src emacs-lisp
-  ;; Note: Doesn't work on emacs28+
   (use-package ligature
     :straight (:host github :repo "mickeynp/ligature.el")
-    :ghook ('(prog-mode-hook
-              LaTeX-mode-hook
-              org-mode-hook) #'ligature-mode)
+    :ghook ('after-init-hook #'global-ligature-mode)
     :init
     (cond
      ;; JetBrains Mono Ligatures
@@ -770,7 +765,11 @@ Sometimes we want text to wrap before the window border.
     :config
     (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
     ;; (setq-default split-window-preferred-function 'visual-fill-column-split-window-sensibly)
-    :ghook ('visual-fill-column-mode-hook #'visual-line-mode))
+    :ghook
+    ('visual-fill-column-mode-hook #'(visual-line-mode
+                                      (lambda ()
+                                        (setq-local split-window-preferred-function
+                                                  'visual-fill-column-split-window-sensibly)))))
 #+end_src
 ** Misc Tweaks
 Pulse current line on window switch
@@ -1000,7 +999,7 @@ Correct the word at the point with ~z=~.
 #+end_src
 
 Lazily load flyspell instead of do it on demand to speed up. 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package flyspell-lazy
     :after flyspell
     :config
@@ -1111,9 +1110,8 @@ We also want to clean up whitespace in prog-mode.
     :hook (emacs-startup . electric-pair-mode))
 #+end_src
 ** Match the indentation of wrapped lines
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
   (use-package adaptive-wrap
-    :hook ((prog-mode text-mode) . adaptive-wrap-prefix-mode)
     :general
     (:prefix-map '+toggle-map
                  "w" #'adaptive-wrap-prefix-mode))
@@ -1279,9 +1277,13 @@ Make compilation buffers process escape codes for colours etc.
         (window-resize (selected-window) (- 30 (window-total-width)) t t)))
     :custom
     (compilation-scroll-output 'first-error)
+    :general
+    (:prefix-map '+code-map
+                 "c" #'compile
+                 "m" #'recompile)
     :ghook
-    ('compilation-filter-hook #'(+compile/apply-ansi-color-to-compilation-buffer-h
-                                 +compile/fix-compilation-size)))
+    ('compilation-filter-hook #'+compile/apply-ansi-color-to-compilation-buffer-h))
+                                 ;; +compile/fix-compilation-size)))
 #+end_src
 ** Makefiles
 I disabled indent-tabs-mode above, I need this enabled for makefiles.
@@ -1309,6 +1311,8 @@ Enable support for pyright language server.
     :ghook
     ('(TeX-mode-hook
        yaml-mode-hook
+       haskell-mode-hook
+       haskell-literate-mode-hook
        sh-mode-hook
        js2-mode-hook) #'lsp-deferred)
     ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
@@ -1370,9 +1374,9 @@ We can sort and remove imports from files with this.
 The ein package has really improved lately. In addition, the jupyter
 kernel provides a pretty good experience for using it inside org-mode.
 #+begin_src emacs-lisp
-  (use-package jupyter
-    :straight (:no-native-compile t)
-    :commands jupyter-connect-repl jupyter-run-repl)
+  ;; (use-package jupyter
+  ;;   :straight (:no-native-compile t)
+  ;;   :commands jupyter-connect-repl jupyter-run-repl)
 
   (use-package emacs-ipython-notebook
     :straight ein
@@ -1535,6 +1539,17 @@ The different web languages. I've also enabled LSP-mode for them above.
   (use-package typescript-mode)
 #+end_src
 
+** Haskell
+Basic syntax highlighting.
+#+begin_src emacs-lisp
+  (use-package haskell-mode)
+#+end_src
+
+Set up language server support.
+#+begin_src emacs-lisp
+  (use-package lsp-haskell
+    :custom (lsp-haskell-server-path "~/.ghcup/bin/haskell-language-server-wrapper"))
+#+end_src
 ** Emacs-Lisp
 Custom indentation for lisp code. Small keybindings for evaling sexps.
 #+begin_src emacs-lisp
@@ -1673,6 +1688,11 @@ set calc mode to start in algebraic (ie normal) mode
     (:prefix-map '+open-map
                  "c" #'calc-dispatch))
 #+end_src
+** El-patch
+Patch existing packages easily
+#+begin_src emacs-lisp :tangle no
+  (use-package el-patch)
+#+end_src
 * Fun Stuff
 ** Elcord
 Discord Integration cause why not
@@ -1715,12 +1735,31 @@ We also set apropos to search as much as possible.
 
   (use-package help
     :straight (:type built-in)
+    :config
+    (require 'apropos)
+    ;; this is taken from
+    ;; https://github.com/Wilfred/helpful/issues/25#issuecomment-738347468
+    ;; to enable helpful buffers from apropos
+    (let ((do-function (lambda (button)
+                         (helpful-function (button-get button 'apropos-symbol))))
+          (do-variable (lambda (button)
+                         (helpful-variable (button-get button 'apropos-symbol)))))
+      ;; :supertype only takes effect statically, at the time of
+      ;; definition, so we can in fact redefine a button with itself
+      ;; as its supertype
+      (define-button-type 'apropos-function :supertype 'apropos-function 'action do-function)
+      (define-button-type 'apropos-macro :supertype 'apropos-macro 'action do-function)
+      (define-button-type 'apropos-command :supertype 'apropos-command 'action do-function)
+      (define-button-type 'apropos-variable :supertype 'apropos-variable 'action do-variable)
+      (define-button-type 'apropos-user-option :supertype 'apropos-user-option 'action do-variable))
     :custom
     (apropos-do-all t))
 #+end_src
 * Project Management
+** Projectile
+Disabling for now, in favour of the simpler ~project.el~.
 Let Projectile handle the hard stuff, like remembering what belongs to what project.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (use-package projectile
     :custom
     (projectile-completion-system 'default)
@@ -1732,6 +1771,44 @@ Let Projectile handle the hard stuff, like remembering what belongs to what proj
             :package projectile
             :which-key "projects")))
 #+end_src
+
+** Project.el
+This is built in and simpler than projectile.
+#+begin_src emacs-lisp
+  (use-package project
+    :preface
+    (cl-defmethod project-root ((project (head local)))
+      (cdr project))
+
+    (defun +_project-files-in-directory (dir)
+      "Use `fd' to list files in DIR."
+      (let* ((default-directory dir)
+             (localdir (file-local-name (expand-file-name dir)))
+             (command (format "fd -t f -0 . %s" localdir)))
+        (project--remote-file-names
+         (sort (split-string (shell-command-to-string command) "\0" t)
+               #'string<))))
+
+    (cl-defmethod project-files ((project (head local)) &optional dirs)
+      "Override `project-files' to use `fd' in local projects."
+      (mapcan #'+_project-files-in-directory
+              (or dirs (list (project-root project)))))
+    :custom
+    (project-switch-commands
+     '((?f "File" project-find-file)
+       (?g "Grep" project-find-regexp)
+       (?d "Dired" project-dired)
+       (?b "Buffer" project-switch-to-buffer)
+       (?q "Query replace" project-query-replace-regexp)
+       (?m "Magit" magit-status)
+       (?v "VC dir" project-vc-dir)))
+    :general
+    (+leader-def
+      "p" '(:keymap project-prefix-map
+            :package project
+            :which-key "projects")))
+#+end_src
+
 * Org Mode
 We don't do much to customize Org. Set the notes directory for
 ~org-capture~, enable some languages to be evaled in ~src~ blocks.
@@ -1771,9 +1848,13 @@ leader keys to replace the special ~C-c~ bindings.
 
 * Direnv
 Direnv automatically adjusts the environment for you when entering a
-directory with a ~.envrc~ file that contains the apropriate commands.
+directory with a ~.envrc~ file that contains the appropriate commands.
 This should be at/near the bottom since you want this hook to be run
-before others. Hooks are apparently a stack. 
+before others. Hooks are apparently a stack.
+
+I'm hooking it to ~emacs-startup-hook~ instead of ~after-init-hook~, as
+~emacs-startup-hook~ runs after ~after-init-hook~
+
 #+begin_src emacs-lisp
   (use-package envrc
     :hook (emacs-startup . envrc-global-mode))
