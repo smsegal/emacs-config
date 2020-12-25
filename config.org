@@ -1,10 +1,19 @@
-#+title: Emacs Configuration
+#+title: An Emacs Configuration
 #+author: Shane Segal
 #+startup: overview
 #+property: header-args :results silent :comments org :tangle yes
 #+options: toc:2
 
-* Contents                                                              :TOC:
+* Introduction                                                          
+What's actually in this very long file?
+#+begin_export html
+<details>
+  <summary>Table of Contents</summary>
+  <div>
+#+end_export
+** Table of Contents                                                   :TOC:
+- [[#introduction][Introduction]]
+  - [[#end-toc-hack][End TOC hack]]
 - [[#lexical-binding][Lexical Binding]]
 - [[#use-package-setup][Use-Package Setup]]
 - [[#custom-file][Custom File]]
@@ -76,6 +85,12 @@
   - [[#projectile][Projectile]]
   - [[#projectel][Project.el]]
 - [[#direnv][Direnv]]
+
+** End TOC hack
+#+begin_export html
+</div>
+</details>
+#+end_export
 
 * Lexical Binding
 We want lexical binding enabled in this whole file.
