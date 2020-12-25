@@ -11,6 +11,7 @@ We want lexical binding enabled in this whole file.
 ;;; config.el -*- lexical-binding: t; -*-
 #+end_src
 * Use-Package Setup
+:toc:
 Using straight.el (loaded in ~init.el~) to load use-package and setup integration. Also set up some personal information
 #+begin_src emacs-lisp
 (straight-use-package 'use-package)
