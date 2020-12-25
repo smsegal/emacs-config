@@ -2,9 +2,9 @@
 #+author: Shane Segal
 #+startup: overview
 #+property: header-args :results silent :comments org :tangle yes
-#+options: num:nil toc:nil
+#+options: num:nil toc:2
 
-#+TOC: headlines 2
+#+toc: headlines 2
 * Lexical Binding
 We want lexical binding enabled in this whole file.
 #+begin_src emacs-lisp
@@ -599,6 +599,39 @@ Finally, some random snippets relating to selectrum et. al.
     :general
     (:keymaps 'selectrum-minibuffer-map
               "C-s" #'selectrum-restrict-to-matches))
+#+end_src
+
+Trying out embark again
+#+begin_src emacs-lisp :tangle no
+  (use-package embark
+    :custom
+    (embark-occur-initial-view-alist '((t . zebra)))
+    (embark-occur-minibuffer-completion t)
+    (embark-live-occur-update-delay 0.1)
+    ;; (embark-live-occur-initial-delay 0.8)
+    ;; (embark-annotator-alist '((t . embark-annotation-function-metadatum)))
+    :hook (minibuffer-setup . embark-live-occur-after-input)
+    :general
+    (general-imap 
+              "C-," #'embark-act)
+    (:keymaps 'minibuffer-local-completion-map
+              "TAB" #'minibuffer-force-complete)
+    (:keymaps 'embark-occur-mode-map
+              "C-j" #'scroll-other-window-down
+              "C-k" #'scroll-other-window))
+    ;; :bind (("C-," . embark-act)
+    ;;        :map minibuffer-local-completion-map
+    ;;        ("C-," . embark-act)
+    ;;        ("C-." . embark-act-noexit)
+    ;;        ("M-q" . embark-occur-toggle-view) ; parallel of `fill-paragraph'
+    ;;        ("M-o" . embark-export) ; falls back to `embark-occur'
+    ;;        ("M-v" . embark-switch-to-live-occur)
+    ;;        :map embark-occur-mode-map
+    ;;        ("," . embark-act)
+    ;;        ("M-t" . toggle-truncate-lines)
+    ;;        ("M-q" . embark-occur-toggle-view)
+    ;;        ;; ("M-v" . prot-minibuffer-focus-mini) ; from `prot-minibuffer.el'
+    ;;        ("M-q" . embark-occur-toggle-view)))
 #+end_src
 
 * Look and Feel
