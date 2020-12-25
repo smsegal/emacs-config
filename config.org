@@ -510,11 +510,11 @@ I also depend on smart-mode-line for the buffer-naming.
 * Incremental Completion
 We're using Selectrum and the associated ecosystem. They have a bigger
 focus on creating and extending basic APIs vs alternative like Ivy.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp 
   (use-package selectrum
     :commands selectrum-next-candidate selectrum-previous-candidate
     :hook
-    (after-init . selectrum-mode)
+    (emacs-startup . selectrum-mode)
     :general
     (general-imap "C-k" nil)
     (:keymaps 'selectrum-minibuffer-map
@@ -525,7 +525,7 @@ focus on creating and extending basic APIs vs alternative like Ivy.
 Prescient is a sorting/filtering package that orders results by "frecency".
 #+begin_src emacs-lisp
   (use-package prescient
-    :hook (selectrum-mode . prescient-persist-mode))
+    :hook (after-init . prescient-persist-mode))
   (use-package selectrum-prescient
     :hook (selectrum-mode . selectrum-prescient-mode))
   (use-package company-prescient
@@ -535,60 +535,60 @@ Prescient is a sorting/filtering package that orders results by "frecency".
 Consult is to selectrum as counsel is to Ivy.
 Marginalia is a bit of extra eye-candy on top of Consult.
 #+begin_src emacs-lisp
-  (use-package consult
-    :straight (:host github :repo "minad/consult")
-    :preface
-    ;; Hack from pr 33 on consult. remove this once it's merged upstream
-    (defun consult--outline-show-branch-maybe ()
-      "Reveal the current outline branch.
-    Show all of the current headine's parents and their children. This includes this
-    headline."
-      (when (outline-invisible-p (line-end-position))
-        (let (points)
-          (save-excursion
-            (outline-back-to-heading :invisible-ok)
-            (push (point) points)
-            (while (ignore-errors (outline-up-heading 1 :invisible-ok))
-              (push (point) points))
-            (dolist (point points)
-              (goto-char point)
-              (outline-show-children)
-              (outline-show-entry))))))
-    :init
-    (general-add-advice 'consult-line :after #'consult--outline-show-branch-maybe)
-    (general-add-advice 'consult-outline :after #'consult--outline-show-branch-maybe)
+    (use-package consult
+      :straight (:host github :repo "minad/consult")
+      :preface
+      ;; Hack from pr 33 on consult. remove this once it's merged upstream
+      (defun consult--outline-show-branch-maybe ()
+        "Reveal the current outline branch.
+      Show all of the current headine's parents and their children. This includes this
+      headline."
+        (when (outline-invisible-p (line-end-position))
+          (let (points)
+            (save-excursion
+              (outline-back-to-heading :invisible-ok)
+              (push (point) points)
+              (while (ignore-errors (outline-up-heading 1 :invisible-ok))
+                (push (point) points))
+              (dolist (point points)
+                (goto-char point)
+                (outline-show-children)
+                (outline-show-entry))))))
+      :init
+      (general-add-advice 'consult-line :after #'consult--outline-show-branch-maybe)
+      (general-add-advice 'consult-outline :after #'consult--outline-show-branch-maybe)
 
-    ;; Replace functions (consult-multi-occur is a drop-in replacement)
-    (fset 'multi-occur #'consult-multi-occur)
-    :hook (after-init . consult-preview-mode)
-    :general
-    (:prefix-map 'help-map
-                 "a" #'consult-apropos
-                 ;; t is usually the tutorial, but this emacs is so customized it's useless
-                 "t" 'consult-theme)
-    (:prefix-map '+insert-map
-                 "y" #'consult-yank)
-    (:prefix-map '+file-map
-                 "w" #'consult-file-externally
-                 "r" #'consult-recent-file)
-    ;; Disabled this keybinding as bufler seems to do a better job
-    ;; (:prefix-map '+buffer-map
-    ;;              "b" #'consult-buffer)
-    (:prefix-map '+search-map
-                 "i" #'consult-imenu
-                 "s" #'consult-line
-                 "S" #'consult-line-symbol-at-point
-                 "o" #'consult-outline)
-    :general
-    (:prefix-map '+code-map
-                 "x" #'consult-error))
-  (use-package consult-selectrum)
-  (use-package consult-flycheck)
-  (use-package marginalia
-    :straight (:host github :repo "minad/marginalia" :branch "main")
-    :hook (consult-preview-mode . marginalia-mode)
-    :custom
-    (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light)))
+      ;; Replace functions (consult-multi-occur is a drop-in replacement)
+      (fset 'multi-occur #'consult-multi-occur)
+      :hook (after-init . consult-preview-mode)
+      :general
+      (:prefix-map 'help-map
+                   "a" #'consult-apropos
+                   ;; t is usually the tutorial, but this emacs is so customized it's useless
+                   "t" 'consult-theme)
+      (:prefix-map '+insert-map
+                   "y" #'consult-yank)
+      (:prefix-map '+file-map
+                   "w" #'consult-file-externally
+                   "r" #'consult-recent-file)
+      ;; Disabled this keybinding as bufler seems to do a better job
+      ;; (:prefix-map '+buffer-map
+      ;;              "b" #'consult-buffer)
+      (:prefix-map '+search-map
+                   "i" #'consult-imenu
+                   "s" #'consult-line
+                   "S" #'consult-line-symbol-at-point
+                   "o" #'consult-outline)
+      :general
+      (:prefix-map '+code-map
+                   "x" #'consult-error))
+    ;; (use-package consult-selectrum)
+    (use-package consult-flycheck)
+    (use-package marginalia
+      :straight (:host github :repo "minad/marginalia" :branch "main")
+      :custom
+      (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
+      :hook (consult-preview-mode . marginalia-mode))
 #+end_src
 
 Finally, some random snippets relating to selectrum et. al.
