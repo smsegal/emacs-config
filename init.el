@@ -15,5 +15,10 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-(straight-use-package 'org)
+;; Load up to date org here, so we don't have different versions loaded.
+;; Also load all files in contrib
+(straight-use-package
+ '(org :host github
+   :repo "emacs-straight/org-mode"
+   :files ("*.el" "lisp/*.el" "contrib/lisp/*.el")))
 (org-babel-load-file (expand-file-name "config.org" user-emacs-directory))

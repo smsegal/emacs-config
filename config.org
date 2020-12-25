@@ -4,17 +4,85 @@
 #+property: header-args :results silent :comments org :tangle yes
 #+options: toc:2
 
-* Contents
-:properties:
-:toc: :include 2
-:end:
+* Contents                                                              :TOC:
+- [[#lexical-binding][Lexical Binding]]
+- [[#use-package-setup][Use-Package Setup]]
+- [[#custom-file][Custom File]]
+- [[#basic-setup][Basic Setup]]
+  - [[#variables-for-later-use][Variables for later use.]]
+  - [[#garbage-collection][Garbage Collection]]
+  - [[#keep-user-emacs-directory-clean][Keep ~user-emacs-directory~ clean]]
+  - [[#performance-and-security][Performance and Security]]
+  - [[#server][Server]]
+- [[#the-meat-and-potatoes][The Meat and Potatoes]]
+  - [[#using-generalel-for-easily-setting-up-keybindings][Using ~general.el~ for easily setting up keybindings]]
+  - [[#evil-mode-et-al][Evil Mode et. al]]
+  - [[#basic-text-editing][Basic Text Editing]]
+- [[#buffers][Buffers]]
+  - [[#bufler-and-burly][Bufler and Burly]]
+  - [[#switch-to-the-scratch-buffer][Switch to the scratch buffer]]
+  - [[#update-how-buffers-get-displayed][Update how buffers get displayed]]
+- [[#window-management][Window Management]]
+- [[#modeline][Modeline]]
+- [[#incremental-completion][Incremental Completion]]
+- [[#look-and-feel][Look and Feel]]
+  - [[#dashboard][Dashboard]]
+  - [[#themes][Themes]]
+  - [[#font][Font]]
+  - [[#ui-tweaks][UI Tweaks]]
+  - [[#visual-fill-column][Visual Fill Column]]
+  - [[#misc-tweaks][Misc Tweaks]]
+  - [[#scrolling][Scrolling]]
+- [[#searching--narrowing][Searching / Narrowing]]
+- [[#spellcheck][Spellcheck]]
+- [[#generally-useful-commands][Generally useful commands]]
+  - [[#crux][Crux]]
+- [[#dired-and-file-management][Dired and File Management]]
+- [[#text-manipulations][Text Manipulations]]
+  - [[#set-up-automatic-pairing-of-][Set up automatic pairing of {(<[\]>)}]]
+  - [[#match-the-indentation-of-wrapped-lines][Match the indentation of wrapped lines]]
+- [[#code-tools][Code Tools]]
+  - [[#autocomplete-and-syntax-checking][Autocomplete and Syntax Checking]]
+  - [[#vc--git][VC / Git]]
+  - [[#magit-itself][Magit Itself]]
+  - [[#magit-extras][Magit Extras]]
+  - [[#tree-sitter][Tree-sitter]]
+  - [[#formatting][Formatting]]
+  - [[#code-search][Code Search]]
+  - [[#editorconfig][Editorconfig]]
+  - [[#compilation][Compilation]]
+  - [[#makefiles][Makefiles]]
+- [[#org-mode][Org Mode]]
+  - [[#table-of-contents][Table of Contents]]
+- [[#language-support][Language Support]]
+  - [[#lsp-mode][LSP-Mode]]
+  - [[#python][Python]]
+  - [[#latex][LaTeX]]
+  - [[#javatypescript][{Java,Type}Script]]
+  - [[#haskell][Haskell]]
+  - [[#emacs-lisp][Emacs-Lisp]]
+  - [[#small-language-modes][Small Language modes]]
+- [[#integrated-terminal][Integrated Terminal]]
+- [[#utilities][Utilities]]
+  - [[#tramp-support][TRAMP Support]]
+  - [[#restart-emacs][Restart emacs]]
+  - [[#calc-mode][Calc mode]]
+  - [[#el-patch][El-patch]]
+- [[#fun-stuff][Fun Stuff]]
+  - [[#elcord][Elcord]]
+- [[#snippets][Snippets]]
+- [[#a-better-help-buffer][A Better Help Buffer]]
+- [[#project-management][Project Management]]
+  - [[#projectile][Projectile]]
+  - [[#projectel][Project.el]]
+- [[#direnv][Direnv]]
+
 * Lexical Binding
 We want lexical binding enabled in this whole file.
 #+begin_src emacs-lisp
 ;;; config.el -*- lexical-binding: t; -*-
 #+end_src
 * Use-Package Setup
-:toc:
 Using straight.el (loaded in ~init.el~) to load use-package and setup integration. Also set up some personal information
 #+begin_src emacs-lisp
 (straight-use-package 'use-package)
@@ -1141,7 +1209,7 @@ We also want to clean up whitespace in prog-mode.
   (use-package ws-butler
     :hook (prog-mode . ws-butler-mode))
 #+end_src
-** Set up automatic pairing of ({[]})
+** Set up automatic pairing of {(<[\]>)}
 #+begin_src emacs-lisp
   (use-package electric-pair
     :straight (:type built-in)
@@ -1330,6 +1398,49 @@ I disabled indent-tabs-mode above, I need this enabled for makefiles.
    'makefile-mode-hook (lambda ()
                          (setq-local indent-tabs-mode +1)))
 #+end_src
+* Org Mode
+We don't do much to customize Org. Set the notes directory for
+~org-capture~, enable some languages to be evaled in ~src~ blocks.
+I also set up fancy heading symbols with org bullets.
+
+I'm aiming to translate a lot of keys to vim-like equivalents, using
+leader keys to replace the special ~C-c~ bindings.
+#+begin_src emacs-lisp
+  (use-package org
+    :custom
+    (org-startup-indented t)
+    (org-src-fontify-natively t)
+    (org-directory "~/Documents/org")
+    (org-default-notes-file (concat org-directory "/notes.org"))
+    (org-export-backends '(beamer html md man latex))
+    :config
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (python . t)))
+    :general
+    (:prefix-map '+open-map
+                 "c" #'org-capture)
+    (+local-leader-def :keymaps 'org-mode-map
+      "," #'org-ctrl-c-ctrl-c
+      "'" #'org-edit-special
+      "t" #'org-todo
+      "o" #'org-open-at-point)
+    (+local-leader-def :keymaps 'org-src-mode-map
+      "," #'org-edit-src-exit
+      "k" #'org-edit-src-abort))
+
+  (use-package org-superstar
+    :ghook ('org-mode-hook #'org-superstar-mode)
+    :custom (org-superstar-special-todo-items t))
+#+end_src
+** Table of Contents
+Have an auto-updated TOC, primarly for github readme support
+#+begin_src emacs-lisp
+  (use-package toc-org
+    :hook (org-mode . toc-org-mode))
+#+end_src
+
 * Language Support
 ** LSP-Mode
 We use LSP mode for pretty much everything we use a lot.
@@ -1845,43 +1956,6 @@ This is built in and simpler than projectile.
       "p" '(:keymap project-prefix-map
             :package project
             :which-key "projects")))
-#+end_src
-
-* Org Mode
-We don't do much to customize Org. Set the notes directory for
-~org-capture~, enable some languages to be evaled in ~src~ blocks.
-I also set up fancy heading symbols with org bullets.
-
-I'm aiming to translate a lot of keys to vim-like equivalents, using
-leader keys to replace the special ~C-c~ bindings.
-#+begin_src emacs-lisp
-  (use-package org
-    :custom
-    (org-startup-indented t)
-    (org-src-fontify-natively t)
-    (org-directory "~/Documents/org")
-    (org-default-notes-file (concat org-directory "/notes.org"))
-    :config
-    ;; (set-face-attribute 'org-block nil :family FONT-NAME)
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((emacs-lisp . t)
-       (python . t)))
-    :general
-    (:prefix-map '+open-map
-                 "c" #'org-capture)
-    (+local-leader-def :keymaps 'org-mode-map
-      "," #'org-ctrl-c-ctrl-c
-      "'" #'org-edit-special
-      "t" #'org-todo
-      "o" #'org-open-at-point)
-    (+local-leader-def :keymaps 'org-src-mode-map
-      "," #'org-edit-src-exit
-      "k" #'org-edit-src-abort))
-
-  (use-package org-superstar
-    :ghook ('org-mode-hook #'org-superstar-mode)
-    :custom (org-superstar-special-todo-items t))
 #+end_src
 
 * Direnv
