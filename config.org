@@ -2,9 +2,12 @@
 #+author: Shane Segal
 #+startup: overview
 #+property: header-args :results silent :comments org :tangle yes
-#+options: num:nil toc:2
+#+options: toc:2
 
-#+toc: headlines 2
+* Contents
+:properties:
+:toc: :include 2
+:end:
 * Lexical Binding
 We want lexical binding enabled in this whole file.
 #+begin_src emacs-lisp
