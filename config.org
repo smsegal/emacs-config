@@ -39,7 +39,7 @@
   - [[#crux][Crux]]
 - [[#dired-and-file-management][Dired and File Management]]
 - [[#text-manipulations][Text Manipulations]]
-  - [[#set-up-automatic-pairing-of-][Set up automatic pairing of {(<[\]>)}]]
+  - [[#set-up-automatic-pairing-of-][Set up automatic pairing of {(<>)}]]
   - [[#match-the-indentation-of-wrapped-lines][Match the indentation of wrapped lines]]
 - [[#code-tools][Code Tools]]
   - [[#autocomplete-and-syntax-checking][Autocomplete and Syntax Checking]]
@@ -1209,7 +1209,7 @@ We also want to clean up whitespace in prog-mode.
   (use-package ws-butler
     :hook (prog-mode . ws-butler-mode))
 #+end_src
-** Set up automatic pairing of {(<[\]>)}
+** Set up automatic pairing of {(<>)}
 #+begin_src emacs-lisp
   (use-package electric-pair
     :straight (:type built-in)
