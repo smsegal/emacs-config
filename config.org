@@ -6,6 +6,7 @@
 
 * Introduction                                                          
 What does it look like?
+
 [[file:.screenshots/dashboard.png][Startup Screen]]
 [[file:.screenshots/working.png][Working]]
 [[file:.screenshots/org-mode.png][Org]]
