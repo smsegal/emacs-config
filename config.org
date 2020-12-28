@@ -42,6 +42,7 @@ What's actually in this very long file?
   - [[#visual-fill-column][Visual Fill Column]]
   - [[#misc-tweaks][Misc Tweaks]]
   - [[#scrolling][Scrolling]]
+  - [[#writeroom-mode][Writeroom Mode]]
 - [[#searching--narrowing][Searching / Narrowing]]
 - [[#spellcheck][Spellcheck]]
 - [[#generally-useful-commands][Generally useful commands]]
@@ -1019,6 +1020,18 @@ Change the shape of the cursor when running in the tty. Also enable the mouse.
     (scroll-on-jump-advice-add goto-last-change)
     (scroll-on-jump-advice-add goto-last-change-reverse))
 #+end_src
+** Writeroom Mode
+Enable a nicer writing environment
+#+begin_src emacs-lisp
+(use-package writeroom-mode
+  :custom
+  (writeroom-global-effects '(writeroom-set-bottom-divider-width))
+  :config
+  (general-add-advice 'text-scale-adjust :after
+              #'visual-fill-column-adjust)
+  :general
+  (:prefix-map '+toggle-map "z" 'writeroom-mode))
+#+end_src
 * Searching / Narrowing
 deadgrep lets us search the specified director with ripgrep. Provides a good UI
 #+begin_src emacs-lisp
@@ -1427,6 +1440,7 @@ leader keys to replace the special ~C-c~ bindings.
      'org-babel-load-languages
      '((emacs-lisp . t)
        (python . t)))
+    :hook (org-mode . visual-line-mode)
     :general
     (:prefix-map '+open-map
                  "c" #'org-capture)

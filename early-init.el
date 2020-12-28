@@ -25,6 +25,9 @@ during normal emacs operations.")
 ;; larger than the system default.
 (setq frame-inhibit-implied-resize t)
 
+;; disable async native compilation. Do it upfront instead of causing random slowdowns
+(setq comp-deferred-compilation nil)
+
 ;; set before straight loads
 ;; (setq straight-check-for-modifications 'find-at-startup)
 ;; needs to be set before straight.el is loaded in order to fix
