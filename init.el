@@ -17,8 +17,11 @@
 
 ;; Load up to date org here, so we don't have different versions loaded.
 ;; Also load all files in contrib
-(straight-use-package
- '(org :host github
-   :repo "emacs-straight/org-mode"
-   :files ("*.el" "lisp/*.el" "contrib/lisp/*.el")))
+;; (straight-use-package
+;;  '(org :host github
+;;    :repo "emacs-straight/org-mode"
+;;    :files ("*.el" "lisp/*.el" "contrib/lisp/*.el")))
+
+;; (load-file (expand-file-name "config.el" user-emacs-directory))
+(require 'org)
 (org-babel-load-file (expand-file-name "config.org" user-emacs-directory))

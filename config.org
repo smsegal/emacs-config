@@ -1429,6 +1429,9 @@ I'm aiming to translate a lot of keys to vim-like equivalents, using
 leader keys to replace the special ~C-c~ bindings.
 #+begin_src emacs-lisp
   (use-package org
+    :straight
+    (:host github :repo "emacs-straight/org-mode"
+           :files ("*.el" "lisp/*.el" "contrib/lisp/*.el"))
     :custom
     (org-startup-indented t)
     (org-src-fontify-natively t)
@@ -1457,6 +1460,94 @@ leader keys to replace the special ~C-c~ bindings.
     :ghook ('org-mode-hook #'org-superstar-mode)
     :custom (org-superstar-special-todo-items t))
 #+end_src
+# ** Literate Config Recompilation
+# This is stolen from DOOM (yet again..)  Instead of loading all of
+# org-mode just to tangle this file on every startup, instead we tangle
+# this file on every save and just load the resulting =config.el= file.
+# #+begin_src emacs-lisp
+#   (defmacro letf! (bindings &rest body)
+#     "Temporarily rebind function and macros in BODY.
+#   Intended as a simpler version of `cl-letf' and `cl-macrolet'.
+
+#   BINDINGS is either a) a list of, or a single, `defun' or `defmacro'-ish form, or
+#   b) a list of (PLACE VALUE) bindings as `cl-letf*' would accept.
+
+#   TYPE is either `defun' or `defmacro'. NAME is the name of the function. If an
+#   original definition for NAME exists, it can be accessed as a lexical variable by
+#   the same name, for use with `funcall' or `apply'. ARGLIST and BODY are as in
+#   `defun'.
+
+#   \(fn ((TYPE NAME ARGLIST &rest BODY) ...) BODY...)"
+#     (declare (indent defun))
+#     (setq body (macroexp-progn body))
+#     (when (memq (car bindings) '(defun defmacro))
+#       (setq bindings (list bindings)))
+#     (dolist (binding (reverse bindings) (macroexpand body))
+#       (let ((type (car binding))
+#             (rest (cdr binding)))
+#         (setq
+#          body (pcase type
+#                 (`defmacro `(cl-macrolet ((,@rest)) ,body))
+#                 (`defun `(cl-letf* ((,(car rest) (symbol-function #',(car rest)))
+#                                     ((symbol-function #',(car rest))
+#                                      (lambda ,(cadr rest) ,@(cddr rest))))
+#                            (ignore ,(car rest))
+#                            ,body))
+#                 (_
+#                  (when (eq (car-safe type) 'function)
+#                    (setq type (list 'symbol-function type)))
+#                  (list 'cl-letf (list (cons type rest)) body)))))))
+#   (defvar org-mode-hook)
+#   (defvar org-inhibit-startup)
+#   (defun +literate-config-tangle ()
+#     (require 'ox nil t)
+#     (require 'ob-tangle nil t)
+#     (require 'no-littering nil t)
+#     (letf! ((source (expand-file-name "config.org" user-emacs-directory))
+#                (target (expand-file-name "config.el" user-emacs-directory))
+#                (cache (expand-file-name "config.cache" no-littering-var-directory))
+#                (backup (make-temp-file (concat (file-name-nondirectory target) ".")))
+#                (current (buffer-file-name))
+#                ;; HACK A hack to prevent ob-tangle from operating relative to
+#                ;;      the backup file and thus tangling to the wrong
+#                ;;      destinations.
+#                (defun org-babel-tangle-single-block (&rest args)
+#                  (let* ((spec (apply org-babel-tangle-single-block args))
+#                         (file (nth 1 spec))
+#                         (file (if (file-equal-p file backup) target file))
+#                         (file (if org-babel-tangle-use-relative-file-links
+#                                   (file-relative-name file)
+#                                 file)))
+#                    (setf (nth 1 spec) file)
+#                    spec)))
+#       (when (string= current source)
+#         (unwind-protect
+#             (with-temp-file backup
+#               (insert-file-contents source)
+#               (let ((buffer-file-name backup)
+#                     ;; Prevent unwanted entries in recentf, or formatters, or
+#                     ;; anything that could be on these hooks, really. Nothing
+#                     ;; else should be touching these files (particularly in
+#                     ;; interactive sessions).
+#                     (write-file-functions nil)
+#                     (before-save-hook nil)
+#                     (after-save-hook nil)
+#                     ;; Prevent infinite recursion due to recompile-on-save
+#                     ;; hooks later, and speed up `org-mode' init.
+#                     (org-mode-hook nil)
+#                     (org-inhibit-startup t))
+#                 (org-mode)
+#                 (with-silent-modifications
+#                   (org-export-expand-include-keyword)
+#                   (org-babel-tangle nil target)))
+#               (ignore-errors (delete-file backup)))))
+#       (with-temp-file cache)))
+
+#   (defun +enable-literate-save/hook ()
+#     (general-add-hook 'after-save-hook #'+literate-config-tangle nil 'local))
+
+#   (general-add-hook 'org-mode-hook '+enable-literate-save/hook)
+# #+end_src
 ** Table of Contents
 Have an auto-updated TOC, primarly for github readme support
 #+begin_src emacs-lisp
