@@ -907,31 +907,7 @@ Hide the mouse when we type near it.
     (mouse-avoidance-mode 'exile))
 #+end_src
 
-Window dividers and the fringe. We want them to show up very thin between windows. 
-#+begin_src emacs-lisp
-  (use-package window-divider
-    :disabled 
-    :straight (:type built-in)
-    :custom
-    (window-divider-default-right-width 1)
-    (window-divider-default-bottom-width 1)
-    (window-divider-default-places 'right-only)
-    :hook (after-init . window-divider-mode))
-
-  (use-package fringe
-    :straight (:type built-in)
-    :init (set-fringe-style 0)
-    :custom
-    ;; fringes
-    (indicate-buffer-boundaries   nil)
-    (indicate-empty-lines         nil)
-    (fringes-outside-margins      nil)
-    (indicate-buffer-boundaries   nil)
-    (indicate-empty-lines         nil)
-    (overflow-newline-into-fringe t))
-#+end_src
-
-Highlight todo keywords when they appear in comments
+Highlight TODO keywords when they appear in comments
 #+begin_src emacs-lisp
   (use-package hl-todo
     :hook (prog-mode . hl-todo-mode))
@@ -950,19 +926,12 @@ Highlight different things. The parentheses surround the point get
 highlighted which is great.
 #+begin_src emacs-lisp
   (use-package highlight-parentheses
-    :hook ((prog-mode LaTeX-mode) . highlight-parentheses-mode))
+    :hook ((prog-mode org-mode LaTeX-mode) . highlight-parentheses-mode))
 
   (use-package hl-line
-    :disabled
     :straight (:type built-in)
-    :preface
-    (defun +highlight-visual-line ()
-      (save-excursion
-        (cons (progn (beginning-of-visual-line) (+ 1 (point)))
-              (progn (beginning-of-visual-line 2) (point)))))
-    :hook ((prog-mode text-mode conf-mode special-mode) . hl-line-mode)
+    :hook ((prog-mode conf-mode) . hl-line-mode)
     :custom
-    (hl-line-range-function '+highlight-visual-line)
     (hl-line-sticky-flag nil)
     (global-hl-line-sticky-flag nil))
 #+end_src
