@@ -15,7 +15,8 @@ What's actually in this very long file?
 ** Table of Contents                                                   :TOC:
 - [[#introduction][Introduction]]
 - [[#lexical-binding][Lexical Binding]]
-- [[#use-package-setup][Use-Package Setup]]
+- [[#personal-information][Personal Information]]
+- [[#package-management-and-use-package-setup][Package Management and Use-Package Setup]]
 - [[#custom-file][Custom File]]
 - [[#basic-setup][Basic Setup]]
   - [[#variables-for-later-use][Variables for later use.]]
@@ -92,18 +93,22 @@ We want lexical binding enabled in this whole file.
 #+begin_src emacs-lisp
 ;;; config.el -*- lexical-binding: t; -*-
 #+end_src
-* Use-Package Setup
-Using straight.el (loaded in ~init.el~) to load use-package and setup integration. Also set up some personal information
+* Personal Information
 #+begin_src emacs-lisp
-(straight-use-package 'use-package)
-(setq straight-use-package-by-default t)
-
-;; Personal Information
 (setq user-full-name "Shane Segal"
       user-mail-address "shane@smsegal.ca")
 (setq auth-sources '("~/.authinfo.gpg"))
 #+end_src
+* Package Management and Use-Package Setup
+Using straight.el (loaded in ~init.el~) to load use-package and setup integration. 
+#+begin_src emacs-lisp
+  (straight-use-package 'use-package)
+  (setq straight-use-package-by-default t)
 
+  ;; loading the additional functions from straight-x
+  (use-package straight-x
+    :straight nil)
+#+end_src
 * Custom File
 Load custom settings from a separate file instead of polluting the init file.
 #+begin_src emacs-lisp
@@ -215,11 +220,11 @@ These tweaks (mainly taken from doom emacs) enhance performance and provide (the
 ** Server
 Start the server unless it's already running.
 #+begin_src emacs-lisp
-(use-package server
-  :straight (:type built-in)
-  :config
-  (unless (server-running-p)
-    (server-start)))
+  (use-package server
+    :straight (:type built-in)
+    :config
+    (unless (server-running-p)
+      (server-start)))
 #+end_src
 
 * The Meat and Potatoes
@@ -452,7 +457,6 @@ Code Folding
     (evil-vimish-fold-target-modes '(prog-mode conf-mode text-mode))
     :hook (after-init . global-evil-vimish-fold-mode))
 #+end_src
-
 ** Basic Text Editing
 * Buffers
 ** Bufler and Burly
@@ -464,6 +468,7 @@ Burly is a lightweight workspace manager that builds on top of emacs
 bookmark system.
 #+begin_src emacs-lisp
   (use-package bufler
+    :disabled
     :hook (after-init . bufler-mode)
     :commands bufler-ex
     :general
@@ -616,60 +621,61 @@ Prescient is a sorting/filtering package that orders results by "frecency".
 Consult is to selectrum as counsel is to Ivy.
 Marginalia is a bit of extra eye-candy on top of Consult.
 #+begin_src emacs-lisp
-    (use-package consult
-      :straight (:host github :repo "minad/consult")
-      :preface
-      ;; Hack from pr 33 on consult. remove this once it's merged upstream
-      (defun consult--outline-show-branch-maybe ()
-        "Reveal the current outline branch.
-      Show all of the current headine's parents and their children. This includes this
-      headline."
-        (when (outline-invisible-p (line-end-position))
-          (let (points)
-            (save-excursion
-              (outline-back-to-heading :invisible-ok)
-              (push (point) points)
-              (while (ignore-errors (outline-up-heading 1 :invisible-ok))
-                (push (point) points))
-              (dolist (point points)
-                (goto-char point)
-                (outline-show-children)
-                (outline-show-entry))))))
-      :init
-      (general-add-advice 'consult-line :after #'consult--outline-show-branch-maybe)
-      (general-add-advice 'consult-outline :after #'consult--outline-show-branch-maybe)
+  (use-package consult
+    :straight (:host github :repo "minad/consult")
+    :preface
+    ;; Hack from pr 33 on consult. remove this once it's merged upstream
+    (defun consult--outline-show-branch-maybe ()
+      "Reveal the current outline branch.
+        Show all of the current headine's parents and their children. This includes this
+        headline."
+      (when (outline-invisible-p (line-end-position))
+        (let (points)
+          (save-excursion
+            (outline-back-to-heading :invisible-ok)
+            (push (point) points)
+            (while (ignore-errors (outline-up-heading 1 :invisible-ok))
+              (push (point) points))
+            (dolist (point points)
+              (goto-char point)
+              (outline-show-children)
+              (outline-show-entry))))))
+    :init
+    (general-add-advice 'consult-line :after #'consult--outline-show-branch-maybe)
+    (general-add-advice 'consult-outline :after #'consult--outline-show-branch-maybe)
 
-      ;; Replace functions (consult-multi-occur is a drop-in replacement)
-      (fset 'multi-occur #'consult-multi-occur)
-      :hook (after-init . consult-preview-mode)
-      :general
-      (:prefix-map 'help-map
-                   "a" #'consult-apropos
-                   ;; t is usually the tutorial, but this emacs is so customized it's useless
-                   "t" 'consult-theme)
-      (:prefix-map '+insert-map
-                   "y" #'consult-yank)
-      (:prefix-map '+file-map
-                   "w" #'consult-file-externally
-                   "r" #'consult-recent-file)
-      ;; Disabled this keybinding as bufler seems to do a better job
-      ;; (:prefix-map '+buffer-map
-      ;;              "b" #'consult-buffer)
-      (:prefix-map '+search-map
-                   "i" #'consult-imenu
-                   "s" #'consult-line
-                   "S" #'consult-line-symbol-at-point
-                   "o" #'consult-outline)
-      :general
-      (:prefix-map '+code-map
-                   "x" #'consult-error))
-    ;; (use-package consult-selectrum)
-    (use-package consult-flycheck)
-    (use-package marginalia
-      :straight (:host github :repo "minad/marginalia" :branch "main")
-      :custom
-      (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
-      :hook (consult-preview-mode . marginalia-mode))
+    ;; Replace functions (consult-multi-occur is a drop-in replacement)
+    (fset 'multi-occur #'consult-multi-occur)
+    :config
+    (setq consult-project-root-function #'+get-project-root)
+    :hook (after-init . consult-preview-mode)
+    :general
+    (:prefix-map 'help-map
+                 "a" #'consult-apropos
+                 ;; t is usually the tutorial, but this emacs is so customized it's useless
+                 "t" 'consult-theme)
+    (:prefix-map '+insert-map
+                 "y" #'consult-yank)
+    (:prefix-map '+file-map
+                 "w" #'consult-file-externally
+                 "r" #'consult-recent-file)
+    (:prefix-map '+buffer-map
+                 "b" #'consult-buffer)
+    (:prefix-map '+search-map
+                 "i" #'consult-imenu
+                 "s" #'consult-line
+                 "S" #'consult-line-symbol-at-point
+                 "o" #'consult-outline)
+    :general
+    (:prefix-map '+code-map
+                 "x" #'consult-error))
+  (use-package consult-selectrum)
+  (use-package consult-flycheck)
+  (use-package marginalia
+    :straight (:host github :repo "minad/marginalia" :branch "main")
+    :custom
+    (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
+    :hook (consult-preview-mode . marginalia-mode))
 #+end_src
 
 Finally, some random snippets relating to selectrum et. al.
@@ -773,22 +779,17 @@ ton of great light and dark themes.
 ** Font
 I like a font with ligatures and I like my comments italic.
 #+begin_src emacs-lisp
-  (use-package emacs
-    :after (doom-themes org)
-    :preface
-    (defvar FONT-NAME "Victor Mono")
-    :init
-    ;; macos needs a larger font due to hidpi
-    (set-face-attribute 'default nil
-                        :family FONT-NAME
-                        :height (if IS-MAC 180 110))
-    ;; (set-frame-font FONT-NAME nil t)
-    ;; (add-to-list 'default-frame-alist '(line-spacing . 0.2))
+  (defvar FONT-NAME "Victor Mono")
+  ;; macos needs a larger font due to hidpi
+  (set-face-attribute 'default nil
+                      :family FONT-NAME
+                      :height (if IS-MAC 180 110))
 
-    ;; this is a fix for doom-acario-theme setting a weird font
-    (set-face-attribute 'fixed-pitch-serif nil :family FONT-NAME)
-    ;; italic comments
-    (set-face-attribute 'font-lock-comment-face nil :family FONT-NAME :slant 'italic))
+  (set-frame-font FONT-NAME nil t)
+  ;; this is a fix for doom-acario-theme setting a weird font
+  (set-face-attribute 'fixed-pitch-serif nil :family FONT-NAME)
+  ;; italic comments
+  (set-face-attribute 'font-lock-comment-face nil :family FONT-NAME :slant 'italic)
 #+end_src
 
 Here is where we set up the ligatures. There's configuration for the
@@ -797,8 +798,8 @@ fonts I use most often: "Victor Mono" and "JetBrains Mono".
   (use-package ligature
     :straight (:host github :repo "mickeynp/ligature.el")
     :ghook ('after-init-hook #'global-ligature-mode)
-    :init
-    (cond
+    :init 
+    (cond 
      ;; JetBrains Mono Ligatures
      ((string= (face-attribute 'default :family) "JetBrains Mono")
       (ligature-set-ligatures
@@ -1332,8 +1333,10 @@ things. I use it for the nicer syntax highlighting in supported
 languages.
 #+begin_src emacs-lisp
   (use-package tree-sitter
-    :init (global-tree-sitter-mode)
-    :ghook (#'tree-sitter-after-on-hook  #'tree-sitter-hl-mode))
+    :ghook ('(python-mode-hook
+              js2-mode-hook
+              typescript-mode-hook
+              css-mode-hook) #'tree-sitter-hl-mode))
   (use-package tree-sitter-langs)
 #+end_src
 ** Formatting
@@ -1396,11 +1399,11 @@ I also set up fancy heading symbols with org bullets.
 
 I'm aiming to translate a lot of keys to vim-like equivalents, using
 leader keys to replace the special ~C-c~ bindings.
+
+=:straight nil= is due to it already being loaded in init.el
 #+begin_src emacs-lisp
   (use-package org
-    :straight
-    (:host github :repo "emacs-straight/org-mode"
-           :files ("*.el" "lisp/*.el" "contrib/lisp/*.el"))
+    :straight nil
     :custom
     (org-startup-indented t)
     (org-src-fontify-natively t)
@@ -1535,7 +1538,7 @@ Enable support for pyright language server.
     :custom
     (read-process-output-max (* 1024 1024)) ;; 1mb
     (lsp-completion-provider :capf)
-    (lsp-enable-folding nil)
+    (lsp-enable-folding t)
     (lsp-enable-on-type-formatting nil)
     (lsp-enable-snippet t)
     (lsp-eldoc-enable-hover nil)
@@ -1543,8 +1546,6 @@ Enable support for pyright language server.
     :ghook
     ('(TeX-mode-hook
        yaml-mode-hook
-       haskell-mode-hook
-       haskell-literate-mode-hook
        sh-mode-hook
        js2-mode-hook) #'lsp-deferred)
     ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
@@ -1775,12 +1776,31 @@ The different web languages. I've also enabled LSP-mode for them above.
 Basic syntax highlighting.
 #+begin_src emacs-lisp
   (use-package haskell-mode)
+  (use-package hlint-refactor
+    :commands (hlint-refactor-refactor-buffer hlint-refactor-refactor-at-point)
+    :general
+    (+local-leader-def :keymaps 'haskell-mode-map
+      "r" '(nil :which-key "refactor")
+      "rr" #'hlint-refactor-refactor-at-point
+      "rR" #'hlint-refactor-refactor-buffer))
+
+  (use-package flycheck-haskell
+    :hook (flycheck-mode . flycheck-haskell-setup))
+
+  (use-package dante
+    :disabled
+    :after haskell-mode
+    :commands 'dante-mode
+    :ghook ('haskell-mode-hook '(flycheck-mode-hook 'dante-mode))
+    :config
+    (flycheck-add-next-checker 'haskell-dante '(info . haskell-hlint)))
 #+end_src
 
 Set up language server support.
 #+begin_src emacs-lisp
   (use-package lsp-haskell
-    :custom (lsp-haskell-server-path "~/.ghcup/bin/haskell-language-server-wrapper"))
+    :custom (lsp-haskell-server-path "~/.ghcup/bin/haskell-language-server-wrapper")
+    :hook (haskell-mode . lsp-deferred))
 #+end_src
 ** Emacs-Lisp
 Custom indentation for lisp code. Small keybindings for evaling sexps.
@@ -1866,6 +1886,10 @@ evil-mode motions and such.
     :custom
     (vterm-buffer-name-string "vterm: %s")
     :general
+    (+leader-def "'" #'vterm-other-window)
+    (:prefix-map '+open-map
+                 "t" #'vterm-other-window
+                 "T" #'vterm)
     (general-nmap :keymaps 'vterm-mode-map
       "a" 'vterm-evil-append
       "d" 'vterm-evil-delete
@@ -1875,6 +1899,7 @@ evil-mode motions and such.
       "C-i" #'vterm-send-escape))
 
   (use-package vterm-toggle
+    :disabled
     :commands (vterm-toggle)
     :general
     (+leader-def
@@ -1893,7 +1918,6 @@ evil-mode motions and such.
                    (dedicated . t) ;dedicated is supported in emacs27
                    (reusable-frames . visible)
                    (window-height . 0.3))))
-
 #+end_src
 * Utilities
 ** TRAMP Support
@@ -2025,6 +2049,10 @@ This is built in and simpler than projectile.
       "Override `project-files' to use `fd' in local projects."
       (mapcan #'+_project-files-in-directory
               (or dirs (list (project-root project)))))
+
+    (defun +get-project-root ()
+      (interactive)
+      (cdr (project-current)))
     :custom
     (project-switch-commands
      '((?f "File" project-find-file)
