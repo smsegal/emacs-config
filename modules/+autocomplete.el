@@ -5,20 +5,24 @@
 
 ;;; autocomplete
 (use-package company
-  :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0)
+  :config
+  (setq company-minimum-prefix-length 1)
+  (setq company-idle-delay 0.0)
   :hook (emacs-startup . global-company-mode)
   :general
   (general-imap "C-SPC" 'company-complete)
   (:keymaps 'company-search-map
             "C-s" #'company-filter-candidates))
+
 (use-package company-prescient
   :hook (company-mode . company-prescient-mode))
+
 (use-package company-box
   :hook (company-mode . company-box-mode))
+
 (use-package company-quickhelp
   :hook (company-mode . company-quickhelp-mode))
+
 (use-package company-posframe
   :unless IS-MAC
   :hook (company-box-mode . company-posframe-mode))

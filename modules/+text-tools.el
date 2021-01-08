@@ -34,5 +34,6 @@
   (:prefix-map '+toggle-map
                "a" #'adaptive-wrap-prefix-mode))
 
+(setq sentence-end-double-space nil)
 
 (provide '+text-tools)

@@ -70,4 +70,11 @@
   (:prefix-map '+open-map
                "w" #'crux-open-with))
 
+(defun +find-init-file-here ()
+  (interactive)
+  (find-file user-init-file))
+
+(general-def :prefix-map '+file-map
+  "P" #'+find-init-file-here)
+
 (provide '+files)

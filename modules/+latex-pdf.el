@@ -13,17 +13,17 @@
 
 (use-package auctex
   :custom
-  (TeX-master t)
-  (TeX-parse-self t) ;; parse on load
-  (TeX-auto-save t)  ;; parse on save
+  (setq TeX-master t)
+  (setq TeX-parse-self t) ;; parse on load
+  (setq TeX-auto-save t)  ;; parse on save
   ;; automatically insert braces after sub/superscript in math mode
-  (TeX-electric-sub-and-superscript t)
-  (bibtex-dialect 'biblatex)
-  (bibtex-align-at-equal-sign t)
-  (bibtex-text-indentation 20)
-  (TeX-fold-type-list '(env math))
+  (setq TeX-electric-sub-and-superscript t)
+  (setq bibtex-dialect 'biblatex)
+  (setq bibtex-align-at-equal-sign t)
+  (setq bibtex-text-indentation 20)
+  (setq TeX-fold-type-list '(env math))
   ;; insert \(\) instead of $$
-  (TeX-electric-math (cons "\\(" "\\)"))
+  (setq TeX-electric-math (cons "\\(" "\\)"))
   :hook ((TeX-mode . lsp-deferred)
          (TeX-mode . +latex-setup)
          (TeX-mode . TeX-fold-mode))
@@ -68,7 +68,7 @@
 
 (use-package auctex-latexmk
   :custom
-  (auctex-latexmk-inherit-TeX-PDF-mode t)
+  (setq auctex-latexmk-inherit-TeX-PDF-mode t)
   :hook
   (TeX-mode . auctex-latexmk-setup))
 
@@ -77,17 +77,18 @@
   :hook ((TeX-mode . reftex-mode)
          (LaTeX-mode . reftex-mode))
   :custom
-  (reftex-cite-format
-   '((?a . "\\autocite[]{%l}")
-     (?b . "\\blockcquote[]{%l}{}")
-     (?c . "\\cite[]{%l}")
-     (?f . "\\footcite[]{%l}")
-     (?n . "\\nocite{%l}")
-     (?p . "\\parencite[]{%l}")
-     (?s . "\\smartcite[]{%l}")
-     (?t . "\\textcite[]{%l}"))
-   (reftex-plug-into-AUCTeX t)
-   (reftex-toc-split-windows-fraction 0.3)))
+  (reftex-plug-into-AUCTeX t)
+  :config
+  (setq reftex-cite-format
+        '((?a . "\\autocite[]{%l}")
+          (?b . "\\blockcquote[]{%l}{}")
+          (?c . "\\cite[]{%l}")
+          (?f . "\\footcite[]{%l}")
+          (?n . "\\nocite{%l}")
+          (?p . "\\parencite[]{%l}")
+          (?s . "\\smartcite[]{%l}")
+          (?t . "\\textcite[]{%l}")))
+  (setq reftex-toc-split-windows-fraction 0.3))
 
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)

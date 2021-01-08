@@ -36,10 +36,11 @@
   (:prefix-map '+toggle-map
                "z" #'zoom-mode))
 
+(defvar +window-enlargened nil)
 ;;;###autoload
 (defun +window-enlargen ()
-  "Enlargen the current window to focus on this one. Does not close other
-windows. Activate again to undo."
+  "Enlargen the current window to focus on this one. Does not close
+other windows. Activate again to undo."
   (interactive)
   (setq +window-enlargened
         (if (and +window-enlargened

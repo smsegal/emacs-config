@@ -22,8 +22,8 @@
   ;;   "Override `project-files' to use `fd' in local projects."
   ;;   (mapcan #'+_project-files-in-directory
   ;;           (or dirs (list (project-root project)))))
-  :custom
-  (project-switch-commands
+  :config
+  (setq project-switch-commands
    '((?f "File" project-find-file)
      (?g "Grep" project-find-regexp)
      (?d "Dired" project-dired)

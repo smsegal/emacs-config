@@ -52,13 +52,13 @@
 (use-package consult-flycheck)
 (use-package marginalia
   :straight (:host github :repo "minad/marginalia" :branch "main")
-  :custom
-  (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
   :init
   (marginalia-mode)
 
   ;; When using Selectrum, ensure that Selectrum is refreshed when cycling annotations.
   (advice-add #'marginalia-cycle :after
-              (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit)))))
+              (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit))))
+  :config
+  (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light)))
 
 (provide '+narrowing)

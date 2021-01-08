@@ -12,20 +12,20 @@
 
 (use-package undo-fu)
 (use-package evil
-  :custom
-  (evil-want-integration t)
-  (evil-want-keybinding nil)
-  (evil-ex-substitute-global t)
-  (evil-respect-visual-line-mode t)
-  (evil-want-Y-yank-to-eol t)
-  (evil-cross-lines nil)
-  (evil-split-window-below t)
-  (evil-vsplit-window-right t)
-  (evil-undo-system 'undo-fu)
-  (evil-regexp-search t)
-  (evil-move-cursor-back t)
-  (evil-undo-system 'undo-fu)
+  :init
+  (setq evil-want-keybinding nil)
   :config
+  (setq evil-want-integration t)
+  (setq evil-ex-substitute-global t)
+  (setq evil-respect-visual-line-mode t)
+  (setq evil-want-Y-yank-to-eol t)
+  (setq evil-cross-lines nil)
+  (setq evil-split-window-below t)
+  (setq evil-vsplit-window-right t)
+  (setq evil-undo-system 'undo-fu)
+  (setq evil-regexp-search t)
+  (setq evil-move-cursor-back t)
+  (setq evil-undo-system 'undo-fu)
   (evil-select-search-module 'evil-search-module 'evil-search)
   (evil-mode +1))
 
@@ -38,10 +38,9 @@
 
 (use-package general
   :after evil
-  :custom
-  (general-override-states
-   '(insert emacs hybrid normal visual motion operator replace))
   :config
+  (setq general-override-states
+   '(insert emacs hybrid normal visual motion operator replace))
   (general-evil-setup)
 
   ;; text indentation stuff

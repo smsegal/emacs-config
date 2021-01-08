@@ -15,7 +15,6 @@
 ;; python tweaks
 (use-package python
   :straight (:type built-in)
-  :hook (python-mode . lsp-deffered)
   :custom
   (python-shell-interpreter "ipython")
   (python-shell-interpreter-args "--simple-prompt -i"))
