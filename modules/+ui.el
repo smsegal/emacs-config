@@ -23,12 +23,10 @@
 ;; Themes
 ;; I use the great ~doom-themes~ package from Doom. It provides a whole
 ;; ton of great light and dark themes.
-
 (use-package doom-themes
-  :custom
-  (doom-themes-enable-bold t)
-  (doom-themes-enable-italic t)
   :config
+  (setq doom-themes-enable-bold t)
+  (setq doom-themes-enable-italic t)
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
@@ -115,7 +113,8 @@
   :demand t
   :custom
   (which-key-popup-type 'side-window)
-  (which-key-enable-extended-define-key t)
+  :config
+  (setq which-key-enable-extended-define-key t)
   :hook (after-init . which-key-mode)
   :general
   (:keymaps 'help-map
@@ -138,9 +137,9 @@
 ;; This is a great one. Dim the background colour of the buffers you're not currently editing in.
 (use-package auto-dim-other-buffers
   :hook (after-init . auto-dim-other-buffers-mode)
-  :custom
-  (auto-dim-other-buffers-dim-on-switch-to-minibuffer nil)
-  (auto-dim-other-buffers-dim-on-focus-out nil))
+  :config
+  (setq auto-dim-other-buffers-dim-on-switch-to-minibuffer nil)
+  (setq auto-dim-other-buffers-dim-on-focus-out nil))
 
 ;; Highlight different things. The parentheses surround the point get
 ;; highlighted which is great.
@@ -159,10 +158,9 @@
   :disabled
   :after (evil goto-chg)
   :straight (:host gitlab :repo "ideasman42/emacs-scroll-on-jump")
-  :custom
-  (scroll-on-jump-duration 0.4)
-  (scroll-on-jump-use-curve t)
   :config
+  (setq scroll-on-jump-duration 0.4)
+  (setq scroll-on-jump-use-curve t)
   (scroll-on-jump-advice-add evil-undo)
   (scroll-on-jump-advice-add evil-redo)
   (scroll-on-jump-advice-add evil-jump-item)
