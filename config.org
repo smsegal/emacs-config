@@ -34,7 +34,6 @@ What's actually in this very long file?
   - [[#update-how-buffers-get-displayed][Update how buffers get displayed]]
 - [[#window-management][Window Management]]
 - [[#modeline][Modeline]]
-- [[#incremental-completion][Incremental Completion]]
 - [[#look-and-feel][Look and Feel]]
   - [[#dashboard][Dashboard]]
   - [[#themes][Themes]]
@@ -44,6 +43,7 @@ What's actually in this very long file?
   - [[#misc-tweaks][Misc Tweaks]]
   - [[#scrolling][Scrolling]]
   - [[#writeroom-mode][Writeroom Mode]]
+- [[#incremental-completion][Incremental Completion]]
 - [[#searching--narrowing][Searching / Narrowing]]
 - [[#spellcheck][Spellcheck]]
 - [[#generally-useful-commands][Generally useful commands]]
@@ -89,8 +89,8 @@ What's actually in this very long file?
 - [[#direnv][Direnv]]
 
 * Lexical Binding
-We want lexical binding enabled in this whole file.
-#+begin_src emacs-lisp
+We want lexical binding enabled in this whole file. This should be at the top so no comments included.
+#+begin_src emacs-lisp :comments no
 ;;; config.el -*- lexical-binding: t; -*-
 #+end_src
 * Personal Information
@@ -593,153 +593,27 @@ I also depend on smart-mode-line for the buffer-naming.
   (use-package evil-anzu)
 #+end_src
 
-* Incremental Completion
-We're using Selectrum and the associated ecosystem. They have a bigger
-focus on creating and extending basic APIs vs alternative like Ivy.
-#+begin_src emacs-lisp 
-  (use-package selectrum
-    :commands selectrum-next-candidate selectrum-previous-candidate
-    :hook
-    (emacs-startup . selectrum-mode)
-    :general
-    (general-imap "C-k" nil)
-    (:keymaps 'selectrum-minibuffer-map
-              "C-j" 'selectrum-next-candidate
-              "C-k" 'selectrum-previous-candidate))
-#+end_src
-
-Prescient is a sorting/filtering package that orders results by "frecency".
-#+begin_src emacs-lisp
-  (use-package prescient
-    :hook (after-init . prescient-persist-mode))
-  (use-package selectrum-prescient
-    :hook (selectrum-mode . selectrum-prescient-mode))
-  (use-package company-prescient
-    :hook (company-mode . company-prescient-mode))
-#+end_src
-
-Consult is to selectrum as counsel is to Ivy.
-Marginalia is a bit of extra eye-candy on top of Consult.
-#+begin_src emacs-lisp
-  (use-package consult
-    :straight (:host github :repo "minad/consult")
-    :preface
-    ;; Hack from pr 33 on consult. remove this once it's merged upstream
-    (defun consult--outline-show-branch-maybe ()
-      "Reveal the current outline branch.
-        Show all of the current headine's parents and their children. This includes this
-        headline."
-      (when (outline-invisible-p (line-end-position))
-        (let (points)
-          (save-excursion
-            (outline-back-to-heading :invisible-ok)
-            (push (point) points)
-            (while (ignore-errors (outline-up-heading 1 :invisible-ok))
-              (push (point) points))
-            (dolist (point points)
-              (goto-char point)
-              (outline-show-children)
-              (outline-show-entry))))))
-    :init
-    (general-add-advice 'consult-line :after #'consult--outline-show-branch-maybe)
-    (general-add-advice 'consult-outline :after #'consult--outline-show-branch-maybe)
-
-    ;; Replace functions (consult-multi-occur is a drop-in replacement)
-    (fset 'multi-occur #'consult-multi-occur)
-    :config
-    (setq consult-project-root-function #'+get-project-root)
-    :hook (after-init . consult-preview-mode)
-    :general
-    (:prefix-map 'help-map
-                 "a" #'consult-apropos
-                 ;; t is usually the tutorial, but this emacs is so customized it's useless
-                 "t" 'consult-theme)
-    (:prefix-map '+insert-map
-                 "y" #'consult-yank)
-    (:prefix-map '+file-map
-                 "w" #'consult-file-externally
-                 "r" #'consult-recent-file)
-    (:prefix-map '+buffer-map
-                 "b" #'consult-buffer)
-    (:prefix-map '+search-map
-                 "i" #'consult-imenu
-                 "s" #'consult-line
-                 "S" #'consult-line-symbol-at-point
-                 "o" #'consult-outline)
-    :general
-    (:prefix-map '+code-map
-                 "x" #'consult-error))
-  (use-package consult-selectrum)
-  (use-package consult-flycheck)
-  (use-package marginalia
-    :straight (:host github :repo "minad/marginalia" :branch "main")
-    :custom
-    (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
-    :hook (consult-preview-mode . marginalia-mode))
-#+end_src
-
-Finally, some random snippets relating to selectrum et. al.
-#+begin_src emacs-lisp
-  (use-package +selectrum-contrib
-    :straight nil
-    :load-path "modules/"
-    :general
-    (:keymaps 'selectrum-minibuffer-map
-              "C-s" #'selectrum-restrict-to-matches))
-#+end_src
-
-Trying out embark again
-#+begin_src emacs-lisp :tangle no
-  (use-package embark
-    :custom
-    (embark-occur-initial-view-alist '((t . zebra)))
-    (embark-occur-minibuffer-completion t)
-    (embark-live-occur-update-delay 0.1)
-    ;; (embark-live-occur-initial-delay 0.8)
-    ;; (embark-annotator-alist '((t . embark-annotation-function-metadatum)))
-    :hook (minibuffer-setup . embark-live-occur-after-input)
-    :general
-    (general-imap 
-              "C-," #'embark-act)
-    (:keymaps 'minibuffer-local-completion-map
-              "TAB" #'minibuffer-force-complete)
-    (:keymaps 'embark-occur-mode-map
-              "C-j" #'scroll-other-window-down
-              "C-k" #'scroll-other-window))
-    ;; :bind (("C-," . embark-act)
-    ;;        :map minibuffer-local-completion-map
-    ;;        ("C-," . embark-act)
-    ;;        ("C-." . embark-act-noexit)
-    ;;        ("M-q" . embark-occur-toggle-view) ; parallel of `fill-paragraph'
-    ;;        ("M-o" . embark-export) ; falls back to `embark-occur'
-    ;;        ("M-v" . embark-switch-to-live-occur)
-    ;;        :map embark-occur-mode-map
-    ;;        ("," . embark-act)
-    ;;        ("M-t" . toggle-truncate-lines)
-    ;;        ("M-q" . embark-occur-toggle-view)
-    ;;        ;; ("M-v" . prot-minibuffer-focus-mini) ; from `prot-minibuffer.el'
-    ;;        ("M-q" . embark-occur-toggle-view)))
-#+end_src
-
 * Look and Feel
 ** Dashboard
 A nice start page for emacs. I set a custom logo for the buffer, and
 enable ~all-the-icons~ support.
 #+begin_src emacs-lisp
-;; dashboard
-(use-package dashboard
-    :custom
-    (dashboard-set-footer nil)
-    (dashboard-center-content t)
-    (dashboard-set-file-icons t)
-    (dashboard-set-heading-icons t)
-    (dashboard-set-init-info t)
-    (dashboard-projects-switch-function 'projectile-persp-switch-project)
-    (dashboard-startup-banner (concat user-emacs-directory "emacs-bigsur_small.png"))
+  ;; dashboard
+  (use-package dashboard
     :init
+    (setq dashboard-set-footer nil)
+    (setq dashboard-center-content t)
+    (setq dashboard-set-file-icons t)
+    (setq dashboard-set-heading-icons t)
+    (setq dashboard-set-init-info t)
+    (setq dashboard-startup-banner (concat user-emacs-directory "emacs-bigsur_small.png"))
+    (setq dashboard-projects-backend 'project-el)
+    (setq dashboard-items '((recents  . 5)
+                            (projects . 5)
+                            (bookmarks . 5)))
+    :config
     (dashboard-setup-startup-hook))
 #+end_src
-
 ** Themes
 I use the great ~doom-themes~ package from Doom. It provides a whole
 ton of great light and dark themes.
@@ -966,11 +840,11 @@ Change the shape of the cursor when running in the tty. Also enable the mouse.
     ;; for tall lines.
     (auto-window-vscroll nil)
     ;; mouse
-
     (mouse-wheel-scroll-amount '(2 ((shift) . hscroll) ((meta)) ((control) . text-scale)))
     (mouse-wheel-progressive-speed nil))  ; don't accelerate scrolling
 
   (use-package scroll-on-jump
+    :disabled
     :after (evil goto-chg)
     :straight (:host gitlab :repo "ideasman42/emacs-scroll-on-jump")
     :custom
@@ -1002,6 +876,139 @@ Enable a nicer writing environment
   :general
   (:prefix-map '+toggle-map "z" 'writeroom-mode))
 #+end_src
+* Incremental Completion
+We're using Selectrum and the associated ecosystem. They have a bigger
+focus on creating and extending basic APIs vs alternative like Ivy.
+#+begin_src emacs-lisp 
+  (use-package selectrum
+    :commands selectrum-next-candidate selectrum-previous-candidate
+    :hook
+    (emacs-startup . selectrum-mode)
+    :general
+    (general-imap "C-k" nil)
+    (:keymaps 'selectrum-minibuffer-map
+              "C-j" 'selectrum-next-candidate
+              "C-k" 'selectrum-previous-candidate))
+#+end_src
+
+Prescient is a sorting/filtering package that orders results by "frecency".
+#+begin_src emacs-lisp
+  (use-package prescient
+    :hook (after-init . prescient-persist-mode))
+  (use-package selectrum-prescient
+    :hook (selectrum-mode . selectrum-prescient-mode))
+  (use-package company-prescient
+    :hook (company-mode . company-prescient-mode))
+#+end_src
+
+Consult is to selectrum as counsel is to Ivy.
+Marginalia is a bit of extra eye-candy on top of Consult.
+#+begin_src emacs-lisp
+    (use-package consult
+      :straight (:host github :repo "minad/consult")
+      ;; :after project
+      ;; :preface
+      ;; ;; Hack from pr 33 on consult. remove this once it's merged upstream
+      ;; (defun consult--outline-show-branch-maybe ()
+      ;;   "Reveal the current outline branch.
+      ;;       Show all of the current headine's parents and their children. This includes this
+      ;;       headline."
+      ;;   (when (outline-invisible-p (line-end-position))
+      ;;     (let (points)
+      ;;       (save-excursion
+      ;;         (outline-back-to-heading :invisible-ok)
+      ;;         (push (point) points)
+      ;;         (while (ignore-errors (outline-up-heading 1 :invisible-ok))
+      ;;           (push (point) points))
+      ;;         (dolist (point points)
+      ;;           (goto-char point)
+      ;;           (outline-show-children)
+      ;;           (outline-show-entry))))))
+      :init
+      ;; (general-add-advice 'consult-line :after #'consult--outline-show-branch-maybe)
+      ;; (general-add-advice 'consult-outline :after #'consult--outline-show-branch-maybe)
+
+      ;; Replace functions (consult-multi-occur is a drop-in replacement)
+      (fset 'multi-occur #'consult-multi-occur)
+      ;; :config
+      ;; (setq consult-project-root-function #'+get-project-root)
+      :general
+      (:prefix-map 'help-map
+                   "a" #'consult-apropos
+                   ;; t is usually the tutorial, but this emacs is so customized it's useless
+                   "t" 'consult-theme)
+      (:prefix-map '+insert-map
+                   "y" #'consult-yank)
+      (:prefix-map '+file-map
+                   "w" #'consult-file-externally
+                   "r" #'consult-recent-file)
+      (:prefix-map '+buffer-map
+                   "b" #'consult-buffer)
+      (:prefix-map '+search-map
+                   "i" #'consult-imenu
+                   "s" #'consult-line
+                   "S" #'consult-line-symbol-at-point
+                   "o" #'consult-outline)
+      :general
+      (:prefix-map '+code-map
+                   "x" #'consult-error))
+    (use-package consult-selectrum)
+    (use-package consult-flycheck)
+    (use-package marginalia
+      :straight (:host github :repo "minad/marginalia" :branch "main")
+      :custom
+      (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
+      :init
+      (marginalia-mode)
+
+      ;; When using Selectrum, ensure that Selectrum is refreshed when cycling annotations.
+      (advice-add #'marginalia-cycle :after
+                  (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit)))))
+#+end_src
+
+Finally, some random snippets relating to selectrum et. al.
+#+begin_src emacs-lisp :tangle no
+  (use-package +selectrum-contrib
+    :straight nil
+    :load-path "modules/"
+    :general
+    (:keymaps 'selectrum-minibuffer-map
+              "C-s" #'selectrum-restrict-to-matches))
+#+end_src
+
+Trying out embark again
+#+begin_src emacs-lisp :tangle no
+  (use-package embark
+    :custom
+    (embark-occur-initial-view-alist '((t . zebra)))
+    (embark-occur-minibuffer-completion t)
+    (embark-live-occur-update-delay 0.1)
+    ;; (embark-live-occur-initial-delay 0.8)
+    ;; (embark-annotator-alist '((t . embark-annotation-function-metadatum)))
+    :hook (minibuffer-setup . embark-live-occur-after-input)
+    :general
+    (general-imap 
+              "C-," #'embark-act)
+    (:keymaps 'minibuffer-local-completion-map
+              "TAB" #'minibuffer-force-complete)
+    (:keymaps 'embark-occur-mode-map
+              "C-j" #'scroll-other-window-down
+              "C-k" #'scroll-other-window))
+    ;; :bind (("C-," . embark-act)
+    ;;        :map minibuffer-local-completion-map
+    ;;        ("C-," . embark-act)
+    ;;        ("C-." . embark-act-noexit)
+    ;;        ("M-q" . embark-occur-toggle-view) ; parallel of `fill-paragraph'
+    ;;        ("M-o" . embark-export) ; falls back to `embark-occur'
+    ;;        ("M-v" . embark-switch-to-live-occur)
+    ;;        :map embark-occur-mode-map
+    ;;        ("," . embark-act)
+    ;;        ("M-t" . toggle-truncate-lines)
+    ;;        ("M-q" . embark-occur-toggle-view)
+    ;;        ;; ("M-v" . prot-minibuffer-focus-mini) ; from `prot-minibuffer.el'
+    ;;        ("M-q" . embark-occur-toggle-view)))
+#+end_src
+
 * Searching / Narrowing
 deadgrep lets us search the specified director with ripgrep. Provides a good UI
 #+begin_src emacs-lisp
@@ -1347,6 +1354,16 @@ Format all code with one keybinding.
   (:prefix-map '+code-map
                "f" 'format-all-buffer))
 #+end_src
+
+Use aphelia when the mode is supported, and fallback to format-all otherwise.
+#+begin_src emacs-lisp
+  (use-package apheleia
+    :straight (:host github :repo "raxod502/apheleia")
+    :general
+    (:keymaps '(python-mode-map js-mode-map)
+              [remap format-all-buffer] #'apheleia-format-buffer))
+#+end_src
+
 ** Code Search
 Automatically jump to definitions in different languages.
 #+begin_src emacs-lisp
@@ -2033,22 +2050,22 @@ This is built in and simpler than projectile.
 #+begin_src emacs-lisp
   (use-package project
     :preface
-    (cl-defmethod project-root ((project (head local)))
-      (cdr project))
+    ;; (cl-defmethod project-root ((project (head local)))
+    ;;   (cdr project))
 
-    (defun +_project-files-in-directory (dir)
-      "Use `fd' to list files in DIR."
-      (let* ((default-directory dir)
-             (localdir (file-local-name (expand-file-name dir)))
-             (command (format "fd -t f -0 . %s" localdir)))
-        (project--remote-file-names
-         (sort (split-string (shell-command-to-string command) "\0" t)
-               #'string<))))
+    ;; (defun +_project-files-in-directory (dir)
+    ;;   "Use `fd' to list files in DIR."
+    ;;   (let* ((default-directory dir)
+    ;;          (localdir (file-local-name (expand-file-name dir)))
+    ;;          (command (format "fd -t f -0 . %s" localdir)))
+    ;;     (project--remote-file-names
+    ;;      (sort (split-string (shell-command-to-string command) "\0" t)
+    ;;            #'string<))))
 
-    (cl-defmethod project-files ((project (head local)) &optional dirs)
-      "Override `project-files' to use `fd' in local projects."
-      (mapcan #'+_project-files-in-directory
-              (or dirs (list (project-root project)))))
+    ;; (cl-defmethod project-files ((project (head local)) &optional dirs)
+    ;;   "Override `project-files' to use `fd' in local projects."
+    ;;   (mapcan #'+_project-files-in-directory
+    ;;           (or dirs (list (project-root project)))))
 
     (defun +get-project-root ()
       (interactive)
