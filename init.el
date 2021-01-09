@@ -32,9 +32,11 @@
 
 ;;; load custom modules
 (require '+core-setup)
+
 ;; load evil and the general.el package for setting keybindings
 ;; (this is just core evil stuff, configuration of evil takes place later)
 (require '+core-keys)
+
 ;; additional packages
 (require '+evil) ;; load evil configuration
 (require '+ui)

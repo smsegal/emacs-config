@@ -9,12 +9,10 @@
 ;; bind to these keymaps in the relevant packages later.
 
 ;; Set up evil-mode ahead of general.el
-
-(use-package undo-fu)
 (use-package evil
+  :after undo-tree
   :init
   (setq evil-want-keybinding nil)
-  :config
   (setq evil-want-integration t)
   (setq evil-ex-substitute-global t)
   (setq evil-respect-visual-line-mode t)
@@ -25,29 +23,25 @@
   (setq evil-undo-system 'undo-fu)
   (setq evil-regexp-search t)
   (setq evil-move-cursor-back t)
-  (setq evil-undo-system 'undo-fu)
+  :config
   (evil-select-search-module 'evil-search-module 'evil-search)
   (evil-mode +1))
 
 ;; Apparently ~undo-tree~ has had it's performance improved, will try it again sometime
 (use-package undo-tree
-  :disabled
   :custom (evil-undo-system 'undo-tree)
   :config (global-undo-tree-mode +1))
-
 
 (use-package general
   :after evil
   :config
   (setq general-override-states
-   '(insert emacs hybrid normal visual motion operator replace))
+        '(insert emacs hybrid normal visual motion operator replace))
   (general-evil-setup)
 
   ;; text indentation stuff
   (general-add-hook (list 'prog-mode-hook 'text-mode-hook)
                     (lambda () (setq-local indent-tabs-mode nil)))
-
-  ;; (general-add-advice #'evil-force-normal-state :after #'evil-escape)
 
   ;; leader key setup
   (general-create-definer +leader-def

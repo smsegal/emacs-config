@@ -29,11 +29,13 @@
 
 ;; syntax checking
 (use-package flycheck
-  :custom
-  (flycheck-disabled-checkers '(emacs-lisp-checkdoc))
-  :hook (after-init . global-flycheck-mode)
-  :general
-  (:prefix-map '+code-map
-               "x" '(flycheck-list-errors :which-key "show errors")))
+  :init
+  (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+  :ghook ('after-init-hook #'global-flycheck-mode))
+
+(use-package flycheck-inline
+  :after flycheck
+  :ghook ('flycheck-mode-hook #'flycheck-inline-mode))
+
 
 (provide '+autocomplete)

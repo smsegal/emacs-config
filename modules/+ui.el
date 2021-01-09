@@ -1,10 +1,9 @@
 ;; -*- lexical-binding: t; -*-
 
+
 ;; Dashboard
 ;; A nice start page for emacs. I set a custom logo for the buffer, and
 ;; enable ~all-the-icons~ support.
-
-;; dashboard
 (use-package dashboard
   :init
   (setq dashboard-set-footer nil)
@@ -12,13 +11,11 @@
   (setq dashboard-set-file-icons t)
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-init-info t)
-  (setq dashboard-startup-banner (concat user-emacs-directory "emacs-bigsur_small.png"))
   (setq dashboard-projects-backend 'project-el)
-  (setq dashboard-items '((recents  . 5)
-                          (projects . 5)
+  (setq dashboard-items '((recents   . 5)
+                          (projects  . 5)
                           (bookmarks . 5)))
   (dashboard-setup-startup-hook))
-
 
 ;; Themes
 ;; I use the great ~doom-themes~ package from Doom. It provides a whole
@@ -31,82 +28,82 @@
   (doom-themes-org-config))
 
 (use-package modus-themes
-  :disabled
   :straight
   (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
-  :custom
-  (modus-themes-bold-constructs t)
-  (modus-themes-slanted-constructs t)
-  (modus-themes-syntax 'faint)
-  (modus-themes-completions 'opinionated)
-  (modus-themes-paren-match 'intense-bold)
-  (modus-themes-org-blocks 'rainbow)
-  (modus-themes-mode-line 'moody))
+  :config
+  (setq modus-themes-bold-constructs t)
+  (setq modus-themes-slanted-constructs t)
+  (setq modus-themes-syntax 'faint)
+  (setq modus-themes-completions 'opinionated)
+  (setq modus-themes-paren-match 'intense-bold)
+  (setq modus-themes-org-blocks 'rainbow)
+  (setq modus-themes-mode-line 'moody))
 
 (use-package circadian
-  :custom
-  (calendar-latitude 43.6)
-  (calendar-longitude -79.4)
-  (circadian-themes '((:sunrise . doom-acario-light)
-                      (:sunset  . doom-gruvbox)))
+  :config
+  (setq calendar-latitude 43.6)
+  (setq calendar-longitude -79.4)
+  (setq circadian-themes '((:sunrise . doom-acario-light)
+                           (:sunset  . doom-gruvbox)))
   :hook
   (after-init . circadian-setup))
 
 (use-package all-the-icons)
 
-;; Font
-;; I like a font with ligatures and I like my comments italic.
-
-(defvar FONT-NAME "Victor Mono")
-;; macos needs a larger font due to hidpi
-(set-face-attribute 'default nil
-                    :family FONT-NAME
-                    :height (if IS-MAC 180 110))
-
-(set-frame-font FONT-NAME nil t)
-;; this is a fix for doom-acario-theme setting a weird font
-(set-face-attribute 'fixed-pitch-serif nil :family FONT-NAME)
-;; italic comments
-(set-face-attribute 'font-lock-comment-face nil :family FONT-NAME :slant 'italic)
-
 ;; Here is where we set up the ligatures. There's configuration for the
 ;; fonts I use most often: "Victor Mono" and "JetBrains Mono".
-
 (use-package ligature
   :straight (:host github :repo "mickeynp/ligature.el")
-  :ghook ('after-init-hook #'global-ligature-mode)
+  :ghook ('(prog-mode-hook org-mode-hook) #'ligature-mode)
   :init
-  (cond
-   ;; JetBrains Mono Ligatures
-   ((string= (face-attribute 'default :family) "JetBrains Mono")
-    (ligature-set-ligatures
-     't '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/="
-          "<=" ">=" "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!"
-          "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<"
-          ">>>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||="
-          "##" "###" "####" "#{" "#[" "]#" "#(" "#?"  "#_" "#_("
-          "#:" "#!"  "#=" "^=" "<$>" "<$" "$>" "<+>" "<+" "+>"
-          "<*>" "<*" "*>" "</" "</>" "/>" "<!--" "<#--" "-->"
-          "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>"
-          "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" ">--"
-          "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<->"
-          "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]"
-          "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||"
-          "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
-          "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
-          "/=" "//=" "/==" "@_" "__")))
-   ;; Victor Mono Ligatures
-   ((string= (face-attribute 'default :family) "Victor Mono")
-    (ligature-set-ligatures
-     't '("</" "</>" "/>" "~-" "-~" "~@" "<~" "<~>" "<~~" "~>" "~~"
-          "~~>" ">=" "<=" "<!--" "##" "###" "####" "|-" "-|" "|->"
-          "<-|" ">-|" "|-<" "|=" "|=>" ">-" "<-" "<--" "-->" "->" "-<"
-          ">->" ">>-" "<<-" "<->" "->>" "-<<" "<-<" "==>" "=>" "=/="
-          "!==" "!=" "<==" ">>=" "=>>" ">=>" "<=>" "<=<" "<<=" "=<<"
-          ".-" ".=" "=:=" "=!=" "==" "===" "::" ":=" ":>" ":<" ">:"
-          ";;" "<|" "<|>" "|>" "<>" "<$" "<$>" "$>" "<+" "<+>" "+>"
-          "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))))
+  (ligature-set-ligatures
+   't '("</" "</>" "/>" "~-" "-~" "~@" "<~" "<~>" "<~~" "~>" "~~"
+        "~~>" ">=" "<=" "<!--" "##" "###" "####" "|-" "-|" "|->"
+        "<-|" ">-|" "|-<" "|=" "|=>" ">-" "<-" "<--" "-->" "->" "-<"
+        ">->" ">>-" "<<-" "<->" "->>" "-<<" "<-<" "==>" "=>" "=/="
+        "!==" "!=" "<==" ">>=" "=>>" ">=>" "<=>" "<=<" "<<=" "=<<"
+        ".-" ".=" "=:=" "=!=" "==" "===" "::" ":=" ":>" ":<" ">:"
+        ";;" "<|" "<|>" "|>" "<>" "<$" "<$>" "$>" "<+" "<+>" "+>"
+        "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))
+;; (cond
+;;  ;; JetBrains Mono Ligatures
+;;  ((string= (face-attribute 'default :family) "JetBrains Mono")
+;;   (ligature-set-ligatures
+;;    't '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/="
+;;         "<=" ">=" "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!"
+;;         "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<"
+;;         ">>>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||="
+;;         "##" "###" "####" "#{" "#[" "]#" "#(" "#?"  "#_" "#_("
+;;         "#:" "#!"  "#=" "^=" "<$>" "<$" "$>" "<+>" "<+" "+>"
+;;         "<*>" "<*" "*>" "</" "</>" "/>" "<!--" "<#--" "-->"
+;;         "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>"
+;;         "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" ">--"
+;;         "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<->"
+;;         "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]"
+;;         "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||"
+;;         "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
+;;         "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
+;;         "/=" "//=" "/==" "@_" "__")))
+;;  ;; Victor Mono Ligatures
+;;  ((string= (face-attribute 'default :family) "Victor Mono")
+;;   (ligature-set-ligatures
+;;    't '("</" "</>" "/>" "~-" "-~" "~@" "<~" "<~>" "<~~" "~>" "~~"
+;;         "~~>" ">=" "<=" "<!--" "##" "###" "####" "|-" "-|" "|->"
+;;         "<-|" ">-|" "|-<" "|=" "|=>" ">-" "<-" "<--" "-->" "->" "-<"
+;;         ">->" ">>-" "<<-" "<->" "->>" "-<<" "<-<" "==>" "=>" "=/="
+;;         "!==" "!=" "<==" ">>=" "=>>" ">=>" "<=>" "<=<" "<<=" "=<<"
+;;         ".-" ".=" "=:=" "=!=" "==" "===" "::" ":=" ":>" ":<" ">:"
+;;         ";;" "<|" "<|>" "|>" "<>" "<$" "<$>" "$>" "<+" "<+>" "+>"
+;;         "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))))
 
+(defun +_set-font ()
+  (let ((font-name "Victor Mono")
+        (font-size "11"))
+    (set-face-attribute 'fixed-pitch-serif nil :family font-name)
+    (set-face-attribute 'font-lock-comment-face nil :family font-name :slant 'italic)
+    (set-frame-font (concat font-name "-" font-size) t t)))
+
+(general-add-hook 'after-init-hook #'+_set-font)
 
 ;; What the hell do I press next? Which-key answers that question.
 (use-package which-key

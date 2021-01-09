@@ -17,6 +17,7 @@
 ;; Prescient is a sorting/filtering package that orders results by "frecency".
 (use-package prescient
   :hook (after-init . prescient-persist-mode))
+
 (use-package selectrum-prescient
   :hook (selectrum-mode . selectrum-prescient-mode))
 
@@ -24,9 +25,15 @@
 ;; Marginalia is a bit of extra eye-candy on top of Consult.
 (use-package consult
   :straight (:host github :repo "minad/consult")
+  :preface
+  (defun +consult-fdfind (&optional dir)
+    (interactive "P")
+    (let ((consult-find-command '("fd" "--color=never" "--full-path")))
+      (consult-find dir)))
   :init
   ;; Replace functions (consult-multi-occur is a drop-in replacement)
   (fset 'multi-occur #'consult-multi-occur)
+  (fset 'goto-line #'consult-goto-line)
   :config
   (setq consult-project-root-function #'+get-project-root)
   :general
@@ -44,12 +51,15 @@
   (:prefix-map '+search-map
                "i" #'consult-imenu
                "s" #'consult-line
-               "S" #'consult-line-symbol-at-point
+               "r" #'consult-ripgrep
+               "f" #'+consult-fdfind
                "o" #'consult-outline)
   (:prefix-map '+code-map
-               "x" #'consult-error))
+               "x" #'consult-flycheck))
+
 (use-package consult-selectrum)
 (use-package consult-flycheck)
+
 (use-package marginalia
   :straight (:host github :repo "minad/marginalia" :branch "main")
   :init
