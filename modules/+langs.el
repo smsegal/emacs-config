@@ -22,6 +22,7 @@
   :straight (:host github :repo "raxod502/apheleia")
   :general
   (:keymaps '(python-mode-map js-mode-map)
+            :predicate '(not (file-remote-p buffer-file-name))
             [remap format-all-buffer] #'apheleia-format-buffer))
 
 ;; Code Search
