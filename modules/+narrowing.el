@@ -1,5 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 
+(require '+project)
+
 ;; Incremental Completion
 ;; We're using Selectrum and the associated ecosystem. They have a bigger
 ;; focus on creating and extending basic APIs vs alternative like Ivy.

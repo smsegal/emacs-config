@@ -1,5 +1,4 @@
 ;; -*- lexical-binding: t; -*-
-
 (require '+lsp)
 
 (use-package lsp-pyright
@@ -30,6 +29,14 @@
     "i" '(nil :which-key "imports")
     "iu" 'pyimport-remove-unused
     "ii" 'pyimport-insert-missing))
+
+(use-package py-isort
+  :after crux
+  :general
+  (general-nvmap
+    :keymaps 'python-mode-map
+    :prefix ","
+    "is" #'py-isort-buffer))
 
 ;; Jupyter Kernal and Notebook support
 ;; The ein package has really improved lately. In addition, the jupyter

@@ -40,11 +40,11 @@
 ;; additional packages
 (require '+evil) ;; load evil configuration
 (require '+ui)
+(require '+project)
 (require '+narrowing) ;; incremental narrowing + utils (selectrum+consult+marginalia)
 (require '+spellcheck)
 (require '+modeline)
 (require '+buffers)
-(require '+project)
 (require '+windows) ;; window management, not the OS
 (require '+autocomplete) ;; + syntax checking
 (require '+files) ;; file management + related
