@@ -1,6 +1,5 @@
 ;; -*- lexical-binding: t; -*-
 
-
 ;; Dashboard
 ;; A nice start page for emacs. I set a custom logo for the buffer, and
 ;; enable ~all-the-icons~ support.
@@ -30,12 +29,19 @@
 (use-package modus-themes
   :straight
   (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
+  :preface
+  (defun +load-modus-theme (theme)
+    (let ((theme-name (format "%s" theme)))
+      (message "circadian modus hook enabled: %s" theme-name)
+      (cond ((string-match-p "^modus-operandi" theme-name)
+             (setq modus-themes-syntax 'alt-syntax))
+            ((string-match-p "^modus-vivendi" theme-name)
+             (setq modus-themes-syntax 'faint)))))
   :config
   (setq modus-themes-bold-constructs t)
   (setq modus-themes-slanted-constructs t)
-  (setq modus-themes-syntax 'faint)
   (setq modus-themes-completions 'opinionated)
-  (setq modus-themes-paren-match 'intense-bold)
+  (setq modus-themes-paren-match 'subtle-bold)
   (setq modus-themes-org-blocks 'rainbow)
   (setq modus-themes-mode-line 'moody))
 
@@ -43,10 +49,11 @@
   :config
   (setq calendar-latitude 43.6)
   (setq calendar-longitude -79.4)
-  (setq circadian-themes '((:sunrise . doom-acario-light)
-                           (:sunset  . doom-gruvbox)))
+  (setq circadian-themes '((:sunrise . modus-operandi)
+                           (:sunset  . modus-vivendi)))
   :hook
-  (after-init . circadian-setup))
+  ((after-init . circadian-setup)
+   (circadian-before-load-theme . +load-modus-theme)))
 
 (use-package all-the-icons)
 
@@ -141,7 +148,10 @@
 ;; Highlight different things. The parentheses surround the point get
 ;; highlighted which is great.
 (use-package highlight-parentheses
-  :hook ((prog-mode org-mode LaTeX-mode) . highlight-parentheses-mode))
+  :hook
+  (((prog-mode org-mode LaTeX-mode) . highlight-parentheses-mode)
+   (highlight-parentheses-mode      . show-paren-mode)))
+
 
 (use-package hl-line
   :straight (:type built-in)
