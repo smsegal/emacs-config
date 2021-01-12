@@ -22,8 +22,6 @@
   (setq bibtex-align-at-equal-sign t)
   (setq bibtex-text-indentation 20)
   (setq TeX-fold-type-list '(env math))
-  ;; insert \(\) instead of $$
-  (setq TeX-electric-math (cons "\\(" "\\)"))
   :hook ((TeX-mode . lsp-deferred)
          (TeX-mode . +latex-setup)
          (TeX-mode . TeX-fold-mode))
@@ -56,6 +54,14 @@
                                          company-backends))))
 (use-package evil-tex
   :hook (LaTeX-mode . evil-tex-mode))
+
+  ;; insert \(\) instead of $$, plus same support for display-mode math
+(use-package math-delimiters
+  :straight (:host github :repo "oantolin/math-delimiters")
+  :general
+  (general-imap
+    :keymaps 'LaTeX-mode-map
+    "$" #'math-delimiters-insert))
 
 (use-package bibtex
   :straight (:type built-in)

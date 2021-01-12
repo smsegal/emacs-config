@@ -38,26 +38,26 @@
 (require '+core-keys)
 
 ;; additional packages
-(require '+evil) ;; load evil configuration
+(require '+evil)          ;; load evil configuration
 (require '+ui)
 (require '+project)
-(require '+narrowing) ;; incremental narrowing + utils (selectrum+consult+marginalia)
+(require '+narrowing)     ;; incremental narrowing + utils (selectrum+consult+marginalia)
 (require '+spellcheck)
 (require '+modeline)
 (require '+buffers)
-(require '+windows) ;; window management, not the OS
-(require '+autocomplete) ;; + syntax checking
-(require '+files) ;; file management + related
+(require '+windows)       ;; window management, not the OS
+(require '+autocomplete)  ;; + syntax checking
+(require '+files)         ;; file management + related
 (require '+text-tools)
 (require '+search-narrow) ;; searching and narrowing to page
-(require '+vc) ;; magit and related
+(require '+vc)            ;; magit and related
 (require '+vterm)
-(require '+langs) ;; general language support that doesn't belong elsewhere
+(require '+langs)         ;; general language support that doesn't belong elsewhere
 (require '+lsp)
 (require '+python)
 (require '+latex-pdf)
 (require '+web)
 (require '+haskell)
 (require '+org)
-(require '+helpful) ;; more helpful help buffers
+(require '+helpful)       ;; more helpful help buffers
 (require '+utils)
