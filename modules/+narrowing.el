@@ -7,7 +7,7 @@
 ;; focus on creating and extending basic APIs vs alternative like Ivy.
 
 (use-package selectrum
-  :commands selectrum-next-candidate selectrum-previous-candidate
+  :commands (selectrum-next-candidate selectrum-previous-candidate)
   :hook
   (emacs-startup . selectrum-mode)
   :general
@@ -16,12 +16,28 @@
             "C-j" 'selectrum-next-candidate
             "C-k" 'selectrum-previous-candidate))
 
-;; Prescient is a sorting/filtering package that orders results by "frecency".
-(use-package prescient
-  :hook (after-init . prescient-persist-mode))
+;; ;; Prescient is a sorting/filtering package that orders results by "frecency".
+;; (use-package prescient
+;;   :hook (after-init . prescient-persist-mode))
 
-(use-package selectrum-prescient
-  :hook (selectrum-mode . selectrum-prescient-mode))
+;; (use-package selectrum-prescient
+;;   :hook (selectrum-mode . selectrum-prescient-mode))
+
+(use-package orderless
+  ;; :disabled
+  :custom (completion-styles '(orderless))
+  :init
+  (setq selectrum-refine-candidates-function #'orderless-filter)
+  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
+  (advice-add #'completion--category-override :filter-return
+              (defun completion-in-region-style-setup+ (res)
+                "Fallback to default styles for region completions with orderless."
+                (or res
+                    ;; Don't use orderless for initial candidate gathering.
+                    (and completion-in-region-mode-predicate
+                         (not (minibufferp))
+                         (equal '(orderless) completion-styles)
+                         '(basic partial-completion emacs22))))))
 
 ;; Consult is to selectrum as counsel is to Ivy.
 ;; Marginalia is a bit of extra eye-candy on top of Consult.
