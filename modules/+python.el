@@ -6,7 +6,48 @@
   (defun +pyright__enable-lsp ()
     (require 'lsp-pyright)
     (lsp-deferred))
-  :hook (python-mode . +pyright__enable-lsp))
+  (defun +__python-add-ignore ()
+    (let ((to-ignore (append '("[/\\\\]\\.mypy_cache"
+                               "[/\\\\]\\.ipynb_checkpoints"
+                               "[/\\\\]__pycache__"
+                               "[/\\\\]*\\.egg-info")
+                             +lsp-ignore-additional-dirs)))
+      (message "adding to lsp ignored dirs: ")src/DHDRNet/dhdrnet/
+      (dolist (path to-ignore)
+        (message "  %s" path)
+        (add-to-list 'lsp-file-watch-ignored-directories path t)))
+    (remove-hook 'hack-local-variables-hook #'+__python-add-ignore))
+  (defun +python-lsp-ignore-dirs ()
+    ;; add additional directories to ignored list for lsp python
+    (add-hook 'hack-local-variables-hook #'+__python-add-ignore))
+  :ghook ('python-mode-hook  #'(+pyright__enable-lsp
+                                +python-lsp-ignore-dirs))
+  :config
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection
+    (lsp-tramp-connection
+     (lambda () (cons "/usr/bin/pyright-langserver"
+                      lsp-pyright-langserver-command-args)))
+    :major-modes '(python-mode)
+    :server-id 'pyright-remote
+    :multi-root lsp-pyright-multi-root
+    :remote? t
+    :priority -1
+    :initialized-fn
+    (lambda (workspace)
+      (with-lsp-workspace workspace
+        ;; we send empty settings initially, LSP server will ask for the
+        ;; configuration of each workspace folder later separately
+        (lsp--set-configuration
+         (make-hash-table :test 'equal))))
+    ;; :download-server-fn
+    ;; (lambda (_client callback error-callback _update?)
+    ;;   (lsp-package-ensure 'pyright callback error-callback))
+    :notification-handlers
+    (lsp-ht ("pyright/beginProgress" 'lsp-pyright--begin-progress-callback)
+            ("pyright/reportProgress" 'lsp-pyright--report-progress-callback)
+            ("pyright/endProgress" 'lsp-pyright--end-progress-callback)))))
 
 ;; Python
 ;; The builtin package needs some simple tweaks to use ipython as the REPL.
@@ -20,7 +61,6 @@
 
 ;; Pyimport
 ;; We can sort and remove imports from files with this.
-
 (use-package pyimport
   :general
   (general-nvmap
@@ -31,7 +71,7 @@
     "ii" 'pyimport-insert-missing))
 
 (use-package py-isort
-  :after crux
+  ;; :after crux
   :general
   (general-nvmap
     :keymaps 'python-mode-map

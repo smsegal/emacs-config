@@ -24,7 +24,6 @@
 ;;   :hook (selectrum-mode . selectrum-prescient-mode))
 
 (use-package orderless
-  ;; :disabled
   :custom (completion-styles '(orderless))
   :init
   (setq selectrum-refine-candidates-function #'orderless-filter)
@@ -71,12 +70,13 @@
                "s" #'consult-line
                "r" #'consult-ripgrep
                "f" #'+consult-fdfind
-               "o" #'consult-outline)
+               "o" #'consult-outline))
+
+(use-package consult-flycheck
+  :straight (:host github :repo "minad/consult")
+  :general
   (:prefix-map '+code-map
                "x" #'consult-flycheck))
-
-(use-package consult-selectrum)
-(use-package consult-flycheck)
 
 (use-package marginalia
   :straight (:host github :repo "minad/marginalia" :branch "main")

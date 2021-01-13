@@ -16,16 +16,17 @@
   (lsp-eldoc-enable-hover nil)
   (lsp-headerline-breadcrumb-enable t)
   :ghook
-  ;; move to language specific areas.
-  ;; ('(TeX-mode-hook
-  ;;    yaml-mode-hook
-  ;;    sh-mode-hook
-  ;;    js2-mode-hook) #'lsp-deferred)
+  ;; move to language specific areas where packages exist
+  ('(sh-mode-hook) #'lsp-deferred)
   ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
                     lsp-modeline-diagnostics-mode
                     lsp-enable-which-key-integration))
+  :init
+  ;; use this for adding additional dirs to the ignore list from .dir-locals.el
+  (defvar +lsp-ignore-additional-dirs nil)
   :general
-  (general-nvmap :keymaps 'lsp-mode-map
+  (general-nvmap
+    :keymaps 'lsp-mode-map
     "," '(:keymap lsp-command-map))
   (general-def
     :prefix-map '+code-map

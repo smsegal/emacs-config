@@ -99,9 +99,9 @@
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :magic ("%PDF" . pdf-view-mode)
-  :hook (pdf-view-mode . auto-revert-mode)
+  ;; :hook (pdf-view-mode . auto-revert-mode)
   :config
-  (pdf-tools-install :no-query)
+  (pdf-loader-install)
   (setq-default pdf-view-display-size 'fit-page)
   ;; Enable hiDPI support, but at the cost of memory! See politza/pdf-tools#51
   (setq pdf-view-use-scaling t

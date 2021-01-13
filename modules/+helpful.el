@@ -3,12 +3,19 @@
 ;; A Better Help Buffer
 ;; We also set apropos to search as much as possible.
 (use-package helpful
+  :hook (helpful-mode . visual-line-mode)
   :general
   (:prefix-map 'help-map
                "f" #'helpful-callable
                "v" #'helpful-variable
                "k" #'helpful-key
                "h" #'helpful-at-point))
+
+(use-package elisp-demos
+  :after helpful
+  :commands elisp-demos-advice-helpful-update
+  :init
+  (general-add-advice 'helpful-update :after #'elisp-demos-advice-helpful-update))
 
 (use-package help
   :straight (:type built-in)
