@@ -29,7 +29,7 @@
 ;; Automatically jump to definitions in different languages.
 
 (use-package dumb-jump
-  :hook (xref-backend-functions . dumb-jump-xreg-activate))
+  :hook (xref-backend-functions . dumb-jump-xref-activate))
 
 ;; Editorconfig
 ;; Per directory spaces/tabs indentation.
