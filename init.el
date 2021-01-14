@@ -6,7 +6,6 @@
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (bootstrap-version 5))
   (unless (file-exists-p bootstrap-file)
-
     (with-current-buffer
         (url-retrieve-synchronously
          "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
@@ -21,7 +20,7 @@
 (setq auth-sources '("~/.authinfo.gpg"))
 
 ;;; Package Management and Use-Package Setup
-;; Using straight.el (loaded in ~init.el~) to load use-package and setup integration.
+;; Using straight.el  to load use-package and setup integration.
 
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
