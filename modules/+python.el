@@ -12,7 +12,7 @@
                                "[/\\\\]__pycache__"
                                "[/\\\\]*\\.egg-info")
                              +lsp-ignore-additional-dirs)))
-      (message "adding to lsp ignored dirs: ")src/DHDRNet/dhdrnet/
+      (message "adding to lsp ignored dirs: ")
       (dolist (path to-ignore)
         (message "  %s" path)
         (add-to-list 'lsp-file-watch-ignored-directories path t)))

@@ -36,8 +36,7 @@
   :custom (org-superstar-special-todo-items t))
 
 ;; Table of Contents
-;; Have an auto-updated TOC, primarly for github readme support
-
+;; Have an auto-updated TOC, primarily for github readme support
 (use-package toc-org
   :hook (org-mode . toc-org-mode))
 
