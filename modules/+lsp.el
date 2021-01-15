@@ -34,18 +34,18 @@
     "r" #'lsp-rename
     "a" #'lsp-execute-code-action)
   (:keymaps 'lsp-mode-map
-            [remap evil-goto-definition] #'lsp-find-definition))
+   [remap evil-goto-definition] #'lsp-find-definition))
 
 (use-package lsp-ui
   :commands lsp-ui-mode
   :general
   (:keymaps 'lsp-mode-map
-            [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
-            [remap xref-find-references] #'lsp-ui-peek-find-references)
+   [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
+   [remap xref-find-references] #'lsp-ui-peek-find-references)
   (:keymaps 'lsp-ui-peek-mode-map
-            "j"   #'lsp-ui-peek--select-next
-            "k"   #'lsp-ui-peek--select-prev
-            "C-j" #'lsp-ui-peek--select-next
-            "C-k" #'lsp-ui-peek--select-prev))
+   "j"   #'lsp-ui-peek--select-next
+   "k"   #'lsp-ui-peek--select-prev
+   "C-j" #'lsp-ui-peek--select-next
+   "C-k" #'lsp-ui-peek--select-prev))
 
 (provide '+lsp)

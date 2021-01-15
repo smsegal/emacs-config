@@ -15,15 +15,15 @@
 (use-package format-all
   :general
   (:prefix-map '+code-map
-               "f" 'format-all-buffer))
+   "f" 'format-all-buffer))
 
 ;; Use aphelia when the mode is supported, and fallback to format-all otherwise.
 (use-package apheleia
   :straight (:host github :repo "raxod502/apheleia")
   :general
   (:keymaps '(python-mode-map js-mode-map)
-            :predicate '(not (file-remote-p buffer-file-name))
-            [remap format-all-buffer] #'apheleia-format-buffer))
+   :predicate '(not (file-remote-p buffer-file-name))
+   [remap format-all-buffer] #'apheleia-format-buffer))
 
 ;; Code Search
 ;; Automatically jump to definitions in different languages.
@@ -53,8 +53,8 @@
   (compilation-scroll-output 'first-error)
   :general
   (:prefix-map '+code-map
-               "c" #'compile
-               "m" #'recompile)
+   "c" #'compile
+   "m" #'recompile)
   :ghook
   ('compilation-filter-hook #'+compile/apply-ansi-color-to-compilation-buffer-h))
 
@@ -68,19 +68,19 @@
                          (setq-local indent-tabs-mode +1))))
 
 ;; Emacs-Lisp
-;; Custom indentation for lisp code. Small keybindings for evaling sexps.
+;; Small keybindings for evaling sexps.
 (use-package emacs-lisp
   :straight (:type built-in)
   :general
   (+local-leader-def :keymaps 'emacs-lisp-mode-map
     "e" #'eval-last-sexp))
 
+;; Custom indentation for lisp code.
 (use-package +lisp-indent
   :straight nil
-  :load-path "modules/"
-  :init
-  (general-add-advice
-   #'calculate-lisp-indent :override #'void~calculate-lisp-indent))
+  :after lisp-mode)
+
+;;; Small language modes not big enough for their own modules
 
 (use-package julia-mode
   :mode "\.*\.jl")
