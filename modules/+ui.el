@@ -122,8 +122,8 @@
   :hook (after-init . which-key-mode)
   :general
   (:keymaps 'help-map
-            "b" #'which-key-show-major-mode
-            "B" #'which-key-show-top-level))
+   "b" #'which-key-show-major-mode
+   "B" #'which-key-show-top-level))
 
 
 ;; Pulse current line on window switch
@@ -188,10 +188,10 @@
   :config
   (advice-add 'text-scale-adjust :after #'visual-fill-column-adjust)
   :ghook
-  ('visual-fill-column-mode-hook #'(visual-line-mode
-                                    (lambda ()
-                                      (setq-local split-window-preferred-function
-                                       'visual-fill-column-split-window-sensibly)))))
+  ('visual-fill-column-mode-hook
+   #'(visual-line-mode
+      (lambda () (setq-local split-window-preferred-function
+                             'visual-fill-column-split-window-sensibly)))))
 
 
 

@@ -30,6 +30,6 @@
   :hook (calc-mode . calc-algebraic-mode)
   :general
   (:prefix-map '+open-map
-               "c" #'calc-dispatch))
+   "c" #'calc-dispatch))
 
 (provide '+utils)

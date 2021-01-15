@@ -103,8 +103,8 @@
     (kbd "<S-return>") #'ein:worksheet-execute-cell-and-goto-next-km)
   :general
   (:keymaps 'ein:notebook-mode-map
-            [remap save-buffer] #'ein:notebook-save-notebook-command-km
-            "C-j" #'ein:worksheet-goto-next-input-km
-            "C-k" #'ein:worksheet-goto-prev-input-km))
+   [remap save-buffer] #'ein:notebook-save-notebook-command-km
+   "C-j" #'ein:worksheet-goto-next-input-km
+   "C-k" #'ein:worksheet-goto-prev-input-km))
 
 (provide '+python)

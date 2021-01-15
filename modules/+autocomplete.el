@@ -12,7 +12,7 @@
   :general
   (general-imap "C-SPC" 'company-complete)
   (:keymaps 'company-search-map
-            "C-s" #'company-filter-candidates))
+   "C-s" #'company-filter-candidates))
 
 (use-package company-prescient
   :hook (company-mode . company-prescient-mode))

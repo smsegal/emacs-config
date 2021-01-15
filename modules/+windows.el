@@ -7,8 +7,8 @@
   :hook (after-init . winner-mode)
   :general
   (:prefix-map 'evil-window-map
-               "u" 'winner-undo
-               "r" 'winner-redo))
+   "u" 'winner-undo
+   "r" 'winner-redo))
 
 ;; Switch to a window with the keyboard like avy.
 
@@ -18,23 +18,26 @@
   :config
   (set-face-attribute 'aw-leading-char-face nil :height 3.0)
   :general (:prefix-map 'evil-window-map
-                        "w" #'ace-window
-                        "W" #'ace-swap-window))
+            "w" #'ace-window
+            "W" #'ace-swap-window))
 
 ;; Window Enlargement
 (use-package zoom
   :custom
   (zoom-size '(0.7 . 0.7))
-  (zoom-ignored-major-modes '(dired-mode vterm-mode
-                              help-mode helpful-mode
-                              rxt-help-mode help-mode-menu
+  (zoom-ignored-major-modes '(dired-mode
+                              vterm-mode
+                              help-mode
+                              helpful-mode
+                              rxt-help-mode
+                              help-mode-menu
                               org-mode))
   (zoom-ignored-buffer-names '("*scratch*" "*info*" "*helpful variable: argv*"))
   (zoom-ignored-buffer-name-regexps '("^\\*calc" "\\*helpful variable: .*\\*"))
   (zoom-ignore-predicates (list (lambda () (< (count-lines (point-min) (point-max)) 20))))
   :general
   (:prefix-map '+toggle-map
-               "z" #'zoom-mode))
+   "z" #'zoom-mode))
 
 (defvar +window-enlargened nil)
 ;;;###autoload

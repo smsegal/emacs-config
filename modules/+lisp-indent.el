@@ -1,3 +1,4 @@
+;; credit to https://github.com/Fuco1/.emacs.d/blob/5445feba8ba1e1121337e07f0eb4ca058960261e/site-lisp/my-redef.el#L26
 (defun lisp-indent-function (indent-point state)
   "This function is the normal value of the variable `lisp-indent-function'.
 The function `calculate-lisp-indent' calls this to determine

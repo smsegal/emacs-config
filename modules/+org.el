@@ -21,7 +21,7 @@
   :hook (org-mode . visual-line-mode)
   :general
   (:prefix-map '+open-map
-               "c" #'org-capture)
+   "c" #'org-capture)
   (+local-leader-def :keymaps 'org-mode-map
     "," #'org-ctrl-c-ctrl-c
     "'" #'org-edit-special

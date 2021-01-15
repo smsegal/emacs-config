@@ -38,8 +38,8 @@
   :general
   (+leader-def "'" #'vterm-other-window)
   (:prefix-map '+open-map
-               "t" #'vterm-other-window
-               "T" #'vterm)
+   "t" #'vterm-other-window
+   "T" #'vterm)
   (general-nmap :keymaps 'vterm-mode-map
     "a" 'vterm-evil-append
     "d" 'vterm-evil-delete
@@ -55,8 +55,8 @@
   (+leader-def
     "'" #'vterm-toggle)
   (:prefix-map '+open-map
-               "t" #'vterm-toggle
-               "T" #'vterm)
+   "t" #'vterm-toggle
+   "T" #'vterm)
   :config
   (setq vterm-toggle-fullscreen-p nil)
   (add-to-list 'display-buffer-alist

@@ -6,11 +6,11 @@
   :config
   (setq project-vc-merge-submodules nil)
   (setq project-switch-commands
-   '((?f "File" project-find-file)
-     (?g "Grep" project-find-regexp)
-     (?d "Dired" project-dired)
-     (?b "Buffer" project-switch-to-buffer)
-     (?m "Magit" magit-status)))
+        '((?f "File" project-find-file)
+          (?g "Grep" project-find-regexp)
+          (?d "Dired" project-dired)
+          (?b "Buffer" project-switch-to-buffer)
+          (?m "Magit" magit-status)))
   :general
   (+leader-def
     "p" '(:keymap project-prefix-map

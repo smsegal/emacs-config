@@ -24,7 +24,7 @@
   ('dired-mode-hook #'(dired-async-mode))
   :general
   (:prefix-map '+open-map
-               "-" #'dired-jump)
+   "-" #'dired-jump)
   (general-nmap :keymaps 'dired-mode-map
     "h" #'dired-up-directory
     "l" #'dired-find-file))
@@ -32,6 +32,8 @@
   :hook (dired-mode . diredfl-mode))
 (use-package dired-collapse
   :hook (dired-mode . dired-collapse-mode))
+(use-package dired+
+  :commands (diredp-do-apply-to-marked))
 
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
@@ -56,19 +58,19 @@
         (message "Copied buffer file name '%s' to the clipboard." filename))))
   :general
   (:prefix-map '+file-map
-               "C" '(+copy-file-name-to-clipboard :which-key "copy filename")))
+   "C" '(+copy-file-name-to-clipboard :which-key "copy filename")))
 
 ;; Crux
 ;; Crux is a selection of useful functions.
 (use-package crux
   :general
   (:prefix-map '+file-map
-               "E" #'crux-sudo-edit
-               "D" #'crux-delete-file-and-buffer
-               "p" #'crux-find-user-init-file
-               "R" #'crux-rename-file-and-buffer)
+   "E" #'crux-sudo-edit
+   "D" #'crux-delete-file-and-buffer
+   "p" #'crux-find-user-init-file
+   "R" #'crux-rename-file-and-buffer)
   (:prefix-map '+open-map
-               "w" #'crux-open-with))
+   "w" #'crux-open-with))
 
 (defun +find-init-file-here ()
   (interactive)

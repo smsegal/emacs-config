@@ -6,10 +6,10 @@
   :hook (helpful-mode . visual-line-mode)
   :general
   (:prefix-map 'help-map
-               "f" #'helpful-callable
-               "v" #'helpful-variable
-               "k" #'helpful-key
-               "h" #'helpful-at-point))
+   "f" #'helpful-callable
+   "v" #'helpful-variable
+   "k" #'helpful-key
+   "h" #'helpful-at-point))
 
 (use-package elisp-demos
   :after helpful

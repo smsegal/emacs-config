@@ -31,7 +31,7 @@
   :config
   (transient-bind-q-to-quit)
   (define-advice magit-list-refs (:around (orig &optional namespaces format sortby)
-                                          prescient-sort)
+                                  prescient-sort)
     "Apply prescient sorting when listing refs."
     (let ((res (funcall orig namespaces format sortby)))
       (if (or sortby
@@ -41,8 +41,8 @@
         (prescient-sort res))))
   :general
   (:prefix-map '+vc-map
-               "g" #'magit-status
-               "C" #'magit-clone)
+   "g" #'magit-status
+   "C" #'magit-clone)
   (general-nmap
     :keymaps 'magit-section-mode-map
     "TAB" #'magit-section-toggle
