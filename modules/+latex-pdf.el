@@ -11,6 +11,20 @@
 (use-package company-math)
 (use-package company-bibtex)
 
+(use-package lsp-latex
+  :disabled
+  :hook ((TeX-mode bibtex-mode) . lsp-deferred)
+  :commands (lsp-latex-build)
+  :config
+  (setq lsp-latex-build-executable "tectonic")
+  (setq lsp-latex-build-args '( "%f"
+                                "--synctex"
+                                "--keep-logs"
+                                "--keep-intermediates"))
+  (setq lsp-latex-forward-search-executable "emacsclient")
+  (setq lsp-latex-forward-search-args
+        '("--eval" "(lsp-latex-forward-search-with-pdf-tools \"%f\" \"%p\" \"%l\")")))
+
 (use-package auctex
   :custom
   (setq TeX-master t)
@@ -22,13 +36,9 @@
   (setq bibtex-align-at-equal-sign t)
   (setq bibtex-text-indentation 20)
   (setq TeX-fold-type-list '(env math))
-  :hook ((TeX-mode . lsp-deferred)
-         (TeX-mode . +latex-setup)
+  :hook ((TeX-mode . +latex-setup)
          (TeX-mode . TeX-fold-mode))
   :mode ("\\.tex\\'" . LaTeX-mode)
-  :general
-  ;; (:keymaps 'TeX-mode-map
-  ;;           ;; [remap compile] #'TeX-command-master)
   :preface
   (defun +latex-setup ()
     (turn-on-visual-line-mode)
@@ -55,7 +65,7 @@
 (use-package evil-tex
   :hook (LaTeX-mode . evil-tex-mode))
 
-  ;; insert \(\) instead of $$, plus same support for display-mode math
+;; insert \(\) instead of $$, plus same support for display-mode math
 (use-package math-delimiters
   :straight (:host github :repo "oantolin/math-delimiters")
   :general
@@ -110,6 +120,6 @@
   (+local-leader-def :keymaps 'pdf-view-mode-map
     "s" 'pdf-view-auto-slice-minor-mode)
   (:keymaps 'pdf-view-mode-map
-            "q" #'kill-current-buffer))
+   "q" #'kill-current-buffer))
 
 (provide '+latex-pdf)
