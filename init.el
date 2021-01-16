@@ -39,6 +39,7 @@
 ;; additional packages
 (require '+evil)          ;; load evil configuration
 (require '+ui)
+(require '+tty)           ;; support for terminal operation
 (require '+project)
 (require '+narrowing)     ;; incremental narrowing + utils (selectrum+consult+marginalia)
 (require '+spellcheck)
@@ -47,6 +48,7 @@
 (require '+windows)       ;; window management, not the OS
 (require '+autocomplete)  ;; + syntax checking
 (require '+files)         ;; file management + related
+(require '+snippets)
 (require '+text-tools)
 (require '+search-narrow) ;; searching and narrowing to page
 (require '+vc)            ;; magit and related

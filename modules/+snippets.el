@@ -18,9 +18,10 @@
 
 (use-package auto-activating-snippets
   :straight (:host github :repo "ymarco/auto-activating-snippets")
-  :ghook ('LaTeX-mode-hook #'auto-activating-snippets-mode)
+  :ghook ('TeX-mode-hook #'auto-activating-snippets-mode)
   :config
   (aas-set-snippets 'latex-mode
-                    "On" "O(n)"))
+                    "On" "O(n)"
+                    "ev0" "\\(\\text{EV}_{0}\\)"))
 
 (provide '+snippets)

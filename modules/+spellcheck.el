@@ -13,6 +13,8 @@
   (flyspell-issue-message-flag nil)
   (ispell-program-name "enchant-2") ;; new spellcheck engine
   (ispell-dictionary "en_CA")
+  :config
+  (setq flyspell-mode-map nil);; I bind my own keys, and this interferes rudely with other packages.
   :ghook
   ('(org-mode-hook
      markdown-mode-hook

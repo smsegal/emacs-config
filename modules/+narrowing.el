@@ -16,9 +16,9 @@
    "C-j" 'selectrum-next-candidate
    "C-k" 'selectrum-previous-candidate))
 
-;; ;; Prescient is a sorting/filtering package that orders results by "frecency".
-;; (use-package prescient
-;;   :hook (after-init . prescient-persist-mode))
+;; Prescient is a sorting/filtering package that orders results by "frecency".
+(use-package prescient
+  :hook (after-init . prescient-persist-mode))
 
 ;; (use-package selectrum-prescient
 ;;   :hook (selectrum-mode . selectrum-prescient-mode))

@@ -79,4 +79,17 @@
 (general-def :prefix-map '+file-map
   "P" #'+find-init-file-here)
 
+(setq delete-old-versions t ;;remove old backup files
+      version-control t
+      tramp-backup-directory-alist backup-directory-alist)
+
+(defun +guess-file-mode ()
+  "inspired by doom again, when saving a file with no mode, try and guess it afterwards"
+  (when (eq major-mode 'fundamental-mode)
+    (let ((buffer (or (buffer-base-buffer) (current-buffer))))
+      (and (buffer-file-name buffer)
+           (eq buffer (window-buffer (selected-window))) ;;buffer must be visible
+           (set-auto-mode)))))
+(add-hook 'after-save-hook #'+guess-file-mode)
+
 (provide '+files)

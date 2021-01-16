@@ -125,7 +125,6 @@
    "b" #'which-key-show-major-mode
    "B" #'which-key-show-top-level))
 
-
 ;; Pulse current line on window switch
 (use-package beacon
   :disabled
@@ -148,10 +147,12 @@
 ;; Highlight different things. The parentheses surround the point get
 ;; highlighted which is great.
 (use-package highlight-parentheses
+  :init
+  (setq show-paren-when-point-in-periphery t
+        show-paren-when-point-inside-paren t)
   :hook
   (((prog-mode org-mode LaTeX-mode) . highlight-parentheses-mode)
    (highlight-parentheses-mode      . show-paren-mode)))
-
 
 (use-package hl-line
   :straight (:type built-in)
@@ -177,10 +178,8 @@
   (scroll-on-jump-advice-add evil-ex-search-previous)
   (scroll-on-jump-advice-add evil-forward-paragraph)
   (scroll-on-jump-advice-add evil-backward-paragraph)
-
   (scroll-on-jump-advice-add goto-last-change)
   (scroll-on-jump-advice-add goto-last-change-reverse))
-
 
 ;; Visual Fill Column
 ;; Sometimes we want text to wrap before the window border.
@@ -192,8 +191,6 @@
    #'(visual-line-mode
       (lambda () (setq-local split-window-preferred-function
                              'visual-fill-column-split-window-sensibly)))))
-
-
 
 ;; A lot of the built-in UI needs some tweaks. We disable menu bars, the toolbar and the scrollbar.
 ;; We also want to confirm things with a single y/n instead of the whole word.
@@ -212,6 +209,29 @@
 (setq menu-bar-mode   nil)
 (setq tool-bar-mode   nil)
 (setq scroll-bar-mode nil)
+
+;; frame title
+(setq frame-title-format '("%b - Emacs")
+      icon-title-format frame-title-format)
+
+(setq window-divider-default-places t
+      window-divider-default-bottom-width 1
+      window-divider-default-right-width 1)
+(add-hook 'after-init-hook #'window-divider-mode)
+
+;; always avoid GUI
+(setq use-dialog-box nil)
+;; Don't display floating tooltips; display their contents in the echo-area,
+;; because native tooltips are ugly.
+(when (bound-and-true-p tooltip-mode)
+  (tooltip-mode -1))
+;; ...especially on linux
+(when IS-LINUX
+  (setq x-gtk-use-system-tooltips nil))
+
+;; Favor vertical splits over horizontal ones. Screens are usually wide.
+(setq split-width-threshold 160
+      split-height-threshold nil)
 
 ;; scrolling
 (setq hscroll-margin 2)
@@ -239,5 +259,7 @@
   (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
   (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
   (add-to-list 'default-frame-alist '(vertical-scroll-bars)))
+
+(setq-default word-wrap t) ;; wrap at word boundaries
 
 (provide '+ui)

@@ -11,7 +11,6 @@
    "r" 'winner-redo))
 
 ;; Switch to a window with the keyboard like avy.
-
 (use-package ace-window
   :custom
   (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
