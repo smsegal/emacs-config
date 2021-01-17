@@ -49,8 +49,16 @@
               `compilation-filter-hook'."
     (with-silent-modifications
       (ansi-color-apply-on-region compilation-filter-start (point))))
-  :custom
-  (compilation-scroll-output 'first-error)
+  (defun +compile-autoclose (buffer string)
+    (require 'winner)
+    (if (string-match "finished" string)
+        (progn (bury-buffer "*compilation*")
+               (winner-undo)
+               (message "Build successful."))
+      (message "Compilation exited abnormally: %s" string)))
+  :init
+  (setq compilation-scroll-output 'first-error)
+  (setq compilation-finish-functions '+compile-autoclose)
   :general
   (:prefix-map '+code-map
    "c" #'compile
