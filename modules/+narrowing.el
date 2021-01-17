@@ -52,6 +52,13 @@
   (fset 'multi-occur #'consult-multi-occur)
   (fset 'goto-line #'consult-goto-line)
   :config
+  ;; Configure register preview function.
+  ;; This gives a consistent display for both `consult-register' and
+  ;; the register preview when editing registers.
+  (setq register-preview-delay 0
+        register-preview-function #'consult-register-preview)
+
+  ;;project root
   (setq consult-project-root-function #'+get-project-root)
   :general
   (:prefix-map 'help-map
@@ -95,7 +102,8 @@
   ;; When using Selectrum, ensure that Selectrum is refreshed when cycling annotations.
   (advice-add #'marginalia-cycle :after
               (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit))))
-  :config
-  (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light)))
+
+  ;; use heavy annotators (keybindings, descriptions etc.)
+  (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil)))
 
 (provide '+narrowing)
