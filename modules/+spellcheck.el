@@ -6,13 +6,13 @@
 (use-package flyspell
   :straight nil
   :defer t
-  :custom
-  (flyspell-issue-welcome-flag nil)
+  :init
+  (setq flyspell-issue-welcome-flag nil)
   ;; Significantly speeds up flyspell, which would otherwise print
   ;; messages for every word when checking the entire buffer
-  (flyspell-issue-message-flag nil)
-  (ispell-program-name "enchant-2") ;; new spellcheck engine
-  (ispell-dictionary "en_CA")
+  (setq flyspell-issue-message-flag nil)
+  (setq ispell-program-name "enchant-2") ;; new spellcheck engine
+  (setq ispell-dictionary "en_CA")
   :config
   (setq flyspell-mode-map nil);; I bind my own keys, and this interferes rudely with other packages.
   :ghook

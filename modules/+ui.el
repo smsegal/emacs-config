@@ -218,6 +218,7 @@
       window-divider-default-bottom-width 1
       window-divider-default-right-width 1)
 (add-hook 'after-init-hook #'window-divider-mode)
+(set-fringe-style 1)
 
 ;; always avoid GUI
 (setq use-dialog-box nil)

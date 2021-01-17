@@ -6,28 +6,27 @@
 
 (use-package vc
   :straight (:type built-in)
-  :custom
-  (vc-command-messages t)
-  (vc-follow-symlinks t)
+  :init
+  (setq vc-command-messages t)
+  (setq vc-follow-symlinks t)
   ;; don't make an extra frame for the ediff control panel
   ;; (doesn't work well in tiling wms)
-  (ediff-window-setup-function 'ediff-setup-windows-plain))
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain))
 
 ;; Magit Itself
 ;; We need to fix a missing binding that should be set by ~evil-collection~.
 ;; Submodules get opened by ~"~ inside the magit status buffer.
 (use-package magit
   :after evil-collection
-  :custom
-  (magit-diff-refine-hunk t)
+  :init
+  (setq magit-diff-refine-hunk t)
   :preface
   (defun +magit/fix-submodule-binding ()
     ;; evil-magit seems to be overriding or setting this wrong
     ;; somehow, so fix it here
     (transient-append-suffix 'magit-dispatch "\""
       '("'" "Submodules" magit-submodule)))
-  :gfhook ('magit-mode-hook #'(+magit/fix-submodule-binding
-                               visual-line-mode))
+  :gfhook ('magit-mode-hook #'(+magit/fix-submodule-binding visual-line-mode))
   :config
   (transient-bind-q-to-quit)
   (define-advice magit-list-refs (:around (orig &optional namespaces format sortby)

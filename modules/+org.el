@@ -7,12 +7,12 @@
 ;; I'm aiming to translate a lot of keys to vim-like equivalents, using
 ;; leader keys to replace the special ~C-c~ bindings.
 (use-package org
-  :custom
-  (org-startup-indented t)
-  (org-src-fontify-natively t)
-  (org-directory "~/Documents/org")
-  (org-default-notes-file (concat org-directory "/notes.org"))
-  (org-export-backends '(beamer html md man latex))
+  :init
+  (setq org-startup-indented t)
+  (setq org-src-fontify-natively t)
+  (setq org-directory "~/Documents/org")
+  (setq org-default-notes-file (concat org-directory "/notes.org"))
+  (setq org-export-backends '(beamer html md man latex))
   :config
   (org-babel-do-load-languages
    'org-babel-load-languages
