@@ -16,29 +16,36 @@
 (use-package dired
   :straight (:type built-in)
   :commands (dired dired-jump)
-  :custom
-  (dired-listing-switches "-agho --group-directories-first")
-  (dired-dwim-target t)
-  (dired-delete-by-moving-to-trash t)
-  :ghook
-  ('dired-mode-hook #'(dired-async-mode))
+  :init
+  (setq dired-listing-switches "-agho --group-directories-first")
+  (setq dired-dwim-target t)
+  (setq dired-delete-by-moving-to-trash t)
   :general
   (:prefix-map '+open-map
    "-" #'dired-jump)
   (general-nmap :keymaps 'dired-mode-map
     "h" #'dired-up-directory
     "l" #'dired-find-file))
+
+;; This provides library async commands, but also dired-async mode
+(use-package dired-async
+  :straight (async)
+  :commands (dired-async-mode)
+  :hook (dired-mode . dired-async-mode))
+
+;; fancy font-locking in dired
 (use-package diredfl
   :hook (dired-mode . diredfl-mode))
+
+;; collapses folders that only contain one child
 (use-package dired-collapse
   :hook (dired-mode . dired-collapse-mode))
+
 (use-package dired+
   :commands (diredp-do-apply-to-marked))
 
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
-
-(use-package ranger :disabled)
 
 (use-package super-save
   :custom (super-save-auto-save-when-idle t)
