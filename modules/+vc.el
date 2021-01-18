@@ -1,5 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 
+(require 'selectrum)
+
 ;; VC / Git
 ;; Magit is probably the single best emacs package.
 ;; We also use the build-int VC mode for some things like ediff.
@@ -18,8 +20,6 @@
 ;; Submodules get opened by ~"~ inside the magit status buffer.
 (use-package magit
   :after evil-collection
-  :init
-  (setq magit-diff-refine-hunk t)
   :preface
   (defun +magit/fix-submodule-binding ()
     ;; evil-magit seems to be overriding or setting this wrong
@@ -27,17 +27,11 @@
     (transient-append-suffix 'magit-dispatch "\""
       '("'" "Submodules" magit-submodule)))
   :gfhook ('magit-mode-hook #'(+magit/fix-submodule-binding visual-line-mode))
+  :init
+  (setq magit-diff-refine-hunk t)
+  (setq magit-completing-read-function #'selectrum-completing-read)
   :config
   (transient-bind-q-to-quit)
-  (define-advice magit-list-refs (:around (orig &optional namespaces format sortby)
-                                  prescient-sort)
-    "Apply prescient sorting when listing refs."
-    (let ((res (funcall orig namespaces format sortby)))
-      (if (or sortby
-              magit-list-refs-sortby
-              (not selectrum-should-sort-p))
-          res
-        (prescient-sort res))))
   :general
   (:prefix-map '+vc-map
    "g" #'magit-status
