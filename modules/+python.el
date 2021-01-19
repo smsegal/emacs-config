@@ -55,9 +55,9 @@
 ;; python tweaks
 (use-package python
   :straight (:type built-in)
-  :custom
-  (python-shell-interpreter "ipython")
-  (python-shell-interpreter-args "--simple-prompt -i"))
+  :init
+  (setq python-shell-interpreter "ipython")
+  (setq python-shell-interpreter-args "--simple-prompt -i"))
 
 ;; Pyimport
 ;; We can sort and remove imports from files with this.
@@ -82,11 +82,31 @@
 ;; The ein package has really improved lately. In addition, the jupyter
 ;; kernel provides a pretty good experience for using it inside org-mode.
 (use-package jupyter
-  :disabled
-  :straight (:no-native-compile t)
-  :commands jupyter-connect-repl jupyter-run-repl)
+  ;; :disabled
+  ;; :straight (:no-native-compile t)
+  :commands (jupyter-connect-repl jupyter-run-repl jupyter-eval-region))
+
+;; trying lighter-weight alternative to ein
+(use-package code-cells
+  :preface
+  (defun +insert-code-cell ()
+    (interactive)
+    (code-cells-forward-cell 2)
+    (insert "# %%\n\n# %%\n\n")
+    (code-cells-backward-cell 2)
+    (forward-line))
+  :general
+  (:keymaps 'python-mode-map
+   "C-j" #'code-cells-forward-cell
+   "C-k" #'code-cells-backward-cell
+   "<C-return>" (code-cells-command 'python-shell-send-region :use-region :pulse)
+   "<S-return>" '(code-cells-do
+                  (pulse-momentary-highlight-region start end)
+                  (python-shell-send-region start end)
+                  (code-cells-forward-cell))))
 
 (use-package emacs-ipython-notebook
+  :disabled
   :straight ein
   :hook (ein:notebook-mode . evil-normalize-keymaps)
   :custom

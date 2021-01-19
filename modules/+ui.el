@@ -50,7 +50,7 @@
   (setq calendar-latitude 43.6)
   (setq calendar-longitude -79.4)
   (setq circadian-themes '((:sunrise . modus-operandi)
-                           (:sunset  . modus-vivendi)))
+                           (:sunset  . doom-rouge)))
   :hook
   ((after-init . circadian-setup)
    (circadian-before-load-theme . +load-modus-theme)))

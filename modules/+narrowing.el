@@ -24,7 +24,8 @@
 ;;   :hook (selectrum-mode . selectrum-prescient-mode))
 
 (use-package orderless
-  :custom (completion-styles '(orderless))
+  ;; completion style should be set when not using selectrum
+  ;; :custom (completion-styles '(orderless))
   :init
   (setq selectrum-refine-candidates-function #'orderless-filter)
   (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
