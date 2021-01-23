@@ -36,8 +36,8 @@
   (setq bibtex-align-at-equal-sign t)
   (setq bibtex-text-indentation 20)
   (setq TeX-fold-type-list '(env math))
-  :hook ((TeX-mode . +latex-setup)
-         (TeX-mode . TeX-fold-mode))
+  :hook (TeX-mode . +latex-setup)
+         ;; (TeX-mode . TeX-fold-mode))
   :mode ("\\.tex\\'" . LaTeX-mode)
   :preface
   (defun +latex-setup ()
@@ -45,7 +45,7 @@
     (visual-fill-column-mode +1)
     (unless word-wrap
       (toggle-word-wrap))
-    (TeX-fold-buffer)
+    ;; (TeX-fold-buffer)
     (setq-local visual-fill-column-center-text t
                 visual-fill-column-width 100
 
