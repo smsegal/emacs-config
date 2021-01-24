@@ -95,6 +95,8 @@
 
 (use-package nix-mode
   :mode "\\.nix\\'")
+(use-package company-nixos-options
+  :config (add-to-list 'company-backends 'company-nixos-options))
 
 (use-package markdown-mode
   :commands (markdown-mode gfm-mode)
