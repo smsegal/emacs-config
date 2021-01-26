@@ -3,7 +3,6 @@
 ;; Window Management
 ;; Undo and redo window configurations.
 (use-package winner
-  :straight (:type built-in)
   :hook (after-init . winner-mode)
   :general
   (:prefix-map 'evil-window-map

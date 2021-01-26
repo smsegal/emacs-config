@@ -9,7 +9,7 @@
 
 ;; narrow-to-region etc is defined in builtin package page
 (use-package page
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :init
   (put 'narrow-to-page 'disabled nil)
   :general

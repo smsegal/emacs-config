@@ -2,7 +2,6 @@
 
 ;; recent files, taking into consideration the no-littering
 (use-package recentf-mode
-  :straight (:type built-in)
   :after no-littering
   :hook (after-init . recentf-mode)
   :custom
@@ -14,7 +13,6 @@
 
 ;; Dired and File Management
 (use-package dired
-  :straight (:type built-in)
   :commands (dired dired-jump)
   :init
   (setq dired-listing-switches "-agho --group-directories-first")
@@ -22,14 +20,13 @@
   (setq dired-delete-by-moving-to-trash t)
   :general
   (:prefix-map '+open-map
-   "-" #'dired-jump)
+               "-" #'dired-jump)
   (general-nmap :keymaps 'dired-mode-map
     "h" #'dired-up-directory
     "l" #'dired-find-file))
 
 ;; This provides library async commands, but also dired-async mode
 (use-package dired-async
-  :straight (async)
   :commands (dired-async-mode)
   :hook (dired-mode . dired-async-mode))
 
@@ -52,7 +49,7 @@
   :hook (after-init . super-save-mode))
 
 (use-package +copy-file-name
-  :straight nil
+  ;; :straight nil
   :preface
   (defun +copy-file-name-to-clipboard ()
     "Copy the current buffer file name to the clipboard."
@@ -65,19 +62,19 @@
         (message "Copied buffer file name '%s' to the clipboard." filename))))
   :general
   (:prefix-map '+file-map
-   "C" '(+copy-file-name-to-clipboard :which-key "copy filename")))
+               "C" '(+copy-file-name-to-clipboard :which-key "copy filename")))
 
 ;; Crux
 ;; Crux is a selection of useful functions.
 (use-package crux
   :general
   (:prefix-map '+file-map
-   "E" #'crux-sudo-edit
-   "D" #'crux-delete-file-and-buffer
-   "p" #'crux-find-user-init-file
-   "R" #'crux-rename-file-and-buffer)
+               "E" #'crux-sudo-edit
+               "D" #'crux-delete-file-and-buffer
+               "p" #'crux-find-user-init-file
+               "R" #'crux-rename-file-and-buffer)
   (:prefix-map '+open-map
-   "w" #'crux-open-with))
+               "w" #'crux-open-with))
 
 (defun +find-init-file-here ()
   (interactive)

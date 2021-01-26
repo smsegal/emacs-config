@@ -5,7 +5,7 @@
 ;; Subword mode lets you navigate camelCase words etc.
 ;; We also want to clean up whitespace in prog-mode.
 (use-package rotate-text
-  :straight (:host github :repo "debug-ito/rotate-text.el")
+  ;; :straight (:host github :repo "debug-ito/rotate-text.el")
   :config
   (add-to-list 'rotate-text-words '("true" "false"))
   (add-to-list 'rotate-text-symbols '("+" "-"))
@@ -25,7 +25,7 @@
 
 ;; Set up automatic pairing of {(<>)}
 (use-package electric-pair
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :hook (emacs-startup . electric-pair-mode))
 
 ;; Match the indentation of wrapped lines

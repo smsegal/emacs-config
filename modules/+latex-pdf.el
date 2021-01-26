@@ -67,14 +67,14 @@
 
 ;; insert \(\) instead of $$, plus same support for display-mode math
 (use-package math-delimiters
-  :straight (:host github :repo "oantolin/math-delimiters")
+  ;; :straight (:host github :repo "oantolin/math-delimiters")
   :general
   (general-imap
     :keymaps 'LaTeX-mode-map
     "$" #'math-delimiters-insert))
 
 (use-package bibtex
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :gfhook #'+bibtex-setup
   :preface
   (defun +bibtex-setup ()
@@ -89,7 +89,7 @@
   (TeX-mode . auctex-latexmk-setup))
 
 (use-package reftex
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :hook ((TeX-mode . reftex-mode)
          (LaTeX-mode . reftex-mode))
   :custom

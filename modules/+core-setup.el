@@ -24,6 +24,7 @@
 
 ;; Set up the path properly on GUI Emacs in environments that don't handle that for us
 (use-package exec-path-from-shell
+  :disabled
   :when (memq window-system '(mac ns x))
   :config
   (setq exec-path-from-shell-arguments '("-l"))
@@ -104,7 +105,6 @@
 ;;; Server
 ;; Start the server unless it's already running.
 (use-package server
-  :straight (:type built-in)
   :config
   (unless (server-running-p)
     (server-start)))

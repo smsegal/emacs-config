@@ -1,18 +1,16 @@
 ;;; init.el -*- lexical-binding: t; -*-
-
-;; load straight so we can use the correct version of org to load the literate config
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+;; (defvar bootstrap-version)
+;; (let ((bootstrap-file
+;;        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+;;       (bootstrap-version 5))
+;;   (unless (file-exists-p bootstrap-file)
+;;     (with-current-buffer
+;;         (url-retrieve-synchronously
+;;          "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+;;          'silent 'inhibit-cookies)
+;;       (goto-char (point-max))
+;;       (eval-print-last-sexp)))
+;;   (load bootstrap-file nil 'nomessage))
 
 ;;; Personal Information
 (setq user-full-name "Shane Segal"
@@ -20,11 +18,18 @@
 (setq auth-sources '("~/.authinfo.gpg"))
 
 ;;; Package Management and Use-Package Setup
-;; Using straight.el  to load use-package and setup integration.
+;; Using straight.el to load use-package and setup integration.
 
-(straight-use-package 'use-package)
+;; optional. makes unpure packages archives unavailable
+(require 'package)
+(setq package-archives nil)
+(package-initialize 'noactivate)
+(eval-when-compile
+  (require 'use-package))
+
+;; (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
-(use-package straight-x :straight nil) ;; loading the additional functions from straight-x
+;;(use-package straight-x) ;; loading the additional functions from straight-x
 
 ;; Add custom code to load path
 (add-to-list 'load-path (expand-file-name "modules" user-emacs-directory))

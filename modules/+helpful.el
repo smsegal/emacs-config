@@ -18,7 +18,7 @@
   (general-add-advice 'helpful-update :after #'elisp-demos-advice-helpful-update))
 
 (use-package help
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :config
   (require 'apropos)
   ;; this is taken from

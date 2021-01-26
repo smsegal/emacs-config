@@ -13,8 +13,8 @@
   :general
   (general-imap "C-k" nil)
   (:keymaps 'selectrum-minibuffer-map
-   "C-j" 'selectrum-next-candidate
-   "C-k" 'selectrum-previous-candidate))
+            "C-j" 'selectrum-next-candidate
+            "C-k" 'selectrum-previous-candidate))
 
 ;; Prescient is a sorting/filtering package that orders results by "frecency".
 (use-package prescient
@@ -42,7 +42,6 @@
 ;; Consult is to selectrum as counsel is to Ivy.
 ;; Marginalia is a bit of extra eye-candy on top of Consult.
 (use-package consult
-  :straight (:host github :repo "minad/consult")
   :preface
   (defun +consult-fdfind (&optional dir)
     (interactive "P")
@@ -63,28 +62,27 @@
   (setq consult-project-root-function #'+get-project-root)
   :general
   (:prefix-map 'help-map
-   "a" #'consult-apropos
-   ;; t is usually the tutorial, but this emacs is so customized it's useless
-   "t" 'consult-theme)
+               "a" #'consult-apropos
+               ;; t is usually the tutorial, but this emacs is so customized it's useless
+               "t" 'consult-theme)
   (:prefix-map '+insert-map
-   "y" #'consult-yank)
+               "y" #'consult-yank)
   (:prefix-map '+file-map
-   "w" #'consult-file-externally
-   "r" #'consult-recent-file)
+               "w" #'consult-file-externally
+               "r" #'consult-recent-file)
   (:prefix-map '+buffer-map
-   "b" #'consult-buffer)
+               "b" #'consult-buffer)
   (:prefix-map '+search-map
-   "i" #'consult-imenu
-   "s" #'consult-line
-   "r" #'consult-ripgrep
-   "f" #'+consult-fdfind
-   "o" #'consult-outline))
+               "i" #'consult-imenu
+               "s" #'consult-line
+               "r" #'consult-ripgrep
+               "f" #'+consult-fdfind
+               "o" #'consult-outline))
 
 (use-package consult-flycheck
-  :straight (:host github :repo "minad/consult")
   :general
   (:prefix-map '+code-map
-   "x" #'consult-flycheck))
+               "x" #'consult-flycheck))
 
 (use-package embark
   :general
@@ -96,7 +94,7 @@
   (embark-collect-mode . embark-consult-preview-minor-mode))
 
 (use-package marginalia
-  :straight (:host github :repo "minad/marginalia" :branch "main")
+  :commands (marginalia-mode)
   :init
   (marginalia-mode)
 

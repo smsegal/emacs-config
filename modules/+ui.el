@@ -4,6 +4,7 @@
 ;; A nice start page for emacs. I set a custom logo for the buffer, and
 ;; enable ~all-the-icons~ support.
 (use-package dashboard
+  :commands (dashboard-setup-startup-hook)
   :init
   (setq dashboard-set-footer nil)
   (setq dashboard-center-content t)
@@ -20,6 +21,7 @@
 ;; I use the great ~doom-themes~ package from Doom. It provides a whole
 ;; ton of great light and dark themes.
 (use-package doom-themes
+  :commands (doom-themes-visual-bell-config)
   :config
   (setq doom-themes-enable-bold t)
   (setq doom-themes-enable-italic t)
@@ -27,8 +29,8 @@
   (doom-themes-org-config))
 
 (use-package modus-themes
-  :straight
-  (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
+  ;;:straight
+  ;;(:host gitlab :repo "protesilaos/modus-themes" :branch "main")
   :preface
   (defun +load-modus-theme (theme)
     (let ((theme-name (format "%s" theme)))
@@ -60,7 +62,7 @@
 ;; Here is where we set up the ligatures. There's configuration for the
 ;; fonts I use most often: "Victor Mono" and "JetBrains Mono".
 (use-package ligature
-  :straight (:host github :repo "mickeynp/ligature.el")
+  :disabled
   :ghook ('(prog-mode-hook org-mode-hook) #'ligature-mode)
   :init
   (ligature-set-ligatures
@@ -155,7 +157,6 @@
    (highlight-parentheses-mode      . show-paren-mode)))
 
 (use-package hl-line
-  :straight (:type built-in)
   :hook ((prog-mode conf-mode) . hl-line-mode)
   :custom
   (hl-line-sticky-flag nil)
@@ -165,7 +166,6 @@
 (use-package scroll-on-jump
   :disabled
   :after (evil goto-chg)
-  :straight (:host gitlab :repo "ideasman42/emacs-scroll-on-jump")
   :config
   (setq scroll-on-jump-duration 0.4)
   (setq scroll-on-jump-use-curve t)

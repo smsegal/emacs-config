@@ -7,7 +7,7 @@
 ;; We also use the build-int VC mode for some things like ediff.
 
 (use-package vc
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :init
   (setq vc-command-messages t)
   (setq vc-follow-symlinks t)
@@ -48,8 +48,8 @@
 
 ;; C dynamic module bindings for speeding up magit
 (use-package libgit
-  :disabled
-  :straight (:host github :repo "magit/libegit2"))
+  :disabled)
+  ;; :straight (:host github :repo "magit/libegit2"))
 
 ;; Magit Extras
 ;; Forge lets us access PR's and other collaborative git features from

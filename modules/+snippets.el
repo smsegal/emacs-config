@@ -12,12 +12,12 @@
                         "s" 'yas-insert-snippet))
 (use-package yasnippet-snippets
   :after yasnippet)
-(use-package doom-snippets
-  :straight (:host github :repo "hlissner/doom-snippets")
-  :after yasnippet)
+;; (use-package doom-snippets
+;;   ;; :straight (:host github :repo "hlissner/doom-snippets")
+;;   :after yasnippet)
 
 (use-package auto-activating-snippets
-  :straight (:host github :repo "ymarco/auto-activating-snippets")
+  ;; :straight (:host github :repo "ymarco/auto-activating-snippets")
   :ghook ('TeX-mode-hook #'auto-activating-snippets-mode)
   :config
   (aas-set-snippets 'latex-mode

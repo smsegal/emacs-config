@@ -14,7 +14,7 @@
 ;; TRAMP Support
 ;; Remote file support.
 (use-package tramp
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :custom
   (tramp-default-method "sshx"))
 
@@ -26,7 +26,7 @@
 ;; Calc mode
 ;; set calc mode to start in algebraic (ie normal) mode
 (use-package calc
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :hook (calc-mode . calc-algebraic-mode)
   :general
   (:prefix-map '+open-map

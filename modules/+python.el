@@ -54,7 +54,7 @@
 
 ;; python tweaks
 (use-package python
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :init
   (setq python-shell-interpreter "ipython")
   (setq python-shell-interpreter-args "--simple-prompt -i"))
@@ -83,11 +83,13 @@
 ;; kernel provides a pretty good experience for using it inside org-mode.
 (use-package jupyter
   ;; :disabled
-  ;; :straight (:no-native-compile t)
+  ;; ;; :straight (:no-native-compile t)
   :commands (jupyter-connect-repl jupyter-run-repl jupyter-eval-region))
 
 ;; trying lighter-weight alternative to ein
 (use-package code-cells
+  :disabled
+  :commands (code-cells-command)
   :preface
   (defun +insert-code-cell ()
     (interactive)
@@ -105,9 +107,9 @@
                   (python-shell-send-region start end)
                   (code-cells-forward-cell))))
 
-(use-package emacs-ipython-notebook
+(use-package ein
   :disabled
-  :straight ein
+  ;; :straight ein
   :hook (ein:notebook-mode . evil-normalize-keymaps)
   :custom
   (ein:output-area-inlined-images t)

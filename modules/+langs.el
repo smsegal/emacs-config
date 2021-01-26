@@ -4,11 +4,13 @@
 ;; Now, apparently this package is useful for a ton of different
 ;; things. I use it for the nicer syntax highlighting in supported languages.
 (use-package tree-sitter
+  :disabled
   :ghook ('(python-mode-hook
             js2-mode-hook
             typescript-mode-hook
             css-mode-hook) #'tree-sitter-hl-mode))
-(use-package tree-sitter-langs)
+(use-package tree-sitter-langs
+  :disabled)
 
 ;; Formatting
 ;; Format all code with one keybinding.
@@ -19,7 +21,7 @@
 
 ;; Use aphelia when the mode is supported, and fallback to format-all otherwise.
 (use-package apheleia
-  :straight (:host github :repo "raxod502/apheleia")
+  ;; :straight (:host github :repo "raxod502/apheleia")
   :general
   (:keymaps '(python-mode-map js-mode-map)
    :predicate '(not (file-remote-p buffer-file-name))
@@ -42,7 +44,7 @@
 ;; Make compilation buffers process escape codes for colours etc.
 
 (use-package compile
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :preface
   (defun +compile/apply-ansi-color-to-compilation-buffer-h ()
     "Applies ansi codes to the compilation buffers. Meant for
@@ -69,7 +71,7 @@
 ;; Makefiles
 ;; I disabled indent-tabs-mode above, I need this enabled for makefiles.
 (use-package make-mode
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :config
   (general-add-hook
    'makefile-mode-hook (lambda ()
@@ -78,14 +80,14 @@
 ;; Emacs-Lisp
 ;; Small keybindings for evaling sexps.
 (use-package emacs-lisp
-  :straight (:type built-in)
+  ;; :straight (:type built-in)
   :general
   (+local-leader-def :keymaps 'emacs-lisp-mode-map
     "e" #'eval-last-sexp))
 
 ;; Custom indentation for lisp code.
 (use-package +lisp-indent
-  :straight nil
+  ;; :straight nil
   :after lisp-mode)
 
 ;;; Small language modes not big enough for their own modules

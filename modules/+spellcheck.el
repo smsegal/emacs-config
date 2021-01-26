@@ -4,7 +4,6 @@
 ;; Spell checking with flyspell and enchant.
 
 (use-package flyspell
-  :straight nil
   :defer t
   :init
   (setq flyspell-issue-welcome-flag nil)
