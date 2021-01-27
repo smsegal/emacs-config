@@ -4,13 +4,20 @@
 ;; Now, apparently this package is useful for a ton of different
 ;; things. I use it for the nicer syntax highlighting in supported languages.
 (use-package tree-sitter
-  :disabled
+  :straight (:host github :repo "ubolonton/emacs-tree-sitter"
+             :files ("lisp/*.el"))
   :ghook ('(python-mode-hook
             js2-mode-hook
             typescript-mode-hook
             css-mode-hook) #'tree-sitter-hl-mode))
 (use-package tree-sitter-langs
-  :disabled)
+  :after no-littering
+  :straight (:host github :repo "ubolonton/emacs-tree-sitter"
+             :files ("langs/*.el" "langs/queries"))
+  :config
+  (defun tsc-dyn-get--dir ()
+    (concat no-littering-var-directory "tsc")))
+;; (general-add-advice tsc-dyn-get--dir :override +tsc-dyn-get--dir))
 
 ;; Formatting
 ;; Format all code with one keybinding.
@@ -21,7 +28,7 @@
 
 ;; Use aphelia when the mode is supported, and fallback to format-all otherwise.
 (use-package apheleia
-  ;; :straight (:host github :repo "raxod502/apheleia")
+  :straight (:host github :repo "raxod502/apheleia")
   :general
   (:keymaps '(python-mode-map js-mode-map)
    :predicate '(not (file-remote-p buffer-file-name))
