@@ -29,7 +29,7 @@
 
 ;; Apparently ~undo-tree~ has had it's performance improved, will try it again sometime
 (use-package undo-tree
-  :custom (evil-undo-system 'undo-tree)
+  :init (setq evil-undo-system 'undo-tree)
   :config (global-undo-tree-mode +1))
 
 (use-package general

@@ -24,8 +24,7 @@
 (require 'package)
 (setq package-archives nil)
 (package-initialize 'noactivate)
-(eval-when-compile
-  (require 'use-package))
+(require 'use-package)
 
 ;; (straight-use-package 'use-package)
 ;;(use-package straight-x) ;; loading the additional functions from straight-x
