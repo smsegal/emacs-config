@@ -1,4 +1,11 @@
 ;;; init.el -*- lexical-binding: t; -*-
+
+;; moving this above for use-package
+(require 'package)
+(setq package-archives nil)
+(package-initialize 'noactivate)
+(require 'use-package)
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -21,10 +28,6 @@
 ;; Using straight.el to load use-package and setup integration.
 
 ;; optional. makes unpure packages archives unavailable
-(require 'package)
-(setq package-archives nil)
-(package-initialize 'noactivate)
-(require 'use-package)
 
 ;; (straight-use-package 'use-package)
 ;;(use-package straight-x) ;; loading the additional functions from straight-x
