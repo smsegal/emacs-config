@@ -18,9 +18,14 @@
   (tramp-default-method "sshx"))
 
 ;; Restart emacs
-(use-package restart-emacs
-  :general
-  (:prefix-map '+quit-restart-map "r" 'restart-emacs))
+; hacky replacement for the restart-emacs package that works with a nix-based config
+(defun +restart-emacs ()
+  (interactive)
+  (save-some-buffers)
+  (shell-command (concat "kill -SIGKILL " (number-to-string (emacs-pid)) "; setsid -f emacs")))
+
+(general-def :prefix-map '+quit-restart-map
+  "r" #'+restart-emacs)
 
 ;; Calc mode
 ;; set calc mode to start in algebraic (ie normal) mode

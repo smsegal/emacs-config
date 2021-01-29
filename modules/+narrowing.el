@@ -13,22 +13,24 @@
   :general
   (general-imap "C-k" nil)
   (:keymaps 'selectrum-minibuffer-map
-            "C-j" 'selectrum-next-candidate
-            "C-k" 'selectrum-previous-candidate))
+   "C-j" 'selectrum-next-candidate
+   "C-k" 'selectrum-previous-candidate))
 
 ;; Prescient is a sorting/filtering package that orders results by "frecency".
 (use-package prescient
   :hook (after-init . prescient-persist-mode))
 
-;; (use-package selectrum-prescient
-;;   :hook (selectrum-mode . selectrum-prescient-mode))
+(use-package selectrum-prescient
+  :hook (selectrum-mode . selectrum-prescient-mode))
 
 (use-package orderless
   ;; completion style should be set when not using selectrum
   ;; :custom (completion-styles '(orderless))
   :init
-  (setq selectrum-refine-candidates-function #'orderless-filter)
-  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
+  (general-add-hook 'selectrum-prescient-mode
+                    #'((setq completion-styles '(orderless)
+                             selectrum-refine-candidates-function #'orderless-filter
+                             selectrum-highlight-candidates-function #'orderless-highlight-matches)))
   (advice-add #'completion--category-override :filter-return
               (defun completion-in-region-style-setup+ (res)
                 "Fallback to default styles for region completions with orderless."
@@ -62,27 +64,27 @@
   (setq consult-project-root-function #'+get-project-root)
   :general
   (:prefix-map 'help-map
-               "a" #'consult-apropos
-               ;; t is usually the tutorial, but this emacs is so customized it's useless
-               "t" 'consult-theme)
+   "a" #'consult-apropos
+   ;; t is usually the tutorial, but this emacs is so customized it's useless
+   "t" 'consult-theme)
   (:prefix-map '+insert-map
-               "y" #'consult-yank)
+   "y" #'consult-yank)
   (:prefix-map '+file-map
-               "w" #'consult-file-externally
-               "r" #'consult-recent-file)
+   "w" #'consult-file-externally
+   "r" #'consult-recent-file)
   (:prefix-map '+buffer-map
-               "b" #'consult-buffer)
+   "b" #'consult-buffer)
   (:prefix-map '+search-map
-               "i" #'consult-imenu
-               "s" #'consult-line
-               "r" #'consult-ripgrep
-               "f" #'+consult-fdfind
-               "o" #'consult-outline))
+   "i" #'consult-imenu
+   "s" #'consult-line
+   "r" #'consult-ripgrep
+   "f" #'+consult-fdfind
+   "o" #'consult-outline))
 
 (use-package consult-flycheck
   :general
   (:prefix-map '+code-map
-               "x" #'consult-flycheck))
+   "x" #'consult-flycheck))
 
 (use-package embark
   :general
