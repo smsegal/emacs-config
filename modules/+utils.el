@@ -3,8 +3,8 @@
 ;;; Writeroom Mode
 ;; Enable a nicer writing environment
 (use-package writeroom-mode
-  :custom
-  (writeroom-global-effects '(writeroom-set-bottom-divider-width))
+  :config
+  (setq writeroom-global-effects '(writeroom-set-bottom-divider-width))
   :config
   (general-add-advice 'text-scale-adjust :after
                       #'visual-fill-column-adjust)

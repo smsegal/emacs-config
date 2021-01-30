@@ -62,7 +62,7 @@
 ;; Here is where we set up the ligatures. There's configuration for the
 ;; fonts I use most often: "Victor Mono" and "JetBrains Mono".
 (use-package ligature
-  :disabled
+  :straight (:host github :repo "mickeynp/ligature.el")
   :ghook ('(prog-mode-hook org-mode-hook) #'ligature-mode)
   :init
   (ligature-set-ligatures

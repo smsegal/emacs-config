@@ -20,8 +20,8 @@
   (defun +python-lsp-ignore-dirs ()
     ;; add additional directories to ignored list for lsp python
     (add-hook 'hack-local-variables-hook #'+__python-add-ignore))
-  :ghook ('python-mode-hook  #'(+pyright__enable-lsp
-                                +python-lsp-ignore-dirs))
+  :ghook ('python-mode-hook  #'(+pyright__enable-lsp))
+                                ;; +python-lsp-ignore-dirs))
   :config
   (lsp-register-client
    (make-lsp-client

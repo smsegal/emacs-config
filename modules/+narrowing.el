@@ -25,11 +25,10 @@
 
 (use-package orderless
   ;; completion style should be set when not using selectrum
-  ;; :custom (completion-styles '(orderless))
+  :custom (completion-styles '(orderless))
   :init
   (general-add-hook 'selectrum-prescient-mode
-                    #'((setq completion-styles '(orderless)
-                             selectrum-refine-candidates-function #'orderless-filter
+                    #'((setq selectrum-refine-candidates-function #'orderless-filter
                              selectrum-highlight-candidates-function #'orderless-highlight-matches)))
   (advice-add #'completion--category-override :filter-return
               (defun completion-in-region-style-setup+ (res)
