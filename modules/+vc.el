@@ -46,11 +46,6 @@
     "," 'with-editor-finish
     "k" 'with-editor-cancel))
 
-;; C dynamic module bindings for speeding up magit
-(use-package libgit
-  :disabled
-  :straight (:host github :repo "magit/libegit2"))
-
 ;; Magit Extras
 ;; Forge lets us access PR's and other collaborative git features from
 ;; inside Magit.  We also set up todo's to be shown from the codebase all

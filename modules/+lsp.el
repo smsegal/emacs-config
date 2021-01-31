@@ -7,14 +7,6 @@
 
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
-  :custom
-  (read-process-output-max (* 1024 1024)) ;; 1mb
-  (lsp-completion-provider :capf)
-  (lsp-enable-folding t)
-  (lsp-enable-on-type-formatting nil)
-  (lsp-enable-snippet t)
-  (lsp-eldoc-enable-hover nil)
-  (lsp-headerline-breadcrumb-enable t)
   :ghook
   ;; move to language specific areas where packages exist
   ('(sh-mode-hook) #'lsp-deferred)
@@ -24,6 +16,15 @@
   :init
   ;; use this for adding additional dirs to the ignore list from .dir-locals.el
   (defvar +lsp-ignore-additional-dirs nil)
+  :config
+  (setq read-process-output-max (* 1024 1024)) ;; 1mb
+  (setq lsp-completion-provider :capf)
+  (setq lsp-enable-folding t)
+  (setq lsp-enable-on-type-formatting nil)
+  (setq lsp-enable-snippet t)
+  (setq lsp-eldoc-enable-hover nil)
+  (setq lsp-headerline-breadcrumb-enable t)
+  (setq lsp-enable-file-watchers nil)
   :general
   (general-nvmap
     :keymaps 'lsp-mode-map

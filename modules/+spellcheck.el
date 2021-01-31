@@ -4,8 +4,8 @@
 ;; Spell checking with flyspell and enchant.
 
 (use-package flyspell
-  :straight nil
   :defer t
+  :straight (:type built-in)
   :init
   (setq flyspell-issue-welcome-flag nil)
   ;; Significantly speeds up flyspell, which would otherwise print

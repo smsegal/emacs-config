@@ -3,8 +3,8 @@
 ;;; Writeroom Mode
 ;; Enable a nicer writing environment
 (use-package writeroom-mode
-  :custom
-  (writeroom-global-effects '(writeroom-set-bottom-divider-width))
+  :config
+  (setq writeroom-global-effects '(writeroom-set-bottom-divider-width))
   :config
   (general-add-advice 'text-scale-adjust :after
                       #'visual-fill-column-adjust)
@@ -20,13 +20,21 @@
 
 ;; Restart emacs
 (use-package restart-emacs
+  :disabled
   :general
   (:prefix-map '+quit-restart-map "r" 'restart-emacs))
+; hacky replacement for the restart-emacs package that works with a nix-based config
+(defun +restart-emacs ()
+  (interactive)
+  (save-some-buffers)
+  (shell-command (concat "kill -SIGKILL " (number-to-string (emacs-pid)) "; setsid -f emacs")))
+
+(general-def :prefix-map '+quit-restart-map
+  "r" #'+restart-emacs)
 
 ;; Calc mode
 ;; set calc mode to start in algebraic (ie normal) mode
 (use-package calc
-  :straight (:type built-in)
   :hook (calc-mode . calc-algebraic-mode)
   :general
   (:prefix-map '+open-map

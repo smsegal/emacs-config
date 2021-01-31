@@ -20,8 +20,8 @@
   (defun +python-lsp-ignore-dirs ()
     ;; add additional directories to ignored list for lsp python
     (add-hook 'hack-local-variables-hook #'+__python-add-ignore))
-  :ghook ('python-mode-hook  #'(+pyright__enable-lsp
-                                +python-lsp-ignore-dirs))
+  :ghook ('python-mode-hook  #'(+pyright__enable-lsp))
+                                ;; +python-lsp-ignore-dirs))
   :config
   (lsp-register-client
    (make-lsp-client
@@ -88,6 +88,8 @@
 
 ;; trying lighter-weight alternative to ein
 (use-package code-cells
+  :disabled
+  :commands (code-cells-command)
   :preface
   (defun +insert-code-cell ()
     (interactive)
@@ -105,7 +107,7 @@
                   (python-shell-send-region start end)
                   (code-cells-forward-cell))))
 
-(use-package emacs-ipython-notebook
+(use-package ein
   :disabled
   :straight ein
   :hook (ein:notebook-mode . evil-normalize-keymaps)

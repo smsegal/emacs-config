@@ -20,15 +20,16 @@
 (use-package prescient
   :hook (after-init . prescient-persist-mode))
 
-;; (use-package selectrum-prescient
-;;   :hook (selectrum-mode . selectrum-prescient-mode))
+(use-package selectrum-prescient
+  :hook (selectrum-mode . selectrum-prescient-mode))
 
 (use-package orderless
   ;; completion style should be set when not using selectrum
-  ;; :custom (completion-styles '(orderless))
+  :custom (completion-styles '(orderless))
   :init
-  (setq selectrum-refine-candidates-function #'orderless-filter)
-  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
+  (general-add-hook 'selectrum-prescient-mode
+                    #'((setq selectrum-refine-candidates-function #'orderless-filter
+                             selectrum-highlight-candidates-function #'orderless-highlight-matches)))
   (advice-add #'completion--category-override :filter-return
               (defun completion-in-region-style-setup+ (res)
                 "Fallback to default styles for region completions with orderless."
@@ -42,7 +43,6 @@
 ;; Consult is to selectrum as counsel is to Ivy.
 ;; Marginalia is a bit of extra eye-candy on top of Consult.
 (use-package consult
-  :straight (:host github :repo "minad/consult")
   :preface
   (defun +consult-fdfind (&optional dir)
     (interactive "P")
@@ -81,7 +81,6 @@
    "o" #'consult-outline))
 
 (use-package consult-flycheck
-  :straight (:host github :repo "minad/consult")
   :general
   (:prefix-map '+code-map
    "x" #'consult-flycheck))
@@ -96,7 +95,7 @@
   (embark-collect-mode . embark-consult-preview-minor-mode))
 
 (use-package marginalia
-  :straight (:host github :repo "minad/marginalia" :branch "main")
+  :commands (marginalia-mode)
   :init
   (marginalia-mode)
 

@@ -9,6 +9,10 @@
 ;; bind to these keymaps in the relevant packages later.
 
 ;; Set up evil-mode ahead of general.el
+;; Apparently ~undo-tree~ has had it's performance improved, will try it again sometime
+(use-package undo-tree
+  :config (global-undo-tree-mode +1))
+
 (use-package evil
   :after undo-tree
   :init
@@ -23,14 +27,11 @@
   (setq evil-undo-system 'undo-fu)
   (setq evil-regexp-search t)
   (setq evil-move-cursor-back t)
+  (setq evil-undo-system 'undo-tree)
   :config
   (evil-select-search-module 'evil-search-module 'evil-search)
   (evil-mode +1))
 
-;; Apparently ~undo-tree~ has had it's performance improved, will try it again sometime
-(use-package undo-tree
-  :custom (evil-undo-system 'undo-tree)
-  :config (global-undo-tree-mode +1))
 
 (use-package general
   :after evil

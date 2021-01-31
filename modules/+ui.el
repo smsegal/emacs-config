@@ -4,6 +4,7 @@
 ;; A nice start page for emacs. I set a custom logo for the buffer, and
 ;; enable ~all-the-icons~ support.
 (use-package dashboard
+  :commands (dashboard-setup-startup-hook)
   :init
   (setq dashboard-set-footer nil)
   (setq dashboard-center-content t)
@@ -20,6 +21,7 @@
 ;; I use the great ~doom-themes~ package from Doom. It provides a whole
 ;; ton of great light and dark themes.
 (use-package doom-themes
+  :commands (doom-themes-visual-bell-config)
   :config
   (setq doom-themes-enable-bold t)
   (setq doom-themes-enable-italic t)

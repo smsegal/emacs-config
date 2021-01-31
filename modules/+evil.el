@@ -61,6 +61,7 @@
   (global-evil-surround-mode +1))
 (use-package evil-embrace
   :after evil-surround
+  :commands (evil-embrace-enable-evil-surround-integration)
   :init (evil-embrace-enable-evil-surround-integration))
 
 ;; Search forwards with ~S~, ~f~, ~t~
