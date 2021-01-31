@@ -19,6 +19,7 @@
 ;; We need to fix a missing binding that should be set by ~evil-collection~.
 ;; Submodules get opened by ~"~ inside the magit status buffer.
 (use-package magit
+  :straight nil
   :after evil-collection
   :preface
   (defun +magit/fix-submodule-binding ()
@@ -28,6 +29,7 @@
       '("'" "Submodules" magit-submodule)))
   :gfhook ('magit-mode-hook #'(+magit/fix-submodule-binding visual-line-mode))
   :init
+  (require 'libgit)
   (setq magit-diff-refine-hunk t)
   (setq magit-completing-read-function #'selectrum-completing-read)
   :config
@@ -53,6 +55,7 @@
 ;; now.
 
 (use-package forge
+  :straight nil
   :after magit)
 
 (use-package magit-todos

@@ -82,13 +82,11 @@
 ;; The ein package has really improved lately. In addition, the jupyter
 ;; kernel provides a pretty good experience for using it inside org-mode.
 (use-package jupyter
-  ;; :disabled
-  ;; :straight (:no-native-compile t)
+  :straight nil
   :commands (jupyter-connect-repl jupyter-run-repl jupyter-eval-region))
 
 ;; trying lighter-weight alternative to ein
 (use-package code-cells
-  :disabled
   :commands (code-cells-command)
   :preface
   (defun +insert-code-cell ()

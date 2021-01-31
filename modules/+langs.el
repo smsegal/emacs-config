@@ -4,6 +4,7 @@
 ;; Now, apparently this package is useful for a ton of different
 ;; things. I use it for the nicer syntax highlighting in supported languages.
 (use-package tree-sitter
+  :defer t
   :straight (:host github :repo "ubolonton/emacs-tree-sitter"
              :files ("lisp/*.el"))
   :ghook ('(python-mode-hook
@@ -11,6 +12,7 @@
             typescript-mode-hook
             css-mode-hook) #'tree-sitter-hl-mode))
 (use-package tree-sitter-langs
+  :defer t
   :straight (:host github :repo "ubolonton/emacs-tree-sitter"
              :files ("langs/*.el" "langs/queries")))
 
@@ -99,8 +101,8 @@
 
 (use-package nix-mode
   :mode "\\.nix\\'")
-(use-package company-nixos-options
-  :config (add-to-list 'company-backends 'company-nixos-options))
+;; (use-package company-nixos-options
+;;   :config (add-to-list 'company-backends 'company-nixos-options))
 
 (use-package markdown-mode
   :commands (markdown-mode gfm-mode)

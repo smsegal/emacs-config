@@ -29,7 +29,7 @@ during normal emacs operations.")
 (setq comp-deferred-compilation nil)
 
 ;; set before straight loads
-;; (setq straight-check-for-modifications 'find-at-startup)
+(setq straight-check-for-modifications '(watch-files find-when-checking))
 ;; needs to be set before straight.el is loaded in order to fix
 ;; flycheck temp file creation
 (setq straight-fix-flycheck t)
