@@ -114,4 +114,4 @@
   ;; use heavy annotators (keybindings, descriptions etc.)
   (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil)))
 
-(provide '+completion-framework)
+(provide '+incr-comp)

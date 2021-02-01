@@ -1,8 +1,8 @@
 ;; -*- lexical-binding: t; -*-
 
 ;; Spellcheck
-;; Spell checking with flyspell and enchant.
 
+;; Spell checking with flyspell and enchant.
 (use-package flyspell
   :defer t
   :straight (:type built-in)
@@ -11,7 +11,7 @@
   ;; Significantly speeds up flyspell, which would otherwise print
   ;; messages for every word when checking the entire buffer
   (setq flyspell-issue-message-flag nil)
-  (setq ispell-program-name "enchant-2") ;; new spellcheck engine
+  (setq ispell-program-name "hunspell") ;; new spellcheck engine
   (setq ispell-dictionary "en_CA")
   :config
   (setq flyspell-mode-map nil);; I bind my own keys, and this interferes rudely with other packages.

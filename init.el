@@ -41,12 +41,12 @@
 (require '+ui)
 (require '+tty)           ;; support for terminal operation
 (require '+project)
-(require '+completion-framework)     ;; incremental narrowing + utils (selectrum+consult+marginalia)
+(require '+incr-comp)     ;; incremental narrowing + utils (selectrum+consult+marginalia)
+(require '+autocomplete)  ;; + syntax checking
 (require '+spellcheck)
 (require '+modeline)
 (require '+buffers)
 (require '+windows)       ;; window management, not the OS
-(require '+autocomplete)  ;; + syntax checking
 (require '+files)         ;; file management + related
 (require '+snippets)
 (require '+text-tools)
