@@ -23,7 +23,9 @@
   (evil-escape-mode +1))
 
 ;; evil keybindings
-(general-nvmap "gD" #'xref-find-references)
+(general-nvmap
+  "gD" #'xref-find-references
+  "gd" #'xref-find-definitions)
 
 ;;;###autoload
 (evil-define-operator +evil:apply-macro (beg end)
@@ -54,8 +56,8 @@
 (evil-ex-define-cmd "@" #'+evil:apply-macro)
 (general-vmap "@" #'+evil:apply-macro)
 (general-mmap "g@" #'+evil:apply-macro)
-;; Surround text objects with different delimiters
 
+;; Surround text objects with different delimiters
 (use-package evil-surround
   :config
   (global-evil-surround-mode +1))
@@ -65,7 +67,6 @@
   :init (evil-embrace-enable-evil-surround-integration))
 
 ;; Search forwards with ~S~, ~f~, ~t~
-
 (use-package evil-snipe
   :after evil
   :custom (evil-snipe-use-vim-sneak-bindings t)
@@ -75,7 +76,6 @@
   (evil-snipe-override-mode +1))
 
 ;; Search for the text objext under the point with ~*~.
-
 (use-package evil-visualstar
   :config (global-evil-visualstar-mode))
 

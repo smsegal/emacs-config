@@ -20,8 +20,8 @@
 (use-package prescient
   :hook (after-init . prescient-persist-mode))
 
-(use-package selectrum-prescient
-  :hook (selectrum-mode . selectrum-prescient-mode))
+(use-package selectrum-prescient)
+;; :hook (selectrum-mode . selectrum-prescient-mode))
 
 (use-package orderless
   ;; completion style should be set when not using selectrum
@@ -29,7 +29,10 @@
   :init
   (general-add-hook 'selectrum-prescient-mode
                     #'((setq selectrum-refine-candidates-function #'orderless-filter
-                             selectrum-highlight-candidates-function #'orderless-highlight-matches)))
+                             selectrum-highlight-candidates-function #'orderless-highlight-matches
+                             selectrum-preprocess-candidates-function #'selectrum-prescient--preprocess)))
+  (add-hook 'selectrum-candidate-selected-hook #'selectrum-prescient--remember)
+  (add-hook 'selectrum-candidate-inserted-hook #'selectrum-prescient--remember)
   (advice-add #'completion--category-override :filter-return
               (defun completion-in-region-style-setup+ (res)
                 "Fallback to default styles for region completions with orderless."
@@ -59,8 +62,13 @@
   (setq register-preview-delay 0
         register-preview-function #'consult-register-preview)
 
+  ;; Optionally tweak the register preview window.
+  ;; This adds zebra stripes, sorting and hides the mode line of the window.
+  (advice-add #'register-preview :override #'consult-register-window)
+
   ;;project root
-  (setq consult-project-root-function #'+get-project-root)
+  (setq consult-project-root-function
+        (lambda () (locate-dominating-file "." ".git")))
   :general
   (:prefix-map 'help-map
    "a" #'consult-apropos
@@ -106,4 +114,4 @@
   ;; use heavy annotators (keybindings, descriptions etc.)
   (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil)))
 
-(provide '+narrowing)
+(provide '+completion-framework)

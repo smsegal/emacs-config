@@ -12,7 +12,6 @@
             typescript-mode-hook
             css-mode-hook) #'tree-sitter-hl-mode))
 (use-package tree-sitter-langs
-  :defer t
   :straight (:host github :repo "ubolonton/emacs-tree-sitter"
              :files ("langs/*.el" "langs/queries")))
 
@@ -33,20 +32,19 @@
 
 ;; Code Search
 ;; Automatically jump to definitions in different languages.
-
 (use-package dumb-jump
+  :config
+  (setq dumb-jump-prefer-searcher 'rg)
   :hook (xref-backend-functions . dumb-jump-xref-activate))
 
 ;; Editorconfig
 ;; Per directory spaces/tabs indentation.
-
 (use-package editorconfig
   :custom (editorconfig-trim-whitespaces-mode 'ws-butler-mode)
   :hook (after-init . editorconfig-mode))
 
 ;; Compilation
 ;; Make compilation buffers process escape codes for colours etc.
-
 (use-package compile
   :straight (:type built-in)
   :preface

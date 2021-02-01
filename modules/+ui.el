@@ -194,9 +194,15 @@
       (lambda () (setq-local split-window-preferred-function
                              'visual-fill-column-split-window-sensibly)))))
 
+;; Line Numbers
+(use-package display-line-numbers
+  :config
+  (setq display-line-numbers-type 'visual)
+  (setq-default display-line-numbers-grow-only t)
+  :hook (prog-mode  . display-line-numbers-mode))
+
 ;; A lot of the built-in UI needs some tweaks. We disable menu bars, the toolbar and the scrollbar.
 ;; We also want to confirm things with a single y/n instead of the whole word.
-
 (setq confirm-nonexistent-file-or-buffer nil)
 (setq mouse-yank-at-point t)
 

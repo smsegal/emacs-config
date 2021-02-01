@@ -106,7 +106,6 @@
                   (code-cells-forward-cell))))
 
 (use-package ein
-  :disabled
   :straight ein
   :hook (ein:notebook-mode . evil-normalize-keymaps)
   :custom

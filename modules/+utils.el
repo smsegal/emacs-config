@@ -4,8 +4,8 @@
 ;; Enable a nicer writing environment
 (use-package writeroom-mode
   :config
-  (setq writeroom-global-effects '(writeroom-set-bottom-divider-width))
-  :config
+  ;; (setq writeroom-global-effects '(writeroom-set-bottom-divider-width))
+  (setq writeroom-maximize-window nil)
   (general-add-advice 'text-scale-adjust :after
                       #'visual-fill-column-adjust)
   :general
@@ -23,7 +23,8 @@
   :disabled
   :general
   (:prefix-map '+quit-restart-map "r" 'restart-emacs))
-; hacky replacement for the restart-emacs package that works with a nix-based config
+
+;; hacky replacement for the restart-emacs package that works with a nix-based config
 (defun +restart-emacs ()
   (interactive)
   (save-some-buffers)

@@ -13,7 +13,7 @@
 ;;; Garbage Collection
 ;; This package changes the behaviour of the garbage collector to act during idle time.
 (use-package gcmh
-  :hook (after-init . gcmh-mode))
+  :hook (emacs-startup . gcmh-mode))
 
 ;; Keep ~user-emacs-directory~ clean
 ;; We also set up ~recentf-mode~ since it relies on no-littering being loaded right before.
@@ -119,5 +119,8 @@
 ;; ~emacs-startup-hook~ runs after ~after-init-hook~
 (use-package envrc
   :hook (emacs-startup . envrc-global-mode))
+
+;; selected text should be overwritten in insert mode just like every other editor
+(add-hook 'emacs-startup-hook #'delete-selection-mode)
 
 (provide '+core-setup)

@@ -64,8 +64,7 @@
     "e" #'eval-buffer)
 
   (general-def :prefix-map '+quit-restart-map
-    "q" 'save-buffers-kill-emacs
-    "r" 'restart-emacs)
+    "q" 'save-buffers-kill-emacs)
 
   (general-def :prefix-map '+buffer-map
     :wk-full-keys nil

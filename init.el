@@ -24,7 +24,7 @@
 
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
-(use-package straight-x :straight nil) ;; loading the additional functions from straight-x
+(require 'straight-x) ;; loading the additional functions from straight-x
 
 ;; Add custom code to load path
 (add-to-list 'load-path (expand-file-name "modules" user-emacs-directory))
@@ -41,7 +41,7 @@
 (require '+ui)
 (require '+tty)           ;; support for terminal operation
 (require '+project)
-(require '+narrowing)     ;; incremental narrowing + utils (selectrum+consult+marginalia)
+(require '+completion-framework)     ;; incremental narrowing + utils (selectrum+consult+marginalia)
 (require '+spellcheck)
 (require '+modeline)
 (require '+buffers)
