@@ -123,4 +123,7 @@
 ;; selected text should be overwritten in insert mode just like every other editor
 (add-hook 'emacs-startup-hook #'delete-selection-mode)
 
+;; long lines shouldn't crash emacs
+(global-so-long-mode 1)
+
 (provide '+core-setup)

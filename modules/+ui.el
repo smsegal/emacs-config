@@ -198,6 +198,7 @@
 (use-package display-line-numbers
   :config
   (setq display-line-numbers-type 'visual)
+  (setq-default display-line-numbers-width 3)
   (setq-default display-line-numbers-grow-only t)
   :hook (prog-mode  . display-line-numbers-mode))
 

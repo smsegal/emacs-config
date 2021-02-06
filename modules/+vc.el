@@ -29,7 +29,6 @@
       '("'" "Submodules" magit-submodule)))
   :gfhook ('magit-mode-hook #'(+magit/fix-submodule-binding visual-line-mode))
   :init
-  (require 'libgit)
   (setq magit-diff-refine-hunk t)
   (setq magit-completing-read-function #'selectrum-completing-read)
   :config
@@ -48,16 +47,19 @@
     "," 'with-editor-finish
     "k" 'with-editor-cancel))
 
+(use-package libgit
+  :straight nil)
+
 ;; Magit Extras
 ;; Forge lets us access PR's and other collaborative git features from
-;; inside Magit.  We also set up todo's to be shown from the codebase all
-;; centralized inside the status buffer. It's kinda slow so disabled for
-;; now.
-
+;; inside Magit.
 (use-package forge
   :straight nil
   :after magit)
 
+;;We also set up todo's to be shown from the codebase all
+;; centralized inside the status buffer. It's kinda slow so disabled for
+;; now.
 (use-package magit-todos
   :disabled
   :after magit

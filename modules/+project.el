@@ -17,10 +17,5 @@
           :package project
           :which-key "projects")))
 
-;;;###autoload
-(defun +get-project-root ()
-  "Get current project root directory."
-  (interactive)
-  (cdr (project-current)))
 
 (provide '+project)
