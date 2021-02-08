@@ -112,6 +112,9 @@
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode)))
 
+(use-package vimrc-mode
+  :mode "\\.vim\\(rc\\)?\\'")
+
 (use-package systemd)
 
 ;; arch PKGBUILDS

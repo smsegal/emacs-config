@@ -33,7 +33,6 @@
    "F" 'burly-bookmark-frames))
 
 ;; Switch to the scratch buffer
-
 (use-package switch-to-buffer
   :straight (:type built-in)
   :preface
