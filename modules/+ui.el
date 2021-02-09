@@ -57,7 +57,7 @@
   ((after-init . circadian-setup)
    (circadian-before-load-theme . +load-modus-theme)))
 
-(use-package all-the-icons)
+(use-package all-the-icons :straight nil)
 
 ;; Here is where we set up the ligatures. There's configuration for the
 ;; fonts I use most often: "Victor Mono" and "JetBrains Mono".
