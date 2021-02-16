@@ -21,7 +21,7 @@
     ;; add additional directories to ignored list for lsp python
     (add-hook 'hack-local-variables-hook #'+__python-add-ignore))
   :ghook ('python-mode-hook  #'(+pyright__enable-lsp))
-                                ;; +python-lsp-ignore-dirs))
+  ;; +python-lsp-ignore-dirs))
   :config
   (lsp-register-client
    (make-lsp-client
@@ -77,6 +77,12 @@
     :keymaps 'python-mode-map
     :prefix ","
     "is" #'py-isort-buffer))
+
+(require 'crux)
+(use-package python-black
+  :general
+  (:keymaps 'python-mode-map
+   [remap format-all-buffer] (crux-with-region-or-buffer python-black-region)))
 
 ;; Jupyter Kernal and Notebook support
 ;; The ein package has really improved lately. In addition, the jupyter
