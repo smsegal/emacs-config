@@ -5,15 +5,11 @@
 ;; things. I use it for the nicer syntax highlighting in supported languages.
 (use-package tree-sitter
   :defer t
-  :straight (:host github :repo "ubolonton/emacs-tree-sitter"
-             :files ("lisp/*.el"))
   :ghook ('(python-mode-hook
             js2-mode-hook
             typescript-mode-hook
             css-mode-hook) #'tree-sitter-hl-mode))
-(use-package tree-sitter-langs
-  :straight (:host github :repo "ubolonton/emacs-tree-sitter"
-             :files ("langs/*.el" "langs/queries")))
+(use-package tree-sitter-langs)
 
 ;; Formatting
 ;; Format all code with one keybinding.
@@ -125,5 +121,6 @@
 (use-package git-modes
   :mode ("/.dockerignore\\'" . gitignore-mode))
 
+(use-package lua-mode)
 
 (provide '+langs)

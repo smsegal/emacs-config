@@ -4,7 +4,7 @@
 ;; Vterm is by far the best terminal emulator. It now has support for
 ;; evil-mode motions and such.
 (use-package vterm
-  :straight nil
+  ;; :straight nil
   ;; :preface
   ;; ;; Add evil specific bindings that work with vterm mode
   ;; (defun vterm-evil-insert ()

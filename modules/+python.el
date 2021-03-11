@@ -88,8 +88,17 @@
 ;; The ein package has really improved lately. In addition, the jupyter
 ;; kernel provides a pretty good experience for using it inside org-mode.
 (use-package jupyter
-  :straight nil
-  :commands (jupyter-connect-repl jupyter-run-repl jupyter-eval-region))
+  ;; :straight nil
+  :commands (jupyter-connect-repl jupyter-run-repl jupyter-eval-region)
+  :general
+  (:keymaps 'jupyter-repl-mode-map
+   :states '(insert normal)
+   "C-j" #'jupyter-repl-history-next
+   "C-k" #'jupyter-repl-history-previous)
+  (:keymaps 'jupyter-repl-mode-map
+   :states 'normal
+   "j" #'jupyter-repl-history-next
+   "k" #'jupyter-repl-history-previous))
 
 ;; trying lighter-weight alternative to ein
 (use-package code-cells

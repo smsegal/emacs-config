@@ -57,7 +57,7 @@
   ((after-init . circadian-setup)
    (circadian-before-load-theme . +load-modus-theme)))
 
-(use-package all-the-icons :straight nil)
+(use-package all-the-icons) ;;:straight nil)
 
 ;; Here is where we set up the ligatures. There's configuration for the
 ;; fonts I use most often: "Victor Mono" and "JetBrains Mono".
@@ -112,7 +112,34 @@
     (set-face-attribute 'font-lock-comment-face nil :family font-name :slant 'italic)
     (set-frame-font (concat font-name "-" font-size) t t)))
 
-(general-add-hook 'after-init-hook #'+_set-font)
+(general-after-gui (+_set-font))
+
+;; don't ring a bell jfc
+;; -- taken from https://emacs.stackexchange.com/a/55988
+(defun my-mode-line-visual-bell ()
+  (setq visible-bell nil)
+  (setq ring-bell-function 'my-mode-line-visual-bell--flash))
+
+(defun my-mode-line-visual-bell--flash ()
+  (let ((frame (selected-frame)))
+    (run-with-timer
+     0.1 nil
+     #'(lambda (frame)
+         (let ((inhibit-quit)
+               (inhibit-redisplay t))
+           (invert-face 'header-line frame)
+           (invert-face 'header-line-highlight frame)
+           (invert-face 'mode-line frame)
+           (invert-face 'mode-line-inactive frame)))
+     frame)
+    (let ((inhibit-quit)
+          (inhibit-redisplay t))
+      (invert-face 'header-line frame)
+      (invert-face 'header-line-highlight frame)
+      (invert-face 'mode-line frame)
+      (invert-face 'mode-line-inactive frame))))
+
+(general-after-init (doom-themes-visual-bell-config))
 
 ;; What the hell do I press next? Which-key answers that question.
 (use-package which-key

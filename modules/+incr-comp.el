@@ -10,6 +10,8 @@
   :commands (selectrum-next-candidate selectrum-previous-candidate)
   :hook
   (emacs-startup . selectrum-mode)
+  :config
+  (setq selectrum-fix-vertical-window-height t)
   :general
   (general-imap "C-k" nil)
   (:keymaps 'selectrum-minibuffer-map
@@ -67,8 +69,12 @@
   (advice-add #'register-preview :override #'consult-register-window)
 
   ;;project root
+  ;; (setq consult-project-root-function
+  ;;       (lambda () (locate-dominating-file "." ".git")))
   (setq consult-project-root-function
-        (lambda () (locate-dominating-file "." ".git")))
+        (lambda ()
+          (when-let (project (project-current))
+            (car (project-roots project)))))
   :general
   (:prefix-map 'help-map
    "a" #'consult-apropos
