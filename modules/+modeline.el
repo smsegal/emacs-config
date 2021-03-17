@@ -12,6 +12,7 @@
 (use-package moody
   :after smart-mode-line
   :config
+  (setq x-underline-at-descent-line t)
   (moody-replace-sml/mode-line-buffer-identification)
   (moody-replace-vc-mode))
 

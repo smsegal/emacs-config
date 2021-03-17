@@ -5,6 +5,10 @@
   :preface
   (defun +pyright__enable-lsp ()
     (require 'lsp-pyright)
+    ;; TODO: This is a hack to make sure the correct env is loaded,
+    ;; but should probably take a look at disabling envrc-global-mode
+    ;; or something similar
+    (envrc-reload)
     (lsp-deferred))
   (defun +__python-add-ignore ()
     (let ((to-ignore (append '("[/\\\\]\\.mypy_cache"

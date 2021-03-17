@@ -19,7 +19,6 @@
   :init
   (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
   :config
-  (add-to-list 'evil-escape-excluded-major-modes 'vterm-mode)
   (evil-escape-mode +1))
 
 ;; evil keybindings
