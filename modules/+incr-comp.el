@@ -68,6 +68,9 @@
   ;; This adds zebra stripes, sorting and hides the mode line of the window.
   (advice-add #'register-preview :override #'consult-register-window)
 
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+
   ;;project root
   ;; (setq consult-project-root-function
   ;;       (lambda () (locate-dominating-file "." ".git")))
@@ -100,11 +103,18 @@
    "x" #'consult-flycheck))
 
 (use-package embark
+  :config
+  (setq embark-action-indicator
+        (lambda (map _target)
+          (which-key--show-keymap "Embark" map nil nil 'no-paging)
+          #'which-key--hide-popup-ignore-command)
+        embark-become-indicator embark-action-indicator)
   :general
-  ("C-," #'embark-act))
+  ("C-S-a" #'embark-act))
 
 (use-package embark-consult
   :after (embark consult)
+  :demand t
   :hook
   (embark-collect-mode . embark-consult-preview-minor-mode))
 
