@@ -7,6 +7,7 @@
 ;; I'm aiming to translate a lot of keys to vim-like equivalents, using
 ;; leader keys to replace the special ~C-c~ bindings.
 (use-package org
+  :straight nil
   :init
   (setq org-startup-indented t)
   (setq org-src-fontify-natively t)
@@ -32,12 +33,14 @@
     "k" #'org-edit-src-abort))
 
 (use-package org-superstar
+  :straight nil
   :ghook ('org-mode-hook #'org-superstar-mode)
   :custom (org-superstar-special-todo-items t))
 
 ;; Table of Contents
 ;; Have an auto-updated TOC, primarily for github readme support
 (use-package toc-org
+  :straight nil
   :hook (org-mode . toc-org-mode))
 
 (provide '+org)

@@ -1,15 +1,19 @@
 ;; -*- lexical-binding: t; -*-
 
+(require '+lsp)
+
 ;; Tree-sitter
 ;; Now, apparently this package is useful for a ton of different
 ;; things. I use it for the nicer syntax highlighting in supported languages.
 (use-package tree-sitter
+  :straight nil
   :defer t
   :ghook ('(python-mode-hook
             js2-mode-hook
             typescript-mode-hook
             css-mode-hook) #'tree-sitter-hl-mode))
 (use-package tree-sitter-langs)
+;; :straight nil)
 
 ;; Formatting
 ;; Format all code with one keybinding.
@@ -93,6 +97,26 @@
 (use-package julia-mode
   :mode "\.*\.jl")
 
+(use-package lsp-julia
+  :straight (:host github
+             :repo "non-Jedi/lsp-julia"
+             :files ("*.el" "languageserver"))
+  :preface
+  (setq lsp-julia-package-dir nil)
+  (defun +_lsp-julia-enable ()
+    (require 'lsp-julia)
+    (lsp-deferred))
+  :config
+  (setq lsp-julia-default-environment "~/.julia/environments/v1.5")
+  (setq lsp-julia-flags "-J ~/.cache/julia/languageserver.so")
+  :hook (julia-mode . +_lsp-julia-enable))
+
+(use-package julia-repl
+  :hook (julia-mode . julia-repl-mode)
+  :config
+  (julia-repl-set-terminal-backend 'vterm)
+  (setq-local vterm-kill-buffer-on-exit nil))
+
 (use-package nix-mode
   :mode "\\.nix\\'")
 ;; (use-package company-nixos-options
@@ -122,5 +146,7 @@
   :mode ("/.dockerignore\\'" . gitignore-mode))
 
 (use-package lua-mode)
+
+(use-package fish-mode)
 
 (provide '+langs)

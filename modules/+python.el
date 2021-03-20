@@ -10,48 +10,7 @@
     ;; or something similar
     (envrc-reload)
     (lsp-deferred))
-  (defun +__python-add-ignore ()
-    (let ((to-ignore (append '("[/\\\\]\\.mypy_cache"
-                               "[/\\\\]\\.ipynb_checkpoints"
-                               "[/\\\\]__pycache__"
-                               "[/\\\\]*\\.egg-info")
-                             +lsp-ignore-additional-dirs)))
-      (message "adding to lsp ignored dirs: ")
-      (dolist (path to-ignore)
-        (message "  %s" path)
-        (add-to-list 'lsp-file-watch-ignored-directories path t)))
-    (remove-hook 'hack-local-variables-hook #'+__python-add-ignore))
-  (defun +python-lsp-ignore-dirs ()
-    ;; add additional directories to ignored list for lsp python
-    (add-hook 'hack-local-variables-hook #'+__python-add-ignore))
-  :ghook ('python-mode-hook  #'(+pyright__enable-lsp))
-  ;; +python-lsp-ignore-dirs))
-  :config
-  (lsp-register-client
-   (make-lsp-client
-    :new-connection
-    (lsp-tramp-connection
-     (lambda () (cons "/usr/bin/pyright-langserver"
-                      lsp-pyright-langserver-command-args)))
-    :major-modes '(python-mode)
-    :server-id 'pyright-remote
-    :multi-root lsp-pyright-multi-root
-    :remote? t
-    :priority -1
-    :initialized-fn
-    (lambda (workspace)
-      (with-lsp-workspace workspace
-        ;; we send empty settings initially, LSP server will ask for the
-        ;; configuration of each workspace folder later separately
-        (lsp--set-configuration
-         (make-hash-table :test 'equal))))
-    ;; :download-server-fn
-    ;; (lambda (_client callback error-callback _update?)
-    ;;   (lsp-package-ensure 'pyright callback error-callback))
-    :notification-handlers
-    (lsp-ht ("pyright/beginProgress" 'lsp-pyright--begin-progress-callback)
-            ("pyright/reportProgress" 'lsp-pyright--report-progress-callback)
-            ("pyright/endProgress" 'lsp-pyright--end-progress-callback)))))
+  :ghook ('python-mode-hook  #'(+pyright__enable-lsp)))
 
 ;; Python
 ;; The builtin package needs some simple tweaks to use ipython as the REPL.
@@ -92,7 +51,7 @@
 ;; The ein package has really improved lately. In addition, the jupyter
 ;; kernel provides a pretty good experience for using it inside org-mode.
 (use-package jupyter
-  ;; :straight nil
+  :straight nil
   :commands (jupyter-connect-repl jupyter-run-repl jupyter-eval-region)
   :general
   (:keymaps 'jupyter-repl-mode-map
@@ -125,7 +84,7 @@
                   (code-cells-forward-cell))))
 
 (use-package ein
-  :straight ein
+  :straight nil
   :hook (ein:notebook-mode . evil-normalize-keymaps)
   :custom
   (ein:output-area-inlined-images t)

@@ -17,15 +17,19 @@
 (use-package company-prescient
   :hook (company-mode . company-prescient-mode))
 
-(use-package company-box
-  :hook (company-mode . company-box-mode))
+(use-package company-tabnine
+  :config
+  (add-to-list 'company-backends #'company-tabnine))
+
+;; (use-package company-box
+;;   :hook (company-mode . company-box-mode))
 
 (use-package company-quickhelp
   :hook (company-mode . company-quickhelp-mode))
 
 (use-package company-posframe
   :unless IS-MAC
-  :hook (company-box-mode . company-posframe-mode))
+  :hook (company-mode . company-posframe-mode))
 
 ;; syntax checking
 (use-package flycheck
@@ -36,6 +40,5 @@
 (use-package flycheck-inline
   :after flycheck
   :ghook ('flycheck-mode-hook #'flycheck-inline-mode))
-
 
 (provide '+autocomplete)

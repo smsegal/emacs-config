@@ -107,7 +107,7 @@
   (setq reftex-toc-split-windows-fraction 0.3))
 
 (use-package pdf-tools
-  ;; :straight nil
+  :straight nil
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :magic ("%PDF" . pdf-view-mode)
   ;; :hook (pdf-view-mode . auto-revert-mode)

@@ -11,10 +11,22 @@
 ;; Set up evil-mode ahead of general.el
 ;; Apparently ~undo-tree~ has had it's performance improved, will try it again sometime
 (use-package undo-tree
+  :disabled
   :config (global-undo-tree-mode +1))
 
+(use-package vundo
+  :straight (:host github :repo "casouri/vundo")
+  :config
+  (evil-set-initial-state 'vundo--mode 'emacs)
+  :general
+  (general-def :keymaps 'vundo--mode-map
+    "j" #'vundo-next
+    "k" #'vundo-previous
+    "h" #'vundo-backward
+    "l" #'vundo-forward))
+
 (use-package evil
-  :after undo-tree
+  ;; :after undo-tree
   :init
   (setq evil-want-keybinding nil)
   (setq evil-want-integration t)
@@ -27,7 +39,7 @@
   (setq evil-undo-system 'undo-fu)
   (setq evil-regexp-search t)
   (setq evil-move-cursor-back t)
-  (setq evil-undo-system 'undo-tree)
+  (setq evil-undo-system 'undo-redo)
   :config
   (evil-select-search-module 'evil-search-module 'evil-search)
   (evil-mode +1))

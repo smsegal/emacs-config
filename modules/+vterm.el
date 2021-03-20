@@ -4,13 +4,13 @@
 ;; Vterm is by far the best terminal emulator. It now has support for
 ;; evil-mode motions and such.
 (use-package vterm
+  :straight nil
   :custom
-  (vterm-shell (concat "/bin/fish -C 'source "
-                       straight-base-dir
-                       "straight/build/vterm/etc/emacs-vterm.fish'"))
+  (vterm-shell "/bin/fish")
   (vterm-buffer-name-string "vterm: %s"))
 
 (use-package vterm-toggle
+  :straight nil
   :commands (vterm-toggle)
   :general
   (+leader-def
