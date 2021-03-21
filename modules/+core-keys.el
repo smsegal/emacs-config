@@ -14,17 +14,6 @@
   :disabled
   :config (global-undo-tree-mode +1))
 
-(use-package vundo
-  :straight (:host github :repo "casouri/vundo")
-  :config
-  (evil-set-initial-state 'vundo--mode 'emacs)
-  :general
-  (general-def :keymaps 'vundo--mode-map
-    "j" #'vundo-next
-    "k" #'vundo-previous
-    "h" #'vundo-backward
-    "l" #'vundo-forward))
-
 (use-package evil
   ;; :after undo-tree
   :init
@@ -111,5 +100,16 @@
     "n" '(:keymap +narrow/notes-map :which-key "narrow/notes")
     "t" '(:keymap +toggle-map :which-key "toggle")
     "h" '(:keymap help-map :which-key "help")))
+
+(use-package vundo
+  :straight (:host github :repo "casouri/vundo")
+  :config
+  (evil-set-initial-state 'vundo--mode 'emacs)
+  :general
+  (general-def :keymaps 'vundo--mode-map
+    "j" #'vundo-next
+    "k" #'vundo-previous
+    "h" #'vundo-backward
+    "l" #'vundo-forward))
 
 (provide '+core-keys)
