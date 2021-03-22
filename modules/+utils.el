@@ -4,10 +4,19 @@
 ;; Enable a nicer writing environment
 (use-package writeroom-mode
   :config
-  ;; (setq writeroom-global-effects '(writeroom-set-bottom-divider-width))
+  (setq writeroom-global-effects nil)
   (setq writeroom-maximize-window nil)
   (general-add-advice 'text-scale-adjust :after
                       #'visual-fill-column-adjust)
+  (defvar +writeroom--line-num-was-enabled -1)
+  (defun +writeroom--maybe-disable-line-numbers ()
+    (setq-local +writeroom--line-num-was-enabled display-line-numbers-mode)
+    (when display-line-numbers-mode
+      (display-line-numbers-mode -1)))
+  (general-add-hook 'writeroom-mode-enable-hook #'+writeroom--maybe-disable-line-numbers)
+  (general-add-hook 'writeroom-mode-disable-hook (lambda ()
+                                                   (when +writeroom--line-num-was-enabled
+                                                     (display-line-numbers-mode +1))))
   :general
   (:prefix-map '+toggle-map "w" 'writeroom-mode))
 
@@ -28,6 +37,7 @@
 (defun +restart-emacs ()
   (interactive)
   (save-some-buffers)
+  (run-hooks 'kill-emacs-hook)
   (shell-command (concat "kill -SIGKILL " (number-to-string (emacs-pid)) "; setsid -f emacs")))
 
 (general-def :prefix-map '+quit-restart-map
@@ -40,7 +50,5 @@
   :general
   (:prefix-map '+open-map
    "c" #'calc-dispatch))
-
-
 
 (provide '+utils)
