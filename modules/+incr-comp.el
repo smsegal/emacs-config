@@ -8,8 +8,10 @@
 
 (use-package selectrum
   :commands (selectrum-next-candidate selectrum-previous-candidate)
-  :hook
-  (emacs-startup . selectrum-mode)
+  :hook (emacs-startup . selectrum-mode)
+  ;; :init
+  ;; (add-hook 'selectrum-candidate-selected-hook #'selectrum-prescient--remember)
+  ;; (add-hook 'selectrum-candidate-inserted-hook #'selectrum-prescient--remember)
   :config
   (setq selectrum-fix-vertical-window-height t)
   :general
@@ -19,22 +21,18 @@
    "C-k" 'selectrum-previous-candidate))
 
 ;; Prescient is a sorting/filtering package that orders results by "frecency".
-(use-package prescient
-  :hook (after-init . prescient-persist-mode))
+;; (use-package prescient
+;;   :hook (after-init . prescient-persist-mode))
 
-(use-package selectrum-prescient)
-;; :hook (selectrum-mode . selectrum-prescient-mode))
+(general-after-init (savehist-mode +1))
 
 (use-package orderless
-  ;; completion style should be set when not using selectrum
-  :custom (completion-styles '(orderless))
   :init
-  (general-add-hook 'selectrum-prescient-mode
-                    #'((setq selectrum-refine-candidates-function #'orderless-filter
-                             selectrum-highlight-candidates-function #'orderless-highlight-matches
-                             selectrum-preprocess-candidates-function #'selectrum-prescient--preprocess)))
-  (add-hook 'selectrum-candidate-selected-hook #'selectrum-prescient--remember)
-  (add-hook 'selectrum-candidate-inserted-hook #'selectrum-prescient--remember)
+  ;; completion style should be set when not using selectrum
+  (setq completion-styles '(orderless))
+  (setq selectrum-refine-candidates-function #'orderless-filter
+        selectrum-highlight-candidates-function #'orderless-highlight-matches)
+  (setq orderless-skip-highlighting (lambda () selectrum-is-active))
   (advice-add #'completion--category-override :filter-return
               (defun completion-in-region-style-setup+ (res)
                 "Fallback to default styles for region completions with orderless."
@@ -44,6 +42,14 @@
                          (not (minibufferp))
                          (equal '(orderless) completion-styles)
                          '(basic partial-completion emacs22))))))
+
+;; (use-package selectrum-prescient
+;;   :hook (selectrum-mode . selectrum-prescient-mode)
+;;   :init
+;;   (setq selectrum-refine-candidates-function #'orderless-filter
+;;         selectrum-highlight-candidates-function #'orderless-highlight-matches
+;;         selectrum-preprocess-candidates-function #'selectrum-prescient--preprocess
+;;         selectrum-prescient-enable-filtering nil))
 
 ;; Consult is to selectrum as counsel is to Ivy.
 ;; Marginalia is a bit of extra eye-candy on top of Consult.

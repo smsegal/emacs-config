@@ -6,7 +6,7 @@
 (use-package vterm
   :straight nil
   :custom
-  (vterm-shell "/bin/fish")
+  (vterm-shell "fish")
   (vterm-buffer-name-string "vterm: %s"))
 
 (use-package vterm-toggle

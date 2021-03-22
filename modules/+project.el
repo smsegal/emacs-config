@@ -17,5 +17,4 @@
           :package project
           :which-key "projects")))
 
-
 (provide '+project)
