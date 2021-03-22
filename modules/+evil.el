@@ -7,6 +7,7 @@
   :after evil
   :custom
   (evil-collection-setup-minibuffer t)
+  (evil-collection-outline-bind-tab-p t)
   :config
   (evil-collection-init))
 
