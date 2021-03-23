@@ -108,8 +108,11 @@
     (lsp-deferred))
   :config
   (setq lsp-julia-default-environment "~/.julia/environments/v1.5")
-  (setq lsp-julia-flags "-J ~/.cache/julia/languageserver.so")
-  :hook (julia-mode . +_lsp-julia-enable))
+  (add-to-list 'lsp-julia-flags (concat "--sysimage=" (expand-file-name "~/.cache/julia/languageserver.so")))
+  :hook (julia-mode . +_lsp-julia-enable)
+  :general
+  (:keymaps 'julia-mode-map
+   [remap format-all-buffer] #'lsp-format-buffer))
 
 (use-package julia-repl
   :hook (julia-mode . julia-repl-mode)

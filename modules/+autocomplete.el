@@ -15,6 +15,7 @@
    "C-s" #'company-filter-candidates))
 
 (use-package company-prescient
+  :disabled
   :hook (company-mode . company-prescient-mode))
 
 (use-package company-tabnine

@@ -16,6 +16,9 @@
   (moody-replace-sml/mode-line-buffer-identification)
   (moody-replace-vc-mode))
 
+;; show column in modeline
+(general-after-init (column-number-mode))
+
 ;; Anzu highlights current search results in the modeline.
 (use-package anzu
   :hook (after-init . global-anzu-mode))
