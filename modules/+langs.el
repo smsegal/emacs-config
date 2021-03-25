@@ -152,4 +152,6 @@
 
 (use-package fish-mode)
 
+(use-package rustic)
+
 (provide '+langs)
