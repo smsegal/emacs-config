@@ -106,8 +106,8 @@
 ;;         "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))))
 
 (defun +_set-font ()
-  (let ((font-name "Julia Mono")
-        (font-size "11"))
+  (let ((font-name "JetBrains Mono")
+        (font-size "10"))
     (set-face-attribute 'fixed-pitch-serif nil :family font-name)
     (set-face-attribute 'font-lock-comment-face nil :family font-name :slant 'italic)
     (set-frame-font (concat font-name "-" font-size) t t)))
