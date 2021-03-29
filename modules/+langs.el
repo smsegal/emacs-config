@@ -6,14 +6,12 @@
 ;; Now, apparently this package is useful for a ton of different
 ;; things. I use it for the nicer syntax highlighting in supported languages.
 (use-package tree-sitter
-  :straight nil
   :defer t
   :ghook ('(python-mode-hook
             js2-mode-hook
             typescript-mode-hook
             css-mode-hook) #'tree-sitter-hl-mode))
 (use-package tree-sitter-langs)
-;; :straight nil)
 
 ;; Formatting
 ;; Format all code with one keybinding.

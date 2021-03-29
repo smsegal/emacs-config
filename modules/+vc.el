@@ -18,10 +18,9 @@
 ;; Magit Itself
 ;; We need to fix a missing binding that should be set by ~evil-collection~.
 ;; Submodules get opened by ~"~ inside the magit status buffer.
-(use-package libgit
-  :straight nil)
+;; (use-package libgit
+;;   :straight nil)
 (use-package magit
-  :straight nil
   :after (evil-collection)
   :preface
   (defun +magit/fix-submodule-binding ()
@@ -54,7 +53,6 @@
 ;; Forge lets us access PR's and other collaborative git features from
 ;; inside Magit.
 (use-package forge
-  :straight nil
   :after magit)
 
 ;;We also set up todo's to be shown from the codebase all

@@ -57,7 +57,7 @@
   ((after-init . circadian-setup)
    (circadian-before-load-theme . +load-modus-theme)))
 
-(use-package all-the-icons :straight nil)
+(use-package all-the-icons)
 
 ;; Here is where we set up the ligatures. There's configuration for the
 ;; fonts I use most often: "Victor Mono" and "JetBrains Mono".
@@ -106,7 +106,7 @@
 ;;         "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))))
 
 (defun +_set-font ()
-  (let ((font-name "JetBrains Mono")
+  (let ((font-name "Hasklug NerdFont")
         (font-size "10"))
     (set-face-attribute 'fixed-pitch-serif nil :family font-name)
     (set-face-attribute 'font-lock-comment-face nil :family font-name :slant 'italic)

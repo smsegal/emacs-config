@@ -51,7 +51,6 @@
 ;; The ein package has really improved lately. In addition, the jupyter
 ;; kernel provides a pretty good experience for using it inside org-mode.
 (use-package jupyter
-  :straight nil
   :commands (jupyter-connect-repl jupyter-run-repl jupyter-eval-region)
   :general
   (:keymaps 'jupyter-repl-mode-map
@@ -84,7 +83,6 @@
                   (code-cells-forward-cell))))
 
 (use-package ein
-  :straight nil
   :hook (ein:notebook-mode . evil-normalize-keymaps)
   :custom
   (ein:output-area-inlined-images t)
