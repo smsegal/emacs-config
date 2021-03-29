@@ -107,7 +107,7 @@
 
 (defun +_set-font ()
   (let ((font-name "Hasklug NerdFont")
-        (font-size "10"))
+        (font-size "11"))
     (set-face-attribute 'fixed-pitch-serif nil :family font-name)
     (set-face-attribute 'font-lock-comment-face nil :family font-name :slant 'italic)
     (set-frame-font (concat font-name "-" font-size) t t)))
