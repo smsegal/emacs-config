@@ -9,13 +9,17 @@
   (setq dashboard-set-footer nil)
   (setq dashboard-center-content t)
   (setq dashboard-set-file-icons t)
+  (setq dashboard-path-style 'truncate-middle)
   (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-navigator t)
   (setq dashboard-set-init-info t)
   (setq dashboard-projects-backend 'project-el)
   (setq dashboard-items '((recents   . 5)
                           (projects  . 5)
                           (bookmarks . 5)))
-  (dashboard-setup-startup-hook))
+  (dashboard-setup-startup-hook)
+  :config
+  (set-face-attribute 'dashboard-items-face nil :inherit 'widget-button :underline nil))
 
 ;; Themes
 ;; I use the great ~doom-themes~ package from Doom. It provides a whole
