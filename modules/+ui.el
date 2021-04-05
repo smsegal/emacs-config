@@ -194,26 +194,6 @@
   (hl-line-sticky-flag nil)
   (global-hl-line-sticky-flag nil))
 
-;; smooth scrolling when jumping around
-(use-package scroll-on-jump
-  :disabled
-  :after (evil goto-chg)
-  :straight (:host gitlab :repo "ideasman42/emacs-scroll-on-jump")
-  :config
-  (setq scroll-on-jump-duration 0.4)
-  (setq scroll-on-jump-use-curve t)
-  (scroll-on-jump-advice-add evil-undo)
-  (scroll-on-jump-advice-add evil-redo)
-  (scroll-on-jump-advice-add evil-jump-item)
-  (scroll-on-jump-advice-add evil-jump-forward)
-  (scroll-on-jump-advice-add evil-jump-backward)
-  (scroll-on-jump-advice-add evil-ex-search-next)
-  (scroll-on-jump-advice-add evil-ex-search-previous)
-  (scroll-on-jump-advice-add evil-forward-paragraph)
-  (scroll-on-jump-advice-add evil-backward-paragraph)
-  (scroll-on-jump-advice-add goto-last-change)
-  (scroll-on-jump-advice-add goto-last-change-reverse))
-
 ;; Visual Fill Column
 ;; Sometimes we want text to wrap before the window border.
 (use-package visual-fill-column
@@ -275,6 +255,12 @@
       split-height-threshold nil)
 
 ;; scrolling
+
+;; Smooth scrolling
+(use-package good-scroll
+  :init
+  (general-after-gui (good-scroll-mode 1)))
+
 (setq hscroll-margin 2)
 (setq hscroll-step 1)
 ;; Emacs spends too much effort recentering the screen if you scroll the
