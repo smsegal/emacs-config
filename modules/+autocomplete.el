@@ -18,9 +18,9 @@
   :disabled
   :hook (company-mode . company-prescient-mode))
 
-(use-package company-tabnine
-  :config
-  (add-to-list 'company-backends #'company-tabnine))
+;; (use-package company-tabnine
+;;   :config
+;;   (add-to-list 'company-backends #'company-tabnine))
 
 ;; (use-package company-box
 ;;   :hook (company-mode . company-box-mode))
