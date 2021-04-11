@@ -55,8 +55,8 @@
   :config
   (setq calendar-latitude 43.6)
   (setq calendar-longitude -79.4)
-  (setq circadian-themes '((:sunrise . modus-operandi)
-                           (:sunset  . doom-rouge)))
+  (setq circadian-themes '((:sunrise . doom-nord-light)
+                           (:sunset  . doom-nord)))
   :hook
   ((after-init . circadian-setup)
    (circadian-before-load-theme . +load-modus-theme)))

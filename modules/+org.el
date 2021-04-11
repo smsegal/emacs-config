@@ -40,4 +40,12 @@
 (use-package toc-org
   :hook (org-mode . toc-org-mode))
 
+(use-package org-roam
+  :hook (after-init . org-roam-mode)
+  :init
+  (let ((+org-roam-dir (expand-file-name "~/Documents/org/roam")))
+    (make-directory +org-roam-dir t)
+    (setq org-roam-directory +org-roam-dir)))
+
+
 (provide '+org)

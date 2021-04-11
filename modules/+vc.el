@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 
-(require 'selectrum)
+;; (require 'selectrum)
 
 ;; VC / Git
 ;; Magit is probably the single best emacs package.
@@ -31,7 +31,7 @@
   :gfhook ('magit-mode-hook #'(+magit/fix-submodule-binding visual-line-mode))
   :init
   (setq magit-diff-refine-hunk t)
-  (setq magit-completing-read-function #'selectrum-completing-read)
+  ;; (setq magit-completing-read-function #'selectrum-completing-read)
   :config
   (transient-bind-q-to-quit)
   :general

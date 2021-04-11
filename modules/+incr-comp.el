@@ -7,11 +7,9 @@
 ;; focus on creating and extending basic APIs vs alternative like Ivy.
 
 (use-package selectrum
+  :disabled
   :commands (selectrum-next-candidate selectrum-previous-candidate)
   :hook (emacs-startup . selectrum-mode)
-  ;; :init
-  ;; (add-hook 'selectrum-candidate-selected-hook #'selectrum-prescient--remember)
-  ;; (add-hook 'selectrum-candidate-inserted-hook #'selectrum-prescient--remember)
   :config
   (setq selectrum-fix-vertical-window-height t)
   :general
@@ -20,36 +18,55 @@
    "C-j" 'selectrum-next-candidate
    "C-k" 'selectrum-previous-candidate))
 
-;; Prescient is a sorting/filtering package that orders results by "frecency".
-;; (use-package prescient
-;;   :hook (after-init . prescient-persist-mode))
+(use-package vertico
+  :hook (after-init . vertico-mode)
+  :general
+  (general-imap "C-k" nil)
+  (:keymaps 'vertico-map
+   "C-j" 'vertico-next
+   "C-k" 'vertico-previous)
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  (defun crm-indicator (args)
+    (cons (concat "[CRM] " (car args)) (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Grow and shrink minibuffer
+  ;; (setq resize-mini-windows t)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Enable recursive minibuffers
+  (setq enable-recursive-minibuffers t))
 
 (general-after-init (savehist-mode +1))
 
 (use-package orderless
   :init
-  ;; completion style should be set when not using selectrum
-  (setq completion-styles '(orderless))
-  (setq selectrum-refine-candidates-function #'orderless-filter
-        selectrum-highlight-candidates-function #'orderless-highlight-matches)
-  (setq orderless-skip-highlighting (lambda () selectrum-is-active))
-  (advice-add #'completion--category-override :filter-return
-              (defun completion-in-region-style-setup+ (res)
-                "Fallback to default styles for region completions with orderless."
-                (or res
-                    ;; Don't use orderless for initial candidate gathering.
-                    (and completion-in-region-mode-predicate
-                         (not (minibufferp))
-                         (equal '(orderless) completion-styles)
-                         '(basic partial-completion emacs22))))))
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles . (partial-completion))))))
 
-;; (use-package selectrum-prescient
-;;   :hook (selectrum-mode . selectrum-prescient-mode)
+
+;; (use-package orderless
 ;;   :init
+;;   ;; completion style should be set when not using selectrum
+;;   (setq completion-styles '(orderless))
 ;;   (setq selectrum-refine-candidates-function #'orderless-filter
-;;         selectrum-highlight-candidates-function #'orderless-highlight-matches
-;;         selectrum-preprocess-candidates-function #'selectrum-prescient--preprocess
-;;         selectrum-prescient-enable-filtering nil))
+;;         selectrum-highlight-candidates-function #'orderless-highlight-matches)
+;;   (setq orderless-skip-highlighting (lambda () selectrum-is-active))
+;;   (advice-add #'completion--category-override :filter-return
+;;               (defun completion-in-region-style-setup+ (res)
+;;                 "Fallback to default styles for region completions with orderless."
+;;                 (or res
+;;                     ;; Don't use orderless for initial candidate gathering.
+;;                     (and completion-in-region-mode-predicate
+;;                          (not (minibufferp))
+;;                          (equal '(orderless) completion-styles)
+;;                          '(basic partial-completion emacs22))))))
 
 ;; Consult is to selectrum as counsel is to Ivy.
 ;; Marginalia is a bit of extra eye-candy on top of Consult.

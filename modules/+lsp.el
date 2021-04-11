@@ -39,6 +39,8 @@
 
 (use-package lsp-ui
   :commands lsp-ui-mode
+  :config
+  (setq lsp-ui-sideline-enable nil)
   :general
   (:keymaps 'lsp-mode-map
    [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
