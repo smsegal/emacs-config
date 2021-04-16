@@ -17,6 +17,8 @@
   :straight (:type built-in)
   :commands (dired dired-jump)
   :init
+  (when IS-MAC
+    (setq insert-directory-program "/usr/local/bin/gls"))
   (setq dired-listing-switches "-agho --group-directories-first")
   (setq dired-dwim-target t)
   (setq dired-delete-by-moving-to-trash t)
