@@ -32,34 +32,16 @@
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
-(use-package modus-themes
-  :straight
-  (:host gitlab :repo "protesilaos/modus-themes" :branch "main")
-  :preface
-  (defun +load-modus-theme (theme)
-    (let ((theme-name (format "%s" theme)))
-      (message "circadian modus hook enabled: %s" theme-name)
-      (cond ((string-match-p "^modus-operandi" theme-name)
-             (setq modus-themes-syntax 'alt-syntax))
-            ((string-match-p "^modus-vivendi" theme-name)
-             (setq modus-themes-syntax 'faint)))))
-  :config
-  (setq modus-themes-bold-constructs t)
-  (setq modus-themes-slanted-constructs t)
-  (setq modus-themes-completions 'opinionated)
-  (setq modus-themes-paren-match 'subtle-bold)
-  (setq modus-themes-org-blocks 'rainbow)
-  (setq modus-themes-mode-line 'moody))
+;; (general-after-init '(load-theme 'doom-oceanic-next t))
+(load-theme 'doom-oceanic-next)
 
 (use-package circadian
+  :disabled
   :config
   (setq calendar-latitude 43.6)
   (setq calendar-longitude -79.4)
   (setq circadian-themes '((:sunrise . doom-nord-light)
-                           (:sunset  . doom-nord)))
-  :hook
-  ((after-init . circadian-setup)
-   (circadian-before-load-theme . +load-modus-theme)))
+                           (:sunset  . doom-nord))))
 
 (use-package all-the-icons)
 
@@ -201,26 +183,6 @@
   :custom
   (hl-line-sticky-flag nil)
   (global-hl-line-sticky-flag nil))
-
-;; smooth scrolling when jumping around
-(use-package scroll-on-jump
-  :disabled
-  :after (evil goto-chg)
-  :straight (:host gitlab :repo "ideasman42/emacs-scroll-on-jump")
-  :config
-  (setq scroll-on-jump-duration 0.4)
-  (setq scroll-on-jump-use-curve t)
-  (scroll-on-jump-advice-add evil-undo)
-  (scroll-on-jump-advice-add evil-redo)
-  (scroll-on-jump-advice-add evil-jump-item)
-  (scroll-on-jump-advice-add evil-jump-forward)
-  (scroll-on-jump-advice-add evil-jump-backward)
-  (scroll-on-jump-advice-add evil-ex-search-next)
-  (scroll-on-jump-advice-add evil-ex-search-previous)
-  (scroll-on-jump-advice-add evil-forward-paragraph)
-  (scroll-on-jump-advice-add evil-backward-paragraph)
-  (scroll-on-jump-advice-add goto-last-change)
-  (scroll-on-jump-advice-add goto-last-change-reverse))
 
 ;; Visual Fill Column
 ;; Sometimes we want text to wrap before the window border.

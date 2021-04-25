@@ -6,10 +6,10 @@
 ;; Set up company mode for autocompletion of references, citations, etc.
 ;; We also setup inline pdf viewing.
 
-(use-package company-auctex)
-(use-package company-reftex)
-(use-package company-math)
-(use-package company-bibtex)
+;; (use-package company-auctex)
+;; (use-package company-reftex)
+;; (use-package company-math)
+;; (use-package company-bibtex)
 
 (use-package lsp-latex
   :disabled

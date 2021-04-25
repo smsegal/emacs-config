@@ -7,7 +7,7 @@
 ;; focus on creating and extending basic APIs vs alternative like Ivy.
 
 (use-package selectrum
-  :disabled
+  ;; :disabled
   :commands (selectrum-next-candidate selectrum-previous-candidate)
   :hook (emacs-startup . selectrum-mode)
   :config
@@ -19,6 +19,7 @@
    "C-k" 'selectrum-previous-candidate))
 
 (use-package vertico
+  :disabled
   :hook (after-init . vertico-mode)
   :general
   (general-imap "C-k" nil)
@@ -44,29 +45,20 @@
 
 (general-after-init (savehist-mode +1))
 
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles . (partial-completion))))))
-
-
 ;; (use-package orderless
 ;;   :init
-;;   ;; completion style should be set when not using selectrum
-;;   (setq completion-styles '(orderless))
-;;   (setq selectrum-refine-candidates-function #'orderless-filter
-;;         selectrum-highlight-candidates-function #'orderless-highlight-matches)
-;;   (setq orderless-skip-highlighting (lambda () selectrum-is-active))
-;;   (advice-add #'completion--category-override :filter-return
-;;               (defun completion-in-region-style-setup+ (res)
-;;                 "Fallback to default styles for region completions with orderless."
-;;                 (or res
-;;                     ;; Don't use orderless for initial candidate gathering.
-;;                     (and completion-in-region-mode-predicate
-;;                          (not (minibufferp))
-;;                          (equal '(orderless) completion-styles)
-;;                          '(basic partial-completion emacs22))))))
+;;   (setq completion-styles '(orderless)
+;;         completion-category-defaults nil
+;;         completion-category-overrides '((file (styles . (partial-completion))))))
+
+
+(use-package orderless
+  :after (selectrum)
+  :init
+  ;; completion style should be set when not using selectrum
+  (setq completion-styles '(orderless))
+  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
+  (setq orderless-skip-highlighting (lambda () selectrum-is-active)))
 
 ;; Consult is to selectrum as counsel is to Ivy.
 ;; Marginalia is a bit of extra eye-candy on top of Consult.
@@ -146,11 +138,7 @@
   :init
   (marginalia-mode)
 
-  ;; When using Selectrum, ensure that Selectrum is refreshed when cycling annotations.
-  (advice-add #'marginalia-cycle :after
-              (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit))))
-
   ;; use heavy annotators (keybindings, descriptions etc.)
-  (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil)))
+  (setq marginalia-annotators '(marginalia-annotators-heavy)))
 
 (provide '+incr-comp)

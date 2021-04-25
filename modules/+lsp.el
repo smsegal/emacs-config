@@ -22,9 +22,11 @@
   (setq lsp-enable-folding t)
   (setq lsp-enable-on-type-formatting nil)
   (setq lsp-enable-snippet t)
-  (setq lsp-eldoc-enable-hover nil)
+  (setq lsp-eldoc-enable-hover t)
   (setq lsp-headerline-breadcrumb-enable t)
   (setq lsp-enable-file-watchers nil)
+  (setq lsp-signature-auto-activate nil)
+  (setq lsp-signature-render-documentation nil)
   :general
   (general-nvmap
     :keymaps 'lsp-mode-map
@@ -50,5 +52,10 @@
    "k"   #'lsp-ui-peek--select-prev
    "C-j" #'lsp-ui-peek--select-next
    "C-k" #'lsp-ui-peek--select-prev))
+
+(use-package consult-lsp
+  :general
+  (:keymaps 'lsp-mode-map
+   [remap xref-find-apropos] #'consult-lsp-symbols))
 
 (provide '+lsp)
