@@ -152,4 +152,7 @@
 
 (use-package rustic)
 
+(use-package dockerfile-mode
+  :mode ("Dockerfile\\'" . dockerfile-mode))
+
 (provide '+langs)
