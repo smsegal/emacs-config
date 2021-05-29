@@ -30,10 +30,10 @@
     "l" #'dired-find-file))
 
 ;; This provides library async commands, but also dired-async mode
-(use-package dired-async
-  :straight (async)
-  :commands (dired-async-mode)
-  :hook (dired-mode . dired-async-mode))
+;; (use-package dired-async
+;;   :straight (async)
+;;   :commands (dired-async-mode)
+;;   :hook (dired-mode . dired-async-mode))
 
 ;; fancy font-locking in dired
 (use-package diredfl
@@ -43,8 +43,8 @@
 (use-package dired-collapse
   :hook (dired-mode . dired-collapse-mode))
 
-(use-package dired+
-  :commands (diredp-do-apply-to-marked))
+;; (use-package dired+
+;;   :commands (diredp-do-apply-to-marked))
 
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
