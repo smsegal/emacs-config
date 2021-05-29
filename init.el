@@ -42,7 +42,7 @@
 (require '+ui)
 (require '+tty)           ;; support for terminal operation
 (require '+project)
-(require '+incr-comp)     ;; incremental narrowing + utils (selectrum+consult+marginalia)
+(require '+incr-comp)     ;; incremental narrowing + utils
 (require '+autocomplete)  ;; + syntax checking
 (require '+spellcheck)
 (require '+modeline)
