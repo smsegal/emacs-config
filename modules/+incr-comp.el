@@ -6,20 +6,7 @@
 ;; We're using Selectrum and the associated ecosystem. They have a bigger
 ;; focus on creating and extending basic APIs vs alternative like Ivy.
 
-(use-package selectrum
-  ;; :disabled
-  :commands (selectrum-next-candidate selectrum-previous-candidate)
-  :hook (emacs-startup . selectrum-mode)
-  :config
-  (setq selectrum-fix-vertical-window-height t)
-  :general
-  (general-imap "C-k" nil)
-  (:keymaps 'selectrum-minibuffer-map
-   "C-j" 'selectrum-next-candidate
-   "C-k" 'selectrum-previous-candidate))
-
 (use-package vertico
-  :disabled
   :hook (after-init . vertico-mode)
   :general
   (general-imap "C-k" nil)
@@ -43,31 +30,20 @@
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t))
 
-(general-after-init (savehist-mode +1))
-
-;; (use-package orderless
-;;   :init
-;;   (setq completion-styles '(orderless)
-;;         completion-category-defaults nil
-;;         completion-category-overrides '((file (styles . (partial-completion))))))
-
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :init
+  (savehist-mode))
 
 (use-package orderless
-  :after (selectrum)
   :init
-  ;; completion style should be set when not using selectrum
-  (setq completion-styles '(orderless))
-  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
-  (setq orderless-skip-highlighting (lambda () selectrum-is-active)))
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles . (partial-completion))))))
 
 ;; Consult is to selectrum as counsel is to Ivy.
 ;; Marginalia is a bit of extra eye-candy on top of Consult.
 (use-package consult
-  :preface
-  (defun +consult-fdfind (&optional dir)
-    (interactive "P")
-    (let ((consult-find-command '("fd" "--color=never" "--full-path")))
-      (consult-find dir)))
   :init
   ;; Replace functions (consult-multi-occur is a drop-in replacement)
   (fset 'multi-occur #'consult-multi-occur)
@@ -108,14 +84,26 @@
   (:prefix-map '+search-map
    "i" #'consult-imenu
    "s" #'consult-line
-   "r" #'consult-ripgrep
-   "f" #'+consult-fdfind
    "o" #'consult-outline))
 
 (use-package consult-flycheck
   :general
   (:prefix-map '+code-map
    "x" #'consult-flycheck))
+
+(use-package affe
+  :after orderless
+  :general
+  (:prefix-map '+search-map
+   "g" #'affe-grep
+   "f" #'affe-find)
+  :config
+  ;; Configure Orderless
+  (setq affe-regexp-function #'orderless-pattern-compiler
+        affe-highlight-function #'orderless-highlight-matches)
+
+  ;; Manual preview key for `affe-grep'
+  (consult-customize affe-grep :preview-key (kbd "M-.")))
 
 (use-package embark
   :config
