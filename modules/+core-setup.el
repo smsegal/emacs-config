@@ -24,9 +24,6 @@
 
 ;; Set up the path properly on GUI Emacs in environments that don't handle that for us
 (use-package exec-path-from-shell
-  ;; :when (memq window-system '(mac ns x))
-  :preface
-  ;; (setq exec-path-from-shell-shell-name "/usr/bin/fish")
   :init
   (exec-path-from-shell-initialize))
 

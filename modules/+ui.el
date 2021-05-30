@@ -32,21 +32,40 @@
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
-;; (general-after-init '(load-theme 'doom-oceanic-next t))
-(load-theme 'doom-oceanic-next)
+;; Theme switcher if we're on linux, otherwise we'll depend on the macos system appearance
 
-(use-package circadian
-  :disabled
-  :config
-  (setq calendar-latitude 43.6)
-  (setq calendar-longitude -79.4)
-  (setq circadian-themes '((:sunrise . doom-nord-light)
-                           (:sunset  . doom-nord))))
+(cond ((boundp 'ns-system-appearance-change-functions)
+       (defun my/apply-theme (appearance)
+         "Load theme, taking current system APPEARANCE into consideration."
+         (mapc #'disable-theme custom-enabled-themes)
+         (pcase appearance
+           ('light (load-theme 'doom-nord-light t))
+           ('dark (load-theme 'doom-oceanic-next t))))
+       (add-hook 'ns-system-appearance-change-functions #'my/apply-theme))
+      ((boundp 'mac-effective-appearance-change-hook)
+       (defun my/apply-theme ()
+         "Load theme, taking current system APPEARANCE into consideration."
+         (mapc #'disable-theme custom-enabled-themes)
+         (pcase (plist-get (mac-application-state) ':appearance)
+           ("NSAppearanceNameAqua"
+            (load-theme 'doom-opera-light t))
+           ("NSAppearanceNameDarkAqua"
+            (load-theme 'doom-oceanic-next t))))
+       (add-hook 'mac-effective-appearance-change-hook #'my/apply-theme)
+       (add-hook 'after-init-hook #'my/apply-theme))
+      (IS-LINUX
+       (use-package circadian
+         :config
+         (setq calendar-latitude 43.6)
+         (setq calendar-longitude -79.4)
+         (setq circadian-themes '((:sunrise . doom-nord-light)
+                                  (:sunset  . doom-oceanic-next)))
+         :hook (after-init . circadian-setup))))
 
 (use-package all-the-icons)
 
 ;; Here is where we set up the ligatures. There's configuration for the
-;; fonts I use most often: "Victor Mono" and "JetBrains Mono".
+;; fonts I use most often: "RecMono Duotone", "Victor Mono" and "JetBrains Mono".
 (use-package ligature
   :straight (:host github :repo "mickeynp/ligature.el")
   :ghook ('(prog-mode-hook org-mode-hook) #'ligature-mode)
@@ -59,79 +78,15 @@
         "<|" "||" "|=" "##" "<*" "//" "${" "−=" "??" "=~" "\\b" "!~" "__"
         "-<" "<-" "\\r" "?:" "/*" "<=" "!=" "**" "!!" "->" "\\t" "/=" "\\v"
         "\\n" "+=" ">=" "::" "--" "```")))
-;; (ligature-set-ligatures
-;;  't '("</" "</>" "/>" "~-" "-~" "~@" "<~" "<~>" "<~~" "~>" "~~"
-;;       "~~>" ">=" "<=" "<!--" "##" "###" "####" "|-" "-|" "|->"
-;;       "<-|" ">-|" "|-<" "|=" "|=>" ">-" "<-" "<--" "-->" "->" "-<"
-;;       ">->" ">>-" "<<-" "<->" "->>" "-<<" "<-<" "==>" "=>" "=/="
-;;       "!==" "!=" "<==" ">>=" "=>>" ">=>" "<=>" "<=<" "<<=" "=<<"
-;;       ".-" ".=" "=:=" "=!=" "==" "===" "::" ":=" ":>" ":<" ">:"
-;;       ";;" "<|" "<|>" "|>" "<>" "<$" "<$>" "$>" "<+" "<+>" "+>"
-;;       "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))
-;; (cond
-;;  ;; JetBrains Mono Ligatures
-;;  ((string= (face-attribute 'default :family) "JetBrains Mono")
-;;   (ligature-set-ligatures
-;;    't '("--" "---" "==" "===" "!=" "!==" "=!=" "=:=" "=/="
-;;         "<=" ">=" "&&" "&&&" "&=" "++" "+++" "***" ";;" "!!"
-;;         "??" "?:" "?." "?=" "<:" ":<" ":>" ">:" "<>" "<<<"
-;;         ">>>" "<<" ">>" "||" "-|" "_|_" "|-" "||-" "|=" "||="
-;;         "##" "###" "####" "#{" "#[" "]#" "#(" "#?"  "#_" "#_("
-;;         "#:" "#!"  "#=" "^=" "<$>" "<$" "$>" "<+>" "<+" "+>"
-;;         "<*>" "<*" "*>" "</" "</>" "/>" "<!--" "<#--" "-->"
-;;         "->" "->>" "<<-" "<-" "<=<" "=<<" "<<=" "<==" "<=>"
-;;         "<==>" "==>" "=>" "=>>" ">=>" ">>=" ">>-" ">-" ">--"
-;;         "-<" "-<<" ">->" "<-<" "<-|" "<=|" "|=>" "|->" "<->"
-;;         "<~~" "<~" "<~>" "~~" "~~>" "~>" "~-" "-~" "~@" "[||]"
-;;         "|]" "[|" "|}" "{|" "[<" ">]" "|>" "<|" "||>" "<||"
-;;         "|||>" "<|||" "<|>" "..." ".." ".=" ".-" "..<" ".?"
-;;         "::" ":::" ":=" "::=" ":?"  ":?>" "//" "///" "/*" "*/"
-;;         "/=" "//=" "/==" "@_" "__")))
-;;  ;; Victor Mono Ligatures
-;;  ((string= (face-attribute 'default :family) "Victor Mono")
-;;   (ligature-set-ligatures
-;;    't '("</" "</>" "/>" "~-" "-~" "~@" "<~" "<~>" "<~~" "~>" "~~"
-;;         "~~>" ">=" "<=" "<!--" "##" "###" "####" "|-" "-|" "|->"
-;;         "<-|" ">-|" "|-<" "|=" "|=>" ">-" "<-" "<--" "-->" "->" "-<"
-;;         ">->" ">>-" "<<-" "<->" "->>" "-<<" "<-<" "==>" "=>" "=/="
-;;         "!==" "!=" "<==" ">>=" "=>>" ">=>" "<=>" "<=<" "<<=" "=<<"
-;;         ".-" ".=" "=:=" "=!=" "==" "===" "::" ":=" ":>" ":<" ">:"
-;;         ";;" "<|" "<|>" "|>" "<>" "<$" "<$>" "$>" "<+" "<+>" "+>"
-;;         "?=" "/=" "/==" "/\\" "\\/" "__" "&&" "++" "+++")))))
 
 (defun +_set-font ()
   (let ((font-name "Rec Mono Duotone")
-        (font-size (if IS-MAC "14" "11")))
+        (font-size (if IS-MAC "14" "10")))
     (set-face-attribute 'fixed-pitch-serif nil :family font-name)
     (set-face-attribute 'font-lock-comment-face nil :family font-name :slant 'italic)
     (set-frame-font (concat font-name "-" font-size) t t)))
 
 (general-after-gui (+_set-font))
-
-;; don't ring a bell jfc
-;; -- taken from https://emacs.stackexchange.com/a/55988
-(defun my-mode-line-visual-bell ()
-  (setq visible-bell nil)
-  (setq ring-bell-function 'my-mode-line-visual-bell--flash))
-
-(defun my-mode-line-visual-bell--flash ()
-  (let ((frame (selected-frame)))
-    (run-with-timer
-     0.1 nil
-     #'(lambda (frame)
-         (let ((inhibit-quit)
-               (inhibit-redisplay t))
-           (invert-face 'header-line frame)
-           (invert-face 'header-line-highlight frame)
-           (invert-face 'mode-line frame)
-           (invert-face 'mode-line-inactive frame)))
-     frame)
-    (let ((inhibit-quit)
-          (inhibit-redisplay t))
-      (invert-face 'header-line frame)
-      (invert-face 'header-line-highlight frame)
-      (invert-face 'mode-line frame)
-      (invert-face 'mode-line-inactive frame))))
 
 (general-after-init (doom-themes-visual-bell-config))
 
@@ -162,10 +117,14 @@
 
 ;; This is a great one. Dim the background colour of the buffers you're not currently editing in.
 (use-package auto-dim-other-buffers
+  :disabled
   :hook (after-init . auto-dim-other-buffers-mode)
   :config
   (setq auto-dim-other-buffers-dim-on-switch-to-minibuffer nil)
   (setq auto-dim-other-buffers-dim-on-focus-out nil))
+
+(use-package solaire-mode
+  :init (solaire-global-mode +1))
 
 ;; Highlight different things. The parentheses surround the point get
 ;; highlighted which is great.
@@ -228,7 +187,6 @@
       window-divider-default-bottom-width 1
       window-divider-default-right-width 1)
 (add-hook 'after-init-hook #'window-divider-mode)
-(set-fringe-style 1)
 
 ;; always avoid GUI
 (setq use-dialog-box nil)

@@ -1,7 +1,5 @@
 ;; -*- lexical-binding: t; -*-
 
-;; (require 'selectrum)
-
 ;; VC / Git
 ;; Magit is probably the single best emacs package.
 ;; We also use the build-int VC mode for some things like ediff.
@@ -45,9 +43,8 @@
     "k" #'magit-section-backward)
   (+local-leader-def
     :keymaps 'with-editor-mode-map
-    "," 'with-editor-finish
-    "k" 'with-editor-cancel))
-
+    "," #'with-editor-finish
+    "k" #'with-editor-cancel))
 
 ;; Magit Extras
 ;; Forge lets us access PR's and other collaborative git features from
@@ -55,7 +52,7 @@
 (use-package forge
   :after magit)
 
-;;We also set up todo's to be shown from the codebase all
+;; We also set up todo's to be shown from the codebase all
 ;; centralized inside the status buffer. It's kinda slow so disabled for
 ;; now.
 (use-package magit-todos
@@ -63,8 +60,19 @@
   :after magit
   :config (magit-todos-mode))
 
-(use-package git-gutter
-  :config (global-git-gutter-mode +1))
+(use-package diff-hl
+  :commands (diff-hl-flydiff-mode)
+  :init
+  (setq fringe-mode '(2 . 1))
+  (setq fringes-outside-margins t)
+  (let* ((height (frame-char-height))
+         (width 2)
+         (ones (1- (expt 2 width)))
+         (bits (make-vector height ones)))
+    (define-fringe-bitmap 'my-diff-hl-bitmap bits height width))
+  (setq diff-hl-fringe-bmp-function (lambda (type pos) 'my-diff-hl-bitmap))
+  (diff-hl-flydiff-mode +1)
+  (global-diff-hl-mode +1))
 
 ;; TODO: needs evil keybindings
 (use-package git-timemachine
