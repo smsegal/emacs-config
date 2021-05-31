@@ -10,6 +10,26 @@
     ;; or something similar
     ;; (envrc-reload)
     (lsp-deferred))
+  :config
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection (lsp-tramp-connection (cons "pyright-langserver" lsp-pyright-langserver-command-args))
+    :major-modes '(python-mode)
+    :remote? t
+    :server-id 'pyright-remote
+    :multi-root t
+    :priority 3
+    :initialized-fn (lambda (workspace)
+                      (with-lsp-workspace workspace
+			;; we send empty settings initially, LSP server will ask for the
+			;; configuration of each workspace folder later separately
+			(lsp--set-configuration
+			 (make-hash-table :test 'equal))))
+    :download-server-fn (lambda (_client callback error-callback _update?)
+                          (lsp-package-ensure 'pyright callback error-callback))
+    :notification-handlers (lsp-ht ("pyright/beginProgress" 'lsp-pyright--begin-progress-callback)
+                                   ("pyright/reportProgress" 'lsp-pyright--report-progress-callback)
+                                   ("pyright/endProgress" 'lsp-pyright--end-progress-callback))))
   :ghook ('python-mode-hook  #'(+pyright__enable-lsp)))
 
 ;; Python

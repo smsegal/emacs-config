@@ -129,4 +129,4 @@
   ;; use heavy annotators (keybindings, descriptions etc.)
   (setq marginalia-annotators '(marginalia-annotators-heavy)))
 
-(provide '+incr-comp)
+(provide '+minibuffer)

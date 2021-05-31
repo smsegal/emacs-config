@@ -41,8 +41,9 @@
 (require '+evil)          ;; load evil configuration
 (require '+ui)
 (require '+tty)           ;; support for terminal operation
+(require '+filetree)
 (require '+project)
-(require '+incr-comp)     ;; incremental narrowing + utils
+(require '+minibuffer)     ;; incremental narrowing + utils
 (require '+autocomplete)  ;; + syntax checking
 (require '+spellcheck)
 (require '+modeline)

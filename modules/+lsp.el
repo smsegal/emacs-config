@@ -10,20 +10,19 @@
   :ghook
   ;; move to language specific areas where packages exist
   ('(sh-mode-hook) #'lsp-deferred)
-  ('lsp-mode-hook '(lsp-headerline-breadcrumb-mode
-                    lsp-modeline-diagnostics-mode
+  ('lsp-mode-hook '(lsp-modeline-diagnostics-mode
+                    lsp-modeline-code-actions-mode
                     lsp-enable-which-key-integration))
   :init
-  ;; use this for adding additional dirs to the ignore list from .dir-locals.el
-  (defvar +lsp-ignore-additional-dirs nil)
   :config
   (setq read-process-output-max (* 1024 1024)) ;; 1mb
   (setq lsp-completion-provider :capf)
-  (setq lsp-enable-folding t)
+  (setq lsp-enable-folding nil)
+  (setq lsp-enable-text-document-color nil)
   (setq lsp-enable-on-type-formatting nil)
   (setq lsp-enable-snippet t)
   (setq lsp-eldoc-enable-hover t)
-  (setq lsp-headerline-breadcrumb-enable t)
+  (setq lsp-headerline-breadcrumb-enable nil)
   (setq lsp-enable-file-watchers nil)
   (setq lsp-signature-auto-activate nil)
   (setq lsp-signature-render-documentation nil)
@@ -42,7 +41,19 @@
 (use-package lsp-ui
   :commands lsp-ui-mode
   :config
-  (setq lsp-ui-sideline-enable nil)
+  (setq lsp-ui-peek-enable t
+        lsp-ui-doc-max-height 8
+        lsp-ui-doc-max-width 35
+        lsp-ui-doc-show-with-mouse nil  ; don't disappear on mouseover
+        lsp-ui-doc-position 'at-point
+        lsp-ui-sideline-ignore-duplicate t
+        ;; Don't show symbol definitions in the sideline. They are pretty noisy,
+        ;; and there is a bug preventing Flycheck errors from being shown (the
+        ;; errors flash briefly and then disappear).
+        lsp-ui-sideline-show-hover nil
+        ;; REVIEW Temporarily disabled, due to immense slowness on every
+        ;;        keypress. See emacs-lsp/lsp-ui#613
+        lsp-ui-doc-enable nil)
   :general
   (:keymaps 'lsp-mode-map
    [remap xref-find-definitions] #'lsp-ui-peek-find-definitions
@@ -50,8 +61,8 @@
   (:keymaps 'lsp-ui-peek-mode-map
    "j"   #'lsp-ui-peek--select-next
    "k"   #'lsp-ui-peek--select-prev
-   "C-j" #'lsp-ui-peek--select-next
-   "C-k" #'lsp-ui-peek--select-prev))
+   "C-j" #'lsp-ui-peek--select-next-file
+   "C-k" #'lsp-ui-peek--select-prev-file))
 
 (use-package consult-lsp
   :general

@@ -43,8 +43,8 @@
 (use-package dired-collapse
   :hook (dired-mode . dired-collapse-mode))
 
-;; (use-package dired+
-;;   :commands (diredp-do-apply-to-marked))
+(use-package dired+
+  :commands (diredp-do-apply-to-marked))
 
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))

@@ -49,7 +49,7 @@
   (general-create-definer +leader-def
     :prefix "SPC"
     :keymaps 'override
-    :states '(normal visual))
+    :states '(normal visual treemacs))
 
   ;; local leader
   (general-create-definer +local-leader-def
