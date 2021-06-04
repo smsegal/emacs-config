@@ -122,4 +122,10 @@
    "C-j" #'ein:worksheet-goto-next-input-km
    "C-k" #'ein:worksheet-goto-prev-input-km))
 
+
+(use-package python-pytest
+  :general
+  (+local-leader-def :keymaps 'python-mode-map
+    "t" #'python-pytest-dispatch))
+
 (provide '+python)

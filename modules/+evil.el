@@ -8,11 +8,11 @@
   :custom
   (evil-collection-setup-minibuffer t)
   (evil-collection-outline-bind-tab-p t)
+  (evil-collection-company-use-tng nil)
   :config
   (evil-collection-init))
 
 ;; I also set ~evil-escape~ to really exit things with ~C-g~
-
 (use-package evil-escape
   :custom
   (evil-escape-delay 0.1)

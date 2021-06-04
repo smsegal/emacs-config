@@ -25,6 +25,9 @@
 ;; Set up the path properly on GUI Emacs in environments that don't handle that for us
 (use-package exec-path-from-shell
   :init
+  (setq shell-file-name (if IS-MAC
+                            "/usr/local/bin/fish"
+                          "/usr/bin/fish"))
   (exec-path-from-shell-initialize))
 
 (unless (daemonp)

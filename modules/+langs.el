@@ -153,6 +153,12 @@
 (use-package rustic)
 
 (use-package dockerfile-mode
-  :mode ("Dockerfile\\'" . dockerfile-mode))
+  :mode ("Dockerfile\\'" . dockerfile-mode)
+  :config
+  (define-format-all-formatter dockfmt
+    (:executable "dockfmt")
+    (:install "go get github.com/jessfraz/dockfmt")
+    (:languages "Dockerfile")
+    (:format (format-all--buffer-easy executable "fmt" (buffer-file-name)))))
 
 (provide '+langs)

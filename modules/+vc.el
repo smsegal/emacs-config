@@ -60,10 +60,10 @@
 (use-package diff-hl
   :commands (diff-hl-flydiff-mode)
   :init
-  (setq fringe-mode '(2 . 1))
+  (setq fringe-mode '(1 . 1))
   (setq fringes-outside-margins t)
   (let* ((height (frame-char-height))
-         (width 2)
+         (width 1)
          (ones (1- (expt 2 width)))
          (bits (make-vector height ones)))
     (define-fringe-bitmap 'my-diff-hl-bitmap bits height width))
