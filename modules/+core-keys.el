@@ -11,7 +11,6 @@
 ;; Set up evil-mode ahead of general.el
 ;; Apparently ~undo-tree~ has had it's performance improved, will try it again sometime
 (use-package undo-tree
-  :disabled
   :config (global-undo-tree-mode +1))
 
 (use-package evil
@@ -25,20 +24,17 @@
   (setq evil-cross-lines nil)
   (setq evil-split-window-below t)
   (setq evil-vsplit-window-right t)
-  (setq evil-undo-system 'undo-fu)
   (setq evil-regexp-search t)
-  (setq evil-move-cursor-back t)
-  (setq evil-undo-system 'undo-redo)
+  (setq evil-undo-system 'undo-tree)
   :config
   (evil-select-search-module 'evil-search-module 'evil-search)
   (evil-mode +1))
 
-
 (use-package general
-  :after evil
-  :config
+  :init
   (setq general-override-states
         '(insert emacs hybrid normal visual motion operator replace))
+  :config
   (general-evil-setup)
 
   ;; text indentation stuff
@@ -49,7 +45,7 @@
   (general-create-definer +leader-def
     :prefix "SPC"
     :keymaps 'override
-    :states '(normal visual treemacs))
+    :states '(normal visual motion treemacs))
 
   ;; local leader
   (general-create-definer +local-leader-def
@@ -59,27 +55,32 @@
 
   (general-def :prefix-map '+file-map
     "f" #'find-file
+    "r" #'recentf-open-files
     "s" #'save-buffer)
 
   (general-def :prefix-map '+code-map
+    "x" #'flycheck-list-errors
     "e" #'eval-buffer)
 
   (general-def :prefix-map '+quit-restart-map
-    "q" 'save-buffers-kill-emacs)
+    "q" #'save-buffers-kill-emacs)
 
   (general-def :prefix-map '+buffer-map
-    :wk-full-keys nil
-    "p" 'previous-buffer
-    "n" 'next-buffer
-    "r" 'revert-buffer
-    "k" 'kill-this-buffer)
+    "b" #'switch-to-buffer
+    "p" #'previous-buffer
+    "n" #'next-buffer
+    "r" #'revert-buffer
+    "k" #'kill-this-buffer)
 
   (general-def :prefix-map '+vc-map)
-  (general-def :prefix-map '+insert-map)
+  (general-def :prefix-map '+insert-map
+    "y" #'yank-pop)
   (general-def :prefix-map '+open-map
-    "f" 'make-frame)
+    "f" #'make-frame)
   (general-def :prefix-map '+toggle-map)
-  (general-def :prefix-map '+search-map)
+  (general-def :prefix-map '+search-map
+    "s" #'goto-line
+    "i" #'imenu)
   (general-def :prefix-map '+bookmark-map
     :wk-full-keys nil)
   (general-def :prefix-map '+narrow/notes-map)

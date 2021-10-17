@@ -7,11 +7,29 @@
 ;; focus on creating and extending basic APIs vs alternative like Ivy.
 
 (use-package vertico
-  :hook (after-init . vertico-mode)
+  :straight (:host github :repo "minad/vertico"
+             :files ("*.el" "extensions/*.el"))
+  :init
+  (add-hook 'after-init-hook #'vertico-mode)
+  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
+  :config
+  (defun +vertico/embark-preview ()
+    "Previews candidate in vertico buffer, unless it's a consult command"
+    (interactive)
+    (unless (bound-and-true-p consult--preview-function)
+      (save-selected-window
+        (let ((embark-quit-after-action nil))
+          (embark-dwim)))))
   :general
-  (:keymaps 'minibuffer-local-map
-   "C-j" 'next-line
-   "C-k" 'previous-line))
+  (general-imap "C-k" nil)
+  (:keymaps 'vertico-map
+   "M-RET" #'vertico-exit-input
+   "C-SPC" #'+vertico/embark-preview
+   "C-j"   #'vertico-next
+   "C-M-j" #'vertico-next-group
+   "C-k"   #'vertico-previous
+   "C-M-k" #'vertico-previous-group
+   [backspace] #'vertico-directory-delete-char))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
@@ -27,6 +45,7 @@
 (use-package consult
   :init
   (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+  (advice-add #'multi-occur :override #'consult-multi-occur)
   (setq xref-show-xrefs-function #'consult-xref
 	xref-show-definitions-function #'consult-xref)
   :config
@@ -38,26 +57,30 @@
 	  (when-let (project (project-current))
             (car (project-roots project)))))
   :general
+  ([remap apropos] #'consult-apropos
+   [remap bookmark-jump] #'consult-bookmark
+   [remap evil-show-marks] #'consult-mark
+   [remap goto-line] #'consult-goto-line
+   [remap imenu] #'consult-imenu
+   [remap locate] #'consult-locate
+   [remap load-theme] #'consult-theme
+   [remap man] #'consult-man
+   [remap recentf-open-files] #'consult-recent-file
+   [remap switch-to-buffer] #'consult-buffer
+   [remap switch-to-buffer-other-window] #'consult-buffer-other-window
+   [remap switch-to-buffer-other-frame]  #'consult-buffer-other-frame
+   [remap yank-pop]                      #'consult-yank-pop)
   (:prefix-map 'help-map
-   "a" #'consult-apropos
    ;; t is usually the tutorial, but this emacs is so customized it's useless
    "t" 'consult-theme)
-  (:prefix-map '+insert-map
-   "y" #'consult-yank)
   (:prefix-map '+file-map
-   "w" #'consult-file-externally
-   "r" #'consult-recent-file)
-  (:prefix-map '+buffer-map
-   "b" #'consult-buffer)
+   "w" #'consult-file-externally)
   (:prefix-map '+search-map
-   "i" #'consult-imenu
-   "s" #'consult-line
    "o" #'consult-outline))
 
 (use-package consult-flycheck
   :general
-  (:prefix-map '+code-map
-   "x" #'consult-flycheck))
+  ([remap flycheck-list-errors] #'consult-flycheck))
 
 (use-package affe
   :after orderless
@@ -119,7 +142,6 @@ targets."
 
 (use-package embark-consult
   :after (embark consult)
-  :demand t
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 (use-package emacs
@@ -140,5 +162,12 @@ targets."
 
 (use-package marginalia
   :init (marginalia-mode))
+
+(use-package all-the-icons-completion
+  :config (all-the-icons-completion-mode))
+
+(use-package wgrep
+  :commands wgrep-change-to-wgrep-mode
+  :config (setq wgrep-auto-save-buffer t))
 
 (provide '+minibuffer)

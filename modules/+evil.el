@@ -22,11 +22,6 @@
   :config
   (evil-escape-mode +1))
 
-;; evil keybindings
-(general-nvmap
-  "gD" #'xref-find-references
-  "gd" #'xref-find-definitions)
-
 ;;;###autoload
 (evil-define-operator +evil:apply-macro (beg end)
   "Apply macro to each line."
@@ -104,7 +99,6 @@
 ;; Some visual cues for yanking and deleting objects.
 
 (use-package evil-goggles
-  :demand t
   :config
   (evil-goggles-mode)
   (evil-goggles-use-diff-faces))

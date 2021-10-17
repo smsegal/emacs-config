@@ -119,21 +119,7 @@
 ;; I'm hooking it to ~emacs-startup-hook~ instead of ~after-init-hook~, as
 ;; ~emacs-startup-hook~ runs after ~after-init-hook~
 (use-package envrc
-  :config
-  (defun +direnv-init-h ()
-    (unless (or envrc-mode
-                (minibufferp)
-                (file-remote-p default-directory))
-      (condition-case _
-          (envrc-mode 1)
-        (quit))))
-
-  (add-hook 'change-major-mode-after-body-hook '+direnv-init-h)
-  (put 'envrc-mode 'permanent-local t)
-  (put 'envrc--status 'permanent-local t)
-  (put 'process-environment 'permanent-local t)
-  (put 'exec-path 'permanent-local t)
-  (put 'eshell-path-env 'permanent-local t))
+  :init (envrc-global-mode))
 
 ;; selected text should be overwritten in insert mode just like every other editor
 (add-hook 'emacs-startup-hook #'delete-selection-mode)

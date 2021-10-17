@@ -6,6 +6,9 @@
 
 ;; I'm aiming to translate a lot of keys to vim-like equivalents, using
 ;; leader keys to replace the special ~C-c~ bindings.
+
+(require 'consult)
+
 (use-package org
   :init
   (setq org-startup-indented t)
@@ -18,6 +21,14 @@
    'org-babel-load-languages
    '((emacs-lisp . t)
      (python . t)))
+  (defvar +vertico--consult-org-source
+    `(:name     "Org"
+      :narrow   ?o
+      :hidden t
+      :category buffer
+      :state    ,#'consult--buffer-state
+      :items    ,(lambda () (mapcar #'buffer-name (org-buffer-list)))))
+  (add-to-list 'consult-buffer-sources '+vertico--consult-org-source 'append)
   :hook (org-mode . visual-line-mode)
   :general
   (:prefix-map '+open-map
@@ -43,9 +54,9 @@
 (use-package org-roam
   :hook (after-init . org-roam-mode)
   :init
+  (setq org-roam-v2-ack t)
   (let ((+org-roam-dir (expand-file-name "~/Documents/org/roam")))
     (make-directory +org-roam-dir t)
     (setq org-roam-directory +org-roam-dir)))
-
 
 (provide '+org)
