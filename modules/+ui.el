@@ -103,14 +103,6 @@
    "b" #'which-key-show-major-mode
    "B" #'which-key-show-top-level))
 
-;; Pulse current line on window switch
-(use-package beacon
-  :disabled
-  :hook (after-init . beacon-mode)
-  :config
-  (add-to-list 'beacon-dont-blink-commands 'vterm-send-return)
-  (add-to-list 'beacon-dont-blink-commands 'mwheel-scroll))
-
 ;; Highlight TODO keywords when they appear in comments
 (use-package hl-todo
   :hook (prog-mode . hl-todo-mode))

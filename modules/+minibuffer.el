@@ -99,10 +99,11 @@
 
 (use-package embark
   :general
-  (:states '(normal insert)
-   :keymaps 'global
-   "C-." #'embark-act
-   "C-;" #'embark-dwim)
+  (:keymaps '(global override)
+   "C-;" #'embark-act
+   "C-." #'embark-dwim)
+  (:keymaps 'minibuffer-local-map
+   "C-c C-;" #'embark-export)
   (:keymaps 'help-map
    "B" #'embark-bindings)
   :init
@@ -113,6 +114,7 @@
 	       '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
                  nil
 		 (window-parameters (mode-line-format . none))))
+
   (defun embark-which-key-indicator ()
     "An embark indicator that displays keymaps using which-key.
 The which-key help message will show the type and value of the

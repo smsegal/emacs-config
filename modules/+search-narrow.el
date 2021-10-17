@@ -1,11 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 
 ;; Searching / Narrowing
-;; deadgrep lets us search the specified director with ripgrep. Provides a good UI
-(use-package deadgrep
-  :general
-  (:prefix-map '+search-map
-   "d" #'deadgrep))
 
 ;; narrow-to-region etc is defined in builtin package page
 (use-package page
