@@ -5,13 +5,11 @@
 ;; Tree-sitter
 ;; Now, apparently this package is useful for a ton of different
 ;; things. I use it for the nicer syntax highlighting in supported languages.
-(use-package tree-sitter
-  :defer t
-  :ghook ('(python-mode-hook
-            js2-mode-hook
-            typescript-mode-hook
-            css-mode-hook) #'tree-sitter-hl-mode))
-(use-package tree-sitter-langs)
+(use-package tree-sitter)
+(use-package tree-sitter-langs
+  :config
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
 ;; Formatting
 ;; Format all code with one keybinding.
@@ -103,12 +101,11 @@
   :general
   (:keymaps 'julia-mode-map
    [remap format-all-buffer] #'lsp-format-buffer))
-
-(use-package julia-repl
-  :hook (julia-mode . julia-repl-mode)
-  :config
-  (julia-repl-set-terminal-backend 'vterm)
-  (setq-local vterm-kill-buffer-on-exit nil))
+;; (use-package julia-repl
+;;   :hook (julia-mode . julia-repl-mode)
+;;   :config
+;;   (julia-repl-set-terminal-backend 'vterm)
+;;   (setq-local vterm-kill-buffer-on-exit nil))
 
 (use-package nix-mode
   :mode "\\.nix\\'")
@@ -142,7 +139,7 @@
 
 (use-package fish-mode)
 
-(use-package rustic)
+;; (use-package rustic)
 
 (use-package dockerfile-mode
   :mode ("Dockerfile\\'" . dockerfile-mode)

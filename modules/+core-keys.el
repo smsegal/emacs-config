@@ -102,6 +102,9 @@
     "t" '(:keymap +toggle-map :which-key "toggle")
     "h" '(:keymap help-map :which-key "help")))
 
+(general-nvmap
+  "go" #'xref-find-definitions-other-window)
+
 (use-package vundo
   :straight (:host github :repo "casouri/vundo")
   :config

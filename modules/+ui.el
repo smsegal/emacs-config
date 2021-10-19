@@ -81,7 +81,7 @@
 
 (defun +_set-font ()
   (let ((font-name "Rec Mono Duotone")
-        (font-size (if IS-MAC "14" "10")))
+        (font-size (if IS-MAC "13" "10")))
     (set-face-attribute 'fixed-pitch-serif nil :family font-name)
     (set-face-attribute 'font-lock-comment-face nil :family font-name :slant 'italic)
     (set-frame-font (concat font-name "-" font-size) t t)))

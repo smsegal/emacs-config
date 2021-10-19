@@ -29,6 +29,8 @@
   :init
   (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
   (setq flycheck-indication-mode 'right-fringe)
+  (delq 'new-line flycheck-check-syntax-automatically)
+
   ;; A non-descript, left-pointing arrow
   (define-fringe-bitmap 'flycheck-fringe-bitmap-double-arrow
     [16 48 112 240 112 48 16] nil nil 'center)

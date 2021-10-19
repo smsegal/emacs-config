@@ -9,7 +9,7 @@
   :commands (lsp lsp-deferred)
   :ghook
   ;; move to language specific areas where packages exist
-  ('(sh-mode-hook) #'lsp-deferred)
+  ('(python-mode-hook sh-mode-hook) #'lsp-deferred)
   ('lsp-mode-hook '(lsp-modeline-diagnostics-mode
                     lsp-modeline-code-actions-mode
                     lsp-enable-which-key-integration))
@@ -22,7 +22,7 @@
   (setq lsp-enable-on-type-formatting nil)
   (setq lsp-enable-snippet t)
   (setq lsp-eldoc-enable-hover t)
-  (setq lsp-headerline-breadcrumb-enable nil)
+  (setq lsp-headerline-breadcrumb-enable t)
   (setq lsp-enable-file-watchers nil)
   (setq lsp-signature-auto-activate nil)
   (setq lsp-signature-render-documentation nil)
@@ -41,7 +41,8 @@
 (use-package lsp-ui
   :commands lsp-ui-mode
   :config
-  (setq lsp-ui-peek-enable t
+  (setq lsp-ui-sideline-enable nil
+        lsp-ui-peek-enable t
         lsp-ui-doc-max-height 8
         lsp-ui-doc-max-width 35
         lsp-ui-doc-show-with-mouse nil  ; don't disappear on mouseover

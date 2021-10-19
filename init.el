@@ -58,9 +58,9 @@
 (require '+langs)         ;; general language support that doesn't belong elsewhere
 (require '+lsp)
 (require '+python)
-(require '+latex-pdf)
+;; (require '+latex-pdf)
 (require '+web)
-(require '+haskell)
+;; (require '+haskell)
 (require '+org)
 (require '+helpful)       ;; more helpful help buffers
 (require '+utils)

@@ -1,36 +1,39 @@
 ;; -*- lexical-binding: t; -*-
 (require '+lsp)
 
-(use-package lsp-pyright
-  :preface
-  (defun +pyright__enable-lsp ()
-    (require 'lsp-pyright)
-    ;; TODO: This is a hack to make sure the correct env is loaded,
-    ;; but should probably take a look at disabling envrc-global-mode
-    ;; or something similar
-    ;; (envrc-reload)
-    (lsp-deferred))
-  :config
-  (lsp-register-client
-   (make-lsp-client
-    :new-connection (lsp-tramp-connection (cons "pyright-langserver" lsp-pyright-langserver-command-args))
-    :major-modes '(python-mode)
-    :remote? t
-    :server-id 'pyright-remote
-    :multi-root t
-    :priority 3
-    :initialized-fn (lambda (workspace)
-                      (with-lsp-workspace workspace
-			;; we send empty settings initially, LSP server will ask for the
-			;; configuration of each workspace folder later separately
-			(lsp--set-configuration
-			 (make-hash-table :test 'equal))))
-    :download-server-fn (lambda (_client callback error-callback _update?)
-                          (lsp-package-ensure 'pyright callback error-callback))
-    :notification-handlers (lsp-ht ("pyright/beginProgress" 'lsp-pyright--begin-progress-callback)
-                                   ("pyright/reportProgress" 'lsp-pyright--report-progress-callback)
-                                   ("pyright/endProgress" 'lsp-pyright--end-progress-callback))))
-  :ghook ('python-mode-hook  #'(+pyright__enable-lsp)))
+;; (use-package lsp-pyright
+;;   :preface
+;;   (defun +pyright__enable-lsp ()
+;;     (require 'lsp-pyright)
+;;     ;; TODO: This is a hack to make sure the correct env is loaded,
+;;     ;; but should probably take a look at disabling envrc-global-mode
+;;     ;; or something similar
+;;     ;; (envrc-reload)
+;;     (lsp-deferred))
+;;   :config
+;;   (lsp-register-client
+;;    (make-lsp-client
+;;     :new-connection (lsp-tramp-connection (cons "pyright-langserver" lsp-pyright-langserver-command-args))
+;;     :major-modes '(python-mode)
+;;     :remote? t
+;;     :server-id 'pyright-remote
+;;     :multi-root t
+;;     :priority 3
+;;     :initialized-fn (lambda (workspace)
+;;                       (with-lsp-workspace workspace
+;; 			;; we send empty settings initially, LSP server will ask for the
+;; 			;; configuration of each workspace folder later separately
+;; 			(lsp--set-configuration
+;; 			 (make-hash-table :test 'equal))))
+;;     :download-server-fn (lambda (_client callback error-callback _update?)
+;;                           (lsp-package-ensure 'pyright callback error-callback))
+;;     :notification-handlers (lsp-ht ("pyright/beginProgress" 'lsp-pyright--begin-progress-callback)
+;;                                    ("pyright/reportProgress" 'lsp-pyright--report-progress-callback)
+;;                                    ("pyright/endProgress" 'lsp-pyright--end-progress-callback))))
+;;   :ghook ('python-mode-hook  #'(+pyright__enable-lsp)))
+
+
+
 
 ;; Python
 ;; The builtin package needs some simple tweaks to use ipython as the REPL.
@@ -41,6 +44,8 @@
   :init
   (setq python-shell-interpreter "ipython")
   (setq python-shell-interpreter-args "--simple-prompt -i"))
+
+(use-package pip-requirements)
 
 ;; Pyimport
 ;; We can sort and remove imports from files with this.
