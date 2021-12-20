@@ -96,18 +96,10 @@
   :mode "\.*\.jl")
 
 (use-package lsp-julia
-  :straight (:host github
-             :repo "non-Jedi/lsp-julia"
-             :files ("*.el" "languageserver"))
-  :preface
+  :hook (julia-mode . lsp-deferred)
+  :init
   (setq lsp-julia-package-dir nil)
-  (defun +_lsp-julia-enable ()
-    (require 'lsp-julia)
-    (lsp-deferred))
-  :config
-  (setq lsp-julia-default-environment "~/.julia/environments/v1.5")
-  (add-to-list 'lsp-julia-flags (concat "--sysimage=" (expand-file-name "~/.cache/julia/languageserver.so")))
-  :hook (julia-mode . +_lsp-julia-enable)
+  (setq lsp-julia-default-environment "~/.julia/environments/v1.7")
   :general
   (:keymaps 'julia-mode-map
    [remap format-all-buffer] #'lsp-format-buffer))
