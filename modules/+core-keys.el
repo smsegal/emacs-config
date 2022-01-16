@@ -103,6 +103,8 @@
     "h" '(:keymap help-map :which-key "help")))
 
 (general-nvmap
+  "gd" #'xref-find-definitions
+  "gD" #'xref-find-references
   "go" #'xref-find-definitions-other-window)
 
 (use-package vundo

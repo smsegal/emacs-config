@@ -26,6 +26,7 @@
   (setq lsp-enable-file-watchers nil)
   (setq lsp-signature-auto-activate nil)
   (setq lsp-signature-render-documentation nil)
+  (setq lsp-diagnostics-provider :flycheck)
   :general
   (general-nvmap
     :keymaps 'lsp-mode-map

@@ -13,6 +13,7 @@
   (add-hook 'after-init-hook #'vertico-mode)
   (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
   :config
+  (setq vertico-resize nil)
   (defun +vertico/embark-preview ()
     "Previews candidate in vertico buffer, unless it's a consult command"
     (interactive)
@@ -28,8 +29,19 @@
    "C-j"   #'vertico-next
    "C-M-j" #'vertico-next-group
    "C-k"   #'vertico-previous
-   "C-M-k" #'vertico-previous-group
-   [backspace] #'vertico-directory-delete-char))
+   "C-M-k" #'vertico-previous-group))
+
+(use-package vertico-directory
+  :straight (:host github :repo "minad/vertico"
+             :files ("*.el" "extensions/*.el"))
+  :after vertico
+  ;; More convenient directory navigation commands
+  :general (:keymaps 'vertico-map
+            "RET"    #'vertico-directory-enter
+            "DEL"    #'vertico-directory-delete-char
+            "M-DEL"  #'vertico-directory-delete-word)
+  ;; Tidy shadowed file names
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
 
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
