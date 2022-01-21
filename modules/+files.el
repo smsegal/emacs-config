@@ -67,7 +67,7 @@
         (message "Copied buffer file name '%s' to the clipboard." filename))))
   :general
   (:prefix-map '+file-map
-   "C" '(+copy-file-name-to-clipboard :which-key "copy filename")))
+   "c" '(+copy-file-name-to-clipboard :which-key "copy filename")))
 
 ;; Crux
 ;; Crux is a selection of useful functions.
@@ -77,6 +77,7 @@
    "E" #'crux-sudo-edit
    "D" #'crux-delete-file-and-buffer
    "p" #'crux-find-user-init-file
+   "C" #'crux-copy-file-preserve-attributes
    "R" #'crux-rename-file-and-buffer)
   (:prefix-map '+open-map
    "w" #'crux-open-with))

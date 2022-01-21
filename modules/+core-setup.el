@@ -110,21 +110,14 @@
   (unless (server-running-p)
     (server-start)))
 
-;; Direnv
-;; Direnv automatically adjusts the environment for you when entering a
-;; directory with a ~.envrc~ file that contains the appropriate commands.
-;; This should be at/near the bottom since you want this hook to be run
-;; before others. Hooks are apparently a stack.
-
-;; I'm hooking it to ~emacs-startup-hook~ instead of ~after-init-hook~, as
-;; ~emacs-startup-hook~ runs after ~after-init-hook~
-(use-package envrc
-  :init (envrc-global-mode))
 
 ;; selected text should be overwritten in insert mode just like every other editor
 (add-hook 'emacs-startup-hook #'delete-selection-mode)
 
 ;; long lines shouldn't crash emacs
 (global-so-long-mode 1)
+
+(when IS-MAC
+  (setenv "XDG_CACHE_HOME" "/Users/shanesegal/Library/Caches"))
 
 (provide '+core-setup)

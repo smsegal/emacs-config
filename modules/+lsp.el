@@ -9,14 +9,28 @@
   :commands (lsp lsp-deferred)
   :ghook
   ;; move to language specific areas where packages exist
-  ('(python-mode-hook sh-mode-hook) #'lsp-deferred)
+  ;; ('(python-mode-hook sh-mode-hook) #'lsp-deferred)
   ('lsp-mode-hook '(lsp-modeline-diagnostics-mode
                     lsp-modeline-code-actions-mode
                     lsp-enable-which-key-integration))
+  ('lsp-completion-mode my/lsp-mode-setup-completion)
   :init
+  (defun my/orderless-dispatch-flex-first (_pattern index _total)
+    (and (eq index 0) 'orderless-flex))
+
+  (defun my/lsp-mode-setup-completion ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless)))
+
+  ;; Optionally configure the first word as flex filtered.
+  (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
+
+  ;; Optionally configure the cape-capf-buster.
+  (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
+
   :config
   (setq read-process-output-max (* 1024 1024)) ;; 1mb
-  (setq lsp-completion-provider :capf)
+  (setq lsp-completion-provider :none)
   (setq lsp-enable-folding nil)
   (setq lsp-enable-text-document-color nil)
   (setq lsp-enable-on-type-formatting nil)

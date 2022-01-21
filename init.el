@@ -2,7 +2,7 @@
 
 ;; load straight so we can use the correct version of org to load the literate config
 (defvar bootstrap-version)
-; (setq straight-repository-branch "develop")
+                                        ; (setq straight-repository-branch "develop")
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (bootstrap-version 5))
@@ -64,3 +64,13 @@
 (require '+org)
 (require '+helpful)       ;; more helpful help buffers
 (require '+utils)
+
+
+;; Direnv
+;; Direnv automatically adjusts the environment for you when entering a
+;; directory with a ~.envrc~ file that contains the appropriate commands.
+;; This should be at/near the bottom since you want this hook to be run
+;; before others. Hooks are apparently a stack.
+;; needs to run last as global hooks are popped off a stack
+(use-package envrc
+  :init (envrc-global-mode))

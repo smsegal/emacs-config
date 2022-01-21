@@ -15,6 +15,8 @@
   (+leader-def
     "p" '(:keymap project-prefix-map
           :package project
-          :which-key "projects")))
+          :which-key "projects"))
+  (general-def :prefix-map 'project-prefix-map
+    "s" #'consult-git-grep))
 
 (provide '+project)

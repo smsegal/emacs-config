@@ -1,6 +1,11 @@
 ;; -*- lexical-binding: t; -*-
 (require '+lsp)
 
+(use-package lsp-pyright
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp-deferred))))
+
 ;; (use-package lsp-pyright
 ;;   :preface
 ;;   (defun +pyright__enable-lsp ()
@@ -59,12 +64,11 @@
     "ii" 'pyimport-insert-missing))
 
 (use-package py-isort
-  ;; :after crux
   :general
   (general-nvmap
     :keymaps 'python-mode-map
     :prefix ","
-    "is" #'py-isort-buffer))
+    "io" #'py-isort-buffer))
 
 (require 'crux)
 (use-package python-black

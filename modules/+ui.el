@@ -33,34 +33,34 @@
   (doom-themes-org-config))
 
 ;; Theme switcher if we're on linux, otherwise we'll depend on the macos system appearance
-
-(cond ((boundp 'ns-system-appearance-change-functions)
-       (defun my/apply-theme (appearance)
-         "Load theme, taking current system APPEARANCE into consideration."
-         (mapc #'disable-theme custom-enabled-themes)
-         (pcase appearance
-           ('light (load-theme 'doom-nord-light t))
-           ('dark (load-theme 'doom-oceanic-next t))))
-       (add-hook 'ns-system-appearance-change-functions #'my/apply-theme))
-      ((boundp 'mac-effective-appearance-change-hook)
-       (defun my/apply-theme ()
-         "Load theme, taking current system APPEARANCE into consideration."
-         (mapc #'disable-theme custom-enabled-themes)
-         (pcase (plist-get (mac-application-state) ':appearance)
-           ("NSAppearanceNameAqua"
-            (load-theme 'doom-opera-light t))
-           ("NSAppearanceNameDarkAqua"
-            (load-theme 'doom-oceanic-next t))))
-       (add-hook 'mac-effective-appearance-change-hook #'my/apply-theme)
-       (add-hook 'after-init-hook #'my/apply-theme))
-      (IS-LINUX
-       (use-package circadian
-         :config
-         (setq calendar-latitude 43.6)
-         (setq calendar-longitude -79.4)
-         (setq circadian-themes '((:sunrise . doom-nord-light)
-                                  (:sunset  . doom-oceanic-next)))
-         :hook (after-init . circadian-setup))))
+(load-theme 'doom-tokyo-night t)
+;; (cond ((boundp 'ns-system-appearance-change-functions)
+;;        (defun my/apply-theme (appearance)
+;;          "Load theme, taking current system APPEARANCE into consideration."
+;;          (mapc #'disable-theme custom-enabled-themes)
+;;          (pcase appearance
+;;            ('light (load-theme 'doom-nord-light t))
+;;            ('dark (load-theme 'doom-oceanic-next t))))
+;;        (add-hook 'ns-system-appearance-change-functions #'my/apply-theme))
+;;       ((boundp 'mac-effective-appearance-change-hook)
+;;        (defun my/apply-theme ()
+;;          "Load theme, taking current system APPEARANCE into consideration."
+;;          (mapc #'disable-theme custom-enabled-themes)
+;;          (pcase (plist-get (mac-application-state) ':appearance)
+;;            ("NSAppearanceNameAqua"
+;;             (load-theme 'doom-opera-light t))
+;;            ("NSAppearanceNameDarkAqua"
+;;             (load-theme 'doom-oceanic-next t))))
+;;        (add-hook 'mac-effective-appearance-change-hook #'my/apply-theme)
+;;        (add-hook 'after-init-hook #'my/apply-theme))
+;;       (IS-LINUX
+;;        (use-package circadian
+;;          :config
+;;          (setq calendar-latitude 43.6)
+;;          (setq calendar-longitude -79.4)
+;;          (setq circadian-themes '((:sunrise . doom-nord-light)
+;;                                   (:sunset  . doom-oceanic-next)))
+;;          :hook (after-init . circadian-setup))))
 
 (use-package all-the-icons)
 
