@@ -13,12 +13,12 @@
 ;;; Garbage Collection
 ;; This package changes the behaviour of the garbage collector to act during idle time.
 (use-package gcmh
-  :hook (emacs-startup . gcmh-mode))
+  :init (gcmh-mode 1))
 
 ;; Keep ~user-emacs-directory~ clean
 ;; We also set up ~recentf-mode~ since it relies on no-littering being loaded right before.
 (use-package no-littering
-  :config
+  :init
   (setq auto-save-file-name-transforms
         `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
@@ -27,8 +27,10 @@
   :init
   (setq shell-file-name (if IS-MAC
                             "/usr/local/bin/fish"
-                          "/usr/bin/fish"))
-  (exec-path-from-shell-initialize))
+                          "/usr/bin/fish")
+        exec-path-from-shell-arguments nil)
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
 
 (unless (daemonp)
   (advice-add #'tty-run-terminal-initialization :override #'ignore)
@@ -49,7 +51,8 @@
 ;; Credit: Doom Emacs
 ;; Contrary to what many Emacs users have in their configs, you really don't
 ;; need more than this to make UTF-8 the default coding system:
-(setq locale-coding-system 'utf-8)
+(set-language-environment "UTF-8")
+(setq default-input-method nil)
 
 ;; Disable bidirectional text rendering for a modest performance boost. I've set
 ;; this to `nil' in the past, but the `bidi-display-reordering's docs say that
@@ -109,7 +112,6 @@
   :config
   (unless (server-running-p)
     (server-start)))
-
 
 ;; selected text should be overwritten in insert mode just like every other editor
 (add-hook 'emacs-startup-hook #'delete-selection-mode)
