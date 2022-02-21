@@ -1,7 +1,5 @@
 ;; -*- lexical-binding: t; -*-
 
-(require '+lsp)
-
 ;; Tree-sitter
 ;; Now, apparently this package is useful for a ton of different
 ;; things. I use it for the nicer syntax highlighting in supported languages.
@@ -90,28 +88,6 @@
 
 ;;; Small language modes not big enough for their own modules
 
-(use-package julia-mode
-  :mode "\.*\.jl")
-
-(use-package lsp-julia
-  :hook (julia-mode . lsp-deferred)
-  :init
-  (setq lsp-julia-package-dir nil)
-  (setq lsp-julia-default-environment "~/.julia/environments/v1.7")
-  :general
-  (:keymaps 'julia-mode-map
-   [remap format-all-buffer] #'lsp-format-buffer))
-;; (use-package julia-repl
-;;   :hook (julia-mode . julia-repl-mode)
-;;   :config
-;;   (julia-repl-set-terminal-backend 'vterm)
-;;   (setq-local vterm-kill-buffer-on-exit nil))
-
-(use-package nix-mode
-  :mode "\\.nix\\'")
-;; (use-package company-nixos-options
-;;   :config (add-to-list 'company-backends 'company-nixos-options))
-
 (use-package markdown-mode
   :commands (markdown-mode gfm-mode)
   :custom (markdown-command "multimarkdown")
@@ -138,8 +114,6 @@
 (use-package lua-mode)
 
 (use-package fish-mode)
-
-;; (use-package rustic)
 
 (use-package dockerfile-mode
   :mode ("Dockerfile\\'" . dockerfile-mode)

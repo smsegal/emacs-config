@@ -1,7 +1,7 @@
 ;; -*- lexical-binding: t; -*-
-(require '+lsp)
 
 (use-package lsp-pyright
+  :after lsp
   :hook (python-mode . (lambda ()
                          (require 'lsp-pyright)
                          (lsp-deferred))))

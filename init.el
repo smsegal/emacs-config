@@ -56,7 +56,8 @@
 (require '+vc)            ;; magit and related
 (require '+vterm)
 (require '+langs)         ;; general language support that doesn't belong elsewhere
-(require '+lsp)
+;; (require '+lsp)
+(require '+eglot)
 (require '+python)
 ;; (require '+latex-pdf)
 (require '+web)

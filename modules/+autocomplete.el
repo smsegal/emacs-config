@@ -1,50 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 
 ;; Autocomplete and Syntax Checking
-;; Using company for auto completion and flycheck.
-
-;;; autocomplete
-;; (use-package company
-;;   :config
-;;   (setq company-minimum-prefix-length 1)
-;;   (setq company-idle-delay 0.0)
-;;   :hook (emacs-startup . global-company-mode)
-;;   :general
-;;   (general-imap "C-SPC" 'company-complete)
-;;   (:keymaps 'company-search-map
-;;    "C-s" #'company-filter-candidates))
-
-;; ;; (use-package company-box
-;; ;;   :hook (company-mode . company-box-mode))
-
-;; (use-package company-quickhelp
-;;   :hook (company-mode . company-quickhelp-mode))
-
-;; (use-package company-posframe
-;;   :unless IS-MAC
-;;   :hook (company-mode . company-posframe-mode))
-
-(use-package cape
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  ;; (add-to-list 'completion-at-point-functions #'cape-tex)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
-  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  (add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;;(add-to-list 'completion-at-point-functions #'cape-line)
-  )
-
-(use-package company
-  :after cape
-  :init
-  (let ((cape-yasnippet (cape-company-to-capf #'company-yasnippet)))
-    (add-to-list completion-at-point-functions #'cape-yasnippet)))
-
+;; Using corfu for auto completion and flycheck.
 
 (use-package corfu
   ;; Optional customizations
@@ -55,8 +12,8 @@
   ;; (corfu-quit-at-boundary t)     ;; Automatically quit at word boundary
   ;; (corfu-quit-no-match t)        ;; Automatically quit if there is no match
   ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-  ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
-  ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
+  (corfu-preselect-first nil)    ;; Disable candidate preselection
+  (corfu-echo-documentation t) ;; Disable documentation in the echo area
   ;; (corfu-scroll-margin 5)        ;; Use scroll margin
 
   ;; Recommended: Enable Corfu globally.
@@ -73,7 +30,26 @@
 
   ;; Enable indentation+completion using the TAB key.
   ;; `completion-at-point' is often bound to M-TAB.
-  (setq tab-always-indent 'complete))
+  (setq tab-always-indent 'complete)
+  :general
+  (:keymaps 'corfu-map
+   "C-j" #'corfu-next
+   "C-k" #'corfu-previous))
+
+(use-package cape
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  ;; (add-to-list 'completion-at-point-functions #'cape-tex)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  (add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  (add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+  )
 
 (use-package corfu-doc-mode
   :straight (:host github :repo "galeo/corfu-doc")

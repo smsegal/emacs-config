@@ -1,6 +1,5 @@
 ;; -*- lexical-binding: t; -*-
 
-(require '+lsp)
 
 ;; Haskell
 ;; Basic syntax highlighting.

@@ -1,6 +1,5 @@
 ;; -*- lexical-binding: t; -*-
 
-(require '+lsp)
 
 ;; LaTeX
 ;; Set up company mode for autocompletion of references, citations, etc.
@@ -37,7 +36,7 @@
   (setq bibtex-text-indentation 20)
   (setq TeX-fold-type-list '(env math))
   :hook (TeX-mode . +latex-setup)
-         ;; (TeX-mode . TeX-fold-mode))
+  ;; (TeX-mode . TeX-fold-mode))
   :mode ("\\.tex\\'" . LaTeX-mode)
   :preface
   (defun +latex-setup ()

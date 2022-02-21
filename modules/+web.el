@@ -1,6 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 
-(require '+lsp)
+;; (require '+lsp)
 
 ;; {Java,Type}Script
 ;; The different web languages. I've also enabled LSP-mode for them above.

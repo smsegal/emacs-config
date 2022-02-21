@@ -5,22 +5,24 @@
 ;; We set some of the more intrusive UI elements to nil.
 ;; Enable support for pyright language server.
 
+(require '+autocomplete)
+
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
-  :ghook
-  ;; move to language specific areas where packages exist
-  ;; ('(python-mode-hook sh-mode-hook) #'lsp-deferred)
-  ('lsp-mode-hook '(lsp-modeline-diagnostics-mode
-                    lsp-modeline-code-actions-mode
-                    lsp-enable-which-key-integration))
-  ('lsp-completion-mode my/lsp-mode-setup-completion)
-  :init
+  :preface
   (defun my/orderless-dispatch-flex-first (_pattern index _total)
     (and (eq index 0) 'orderless-flex))
 
   (defun my/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless)))
+  :ghook
+  ;; move to language specific areas where packages exist
+  ('lsp-mode-hook '(lsp-modeline-diagnostics-mode
+                    lsp-modeline-code-actions-mode
+                    lsp-enable-which-key-integration))
+  ('lsp-completion-mode 'my/lsp-mode-setup-completion)
+  :init
 
   ;; Optionally configure the first word as flex filtered.
   (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)

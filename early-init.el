@@ -38,13 +38,6 @@ during normal emacs operations.")
 ;; disable async native compilation. Do it upfront instead of causing random slowdowns
 (setq comp-deferred-compilation nil)
 
-;; set before straight loads
-(setq straight-check-for-modifications '(watch-files find-when-checking))
 ;; needs to be set before straight.el is loaded in order to fix
 ;; flycheck temp file creation
 (setq straight-fix-flycheck t)
-
-;; Ignore X resources; its settings would be redundant with the other settings
-;; in this file and can conflict with later config (particularly where the
-;; cursor color is concerned).
-(fset #'x-apply-session-resources #'ignore)
